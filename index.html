@@ -379,7 +379,7 @@ const profile={meno:"",priezvisko:"",trieda:""};
 let sent=false;
 const LOG=[];let T0=Date.now();const SKEY="pcdielna_v1";
 function log(cast,akcia,detail,ok){setTimeout(save,0);LOG.push({t:new Date().toISOString(),sec:Math.round((Date.now()-T0)/1000),cast,akcia,detail,ok:ok===undefined?"":ok?"áno":"nie"})}
-function save(){try{localStorage.setItem(SKEY,JSON.stringify({profile,T0,LOG,builds,passed,lastEval,tries,aNext,aErr,order,bios:biosSt,diag:diagSt,sent,cur}))}catch(e){}}
+function save(){if(sent){try{localStorage.removeItem(SKEY)}catch(e){}return}try{localStorage.setItem(SKEY,JSON.stringify({profile,T0,LOG,builds,passed,lastEval,tries,aNext,aErr,order,bios:biosSt,diag:diagSt,sent,cur}))}catch(e){}}
 function fullName(){return (profile.meno+" "+profile.priezvisko).trim()}
 
 /* ikony kategórií */
@@ -700,10 +700,11 @@ $("#send").onclick=async()=>{
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
   $("#send").disabled=true;m.className="note";m.textContent="Odosielam…";
   try{await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
-    sent=true;log("Odoslanie","odoslané","");save();m.className="note ok";m.textContent="Výsledky sú odoslané majstrovi. Môžeš zavrieť stránku.";$("#send").textContent="Odoslané"}
+    sent=true;try{localStorage.removeItem(SKEY)}catch(e){}m.className="note ok";m.textContent="Výsledky sú odoslané majstrovi. Po obnovení stránky budeš odhlásený.";$("#send").textContent="Odoslané"}
   catch(err){$("#send").disabled=false;m.className="note bad";m.textContent="Odoslanie zlyhalo. Skontroluj pripojenie na internet a skús znova."}
 };
 let saved=null;try{saved=JSON.parse(localStorage.getItem(SKEY)||"null")}catch(e){}
+if(saved&&saved.sent){try{localStorage.removeItem(SKEY)}catch(e){}saved=null}
 if(saved&&saved.profile&&saved.profile.meno){
   Object.assign(profile,saved.profile);T0=saved.T0;LOG.push(...saved.LOG);
   Object.keys(saved.builds).forEach(k=>builds[k]=saved.builds[k]);Object.assign(passed,saved.passed);Object.assign(lastEval,saved.lastEval||{});Object.assign(tries,saved.tries||{});
