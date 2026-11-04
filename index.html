@@ -121,6 +121,7 @@ tr:last-child td{border-bottom:0}
 .note{font-size:13.5px;padding:9px 11px;border-radius:4px;background:var(--sunk)}
 .note.ok{background:var(--ok-soft);color:var(--ok)}.note.bad{background:var(--bad-soft);color:var(--bad)}
 .act{display:flex;gap:8px}
+.small-rule{font-size:13px;color:var(--muted)}
 .act .lnk{padding:8px 12px;font-size:14px}
 
 /* montáž */
@@ -133,6 +134,19 @@ tr:last-child td{border-bottom:0}
 .proc{margin:0;padding:12px 14px 12px 38px;display:grid;gap:7px;font-size:14px}
 .proc li::marker{font-family:var(--mono);color:var(--muted);font-size:12px}
 .proc .todo{color:var(--muted)}
+.rig{padding:12px 14px 0}
+.rig svg{width:100%;height:auto;display:block}
+.rig .lb{font-family:var(--mono);font-size:10px;fill:var(--muted)}
+.rig .fr{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:4 3}
+.rig .cs{fill:var(--sunk);stroke:var(--muted);stroke-width:1.5}
+.rig .bd{fill:#1d5a3c;stroke:#2f7a55}
+.rig .pt{fill:#3b4048;stroke:#8b939d;stroke-width:1}
+.rig .cu{fill:#c9cdd3;stroke:#8b939d}
+.rig .cb{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round}
+.rig .fp{fill:none;stroke:#8b939d;stroke-width:1.2}
+.rig .ok{fill:var(--ok)}
+.rig .tx{font-family:var(--mono);font-size:11px;fill:var(--ok)}
+.rig g{transition:opacity .25s}
 .bh{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
 .bh .mono{font-size:12.5px;color:var(--muted)}
 
@@ -166,6 +180,11 @@ tr:last-child td{border-bottom:0}
 .detail .head{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .detail .head b{color:var(--fg);font-weight:600}
 .detail blockquote{margin:0;padding:12px 14px;border-left:3px solid var(--line);background:var(--sunk);font-size:15.5px;max-width:70ch}
+.checks-box{display:grid;gap:8px;max-width:70ch}
+.chk{display:grid;gap:6px}
+.chk .lnk{text-align:left;padding:8px 11px;font-weight:500}
+.chk-r{display:grid;gap:2px;padding:8px 11px;border:1px solid var(--line);border-radius:4px;background:var(--sunk);font-size:14px}
+.chk-r b{font-weight:600}
 .opts{display:grid;gap:6px;max-width:70ch}
 .opts button{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:10px 12px;display:grid;grid-template-columns:22px 1fr;gap:8px}
 .opts button .k{font-family:var(--mono);color:var(--muted)}
@@ -209,7 +228,7 @@ tr:last-child td{border-bottom:0}
     <label class="fld">Trieda<select id="fTrieda" required><option value="">Vyber triedu</option><option>1.D</option><option>2.C</option><option>2.G</option><option>3.C</option></select></label>
     <div class="err" id="fErr"></div>
     <button class="lnk pri" type="submit">Začať prácu</button>
-    <p class="hint" style="font-size:13px">Počas práce stránku neobnovuj, inak sa postup stratí.</p>
+    <p class="hint" style="font-size:13px">Postup sa priebežne ukladá v tomto prehliadači. Ak stránku omylom zavrieš, po otvorení pokračuješ tam, kde si skončil.</p>
   </form>
 </div>
 
@@ -253,21 +272,16 @@ tr:last-child td{border-bottom:0}
         <div class="kv"><span>Rozpočet zákazníka</span><b class="num" id="bud"></b></div>
         <div class="kv"><span id="leftL">Zostáva</span><b class="num" id="left"></b></div>
       </div>
-      <div>
-        <div class="kv" style="margin:0"><span>Odhadovaná spotreba</span><b class="num" id="draw">–</b></div>
-        <div class="kv"><span>Odporúčaný zdroj</span><b class="num" id="needW">–</b></div>
-      </div>
-      <div>
+      <div class="small-rule">Kompatibilitu kontroluješ sám. Výkon zdroja počítaj ako spotreba procesora + grafiky + 100 W a k tomu rezervu 25 %. Výsledok kontroly uvidíš až po odovzdaní.</div>
+      <div id="evalBox" hidden>
         <div class="status" id="cStat"><span class="dot"></span><span id="cText"></span></div>
         <ul class="list" id="compat"></ul>
-        <button class="toggle" id="cTog"></button>
-      </div>
-      <div>
-        <div class="status" id="rStat"><span class="dot"></span><span id="rText"></span></div>
+        <div class="status" id="rStat" style="margin-top:12px"><span class="dot"></span><span id="rText"></span></div>
         <ul class="list" id="reqs"></ul>
       </div>
       <div style="display:grid;gap:10px">
-        <div class="act"><button class="lnk pri" id="submit">Odovzdať zostavu</button><button class="lnk" id="clear">Vyprázdniť</button></div>
+        <div class="act"><button class="lnk pri" id="submit">Odovzdať zostavu</button></div>
+        <div class="kv" style="margin:0"><span>Pokusy o odovzdanie</span><b class="num" id="tries">0</b></div>
         <div class="note" id="smsg" hidden></div>
       </div>
     </aside>
@@ -284,6 +298,7 @@ tr:last-child td{border-bottom:0}
     </div>
     <div class="box">
       <div class="bh"><h2>Pracovný postup</h2><button class="lnk x" id="aReset">Začať znova</button></div>
+      <div class="rig" id="rig"></div>
       <ol class="proc" id="proc"></ol>
       <div style="padding:0 14px 14px"><div class="note" id="aMsg">Začni prvým krokom.</div></div>
     </div>
@@ -361,8 +376,10 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 /* záznam postupu */
 const ENDPOINT="https://script.google.com/macros/s/AKfycbw_7tBbz6AAgIeKXCfSS3w8aYwcIfg4nVgFFbOrLszR-tV9SeHu6LVCWn91a-COmwE3/exec"; // URL webovej aplikácie Google Apps Script
 const profile={meno:"",priezvisko:"",trieda:""};
-const LOG=[];const T0=Date.now();
-function log(cast,akcia,detail,ok){LOG.push({t:new Date().toISOString(),sec:Math.round((Date.now()-T0)/1000),cast,akcia,detail,ok:ok===undefined?"":ok?"áno":"nie"})}
+let sent=false;
+const LOG=[];let T0=Date.now();const SKEY="pcdielna_v1";
+function log(cast,akcia,detail,ok){setTimeout(save,0);LOG.push({t:new Date().toISOString(),sec:Math.round((Date.now()-T0)/1000),cast,akcia,detail,ok:ok===undefined?"":ok?"áno":"nie"})}
+function save(){try{localStorage.setItem(SKEY,JSON.stringify({profile,T0,LOG,builds,passed,lastEval,tries,aNext,aErr,order,bios:biosSt,diag:diagSt,sent,cur}))}catch(e){}}
 function fullName(){return (profile.meno+" "+profile.priezvisko).trim()}
 
 /* ikony kategórií */
@@ -442,7 +459,8 @@ const ORDERS=[
   text:"Strihám videá a pracujem vo Photoshope. Potrebujem procesor s aspoň 12 jadrami, 64 GB RAM, SSD na systém a spolu aspoň 3 TB miesta. Grafika stačí na úrovni RTX 4060. Rozpočet 2200 €.",
   req:{ramMin:64,storMin:3,gpuTier:1,coresMin:12}}
 ];
-let cur="o1",activeCat="cpu",showAllC=false;
+let cur="o1",activeCat="cpu";
+const lastEval={},tries={};
 const builds={o1:{storage:[]},o2:{storage:[]},o3:{storage:[]}};
 const passed={};
 const get=(c,id)=>P[c].find(x=>x.id===id);
@@ -494,7 +512,7 @@ function renderBuild(){
     return `<tr class="${activeCat===c.k?"active":""}"><td><span class="cat">${ico(c.k)}${c.n}</span></td><td class="pick">${sel}</td><td class="pr mono num">${pr}</td><td style="text-align:right">${has&&!c.multi?`<button class="lnk x" data-rm="${c.k}" aria-label="Odobrať">✕</button>`:""}<button class="lnk${has?"":" pri"}" data-c="${c.k}">${has?"Zmeniť":"Vybrať"}</button></td></tr>`;
   }).join("")+"</tbody>";
   $("#build").querySelectorAll("[data-c]").forEach(e=>e.onclick=()=>{activeCat=e.dataset.c;renderCfg();$("#catBox").scrollIntoView({behavior:"smooth",block:"nearest"})});
-  $("#build").querySelectorAll("[data-rm]").forEach(e=>e.onclick=()=>{log("Konfigurátor "+ORDERS.find(o=>o.id===cur).no,"odobral",CATS.find(c=>c.k===e.dataset.rm).n+": "+get(e.dataset.rm,builds[cur][e.dataset.rm]).n);delete builds[cur][e.dataset.rm];renderCfg()});
+  $("#build").querySelectorAll("[data-rm]").forEach(e=>e.onclick=()=>{if(passed[cur])delete passed[cur];log("Konfigurátor "+ORDERS.find(o=>o.id===cur).no,"odobral",CATS.find(c=>c.k===e.dataset.rm).n+": "+get(e.dataset.rm,builds[cur][e.dataset.rm]).n);delete builds[cur][e.dataset.rm];renderCfg()});
 }
 function renderCat(){
   const c=CATS.find(x=>x.k===activeCat),b=builds[cur];
@@ -510,38 +528,38 @@ function renderCat(){
     if(c.multi){const i=b.storage.indexOf(id);if(i>=0)b.storage.splice(i,1);else if(b.storage.length<3)b.storage.push(id)}
     else if(b[c.k]===id)delete b[c.k];
     else{b[c.k]=id;const i=CATS.findIndex(x=>x.k===c.k);const nx=CATS.slice(i+1).find(x=>x.multi?!b.storage.length:!b[x.k]);if(nx)activeCat=nx.k}
+    if(passed[cur]){delete passed[cur];log("Konfigurátor "+ORDERS.find(o=>o.id===cur).no,"zmenil už odovzdanú zostavu","odovzdanie zrušené")}
     renderCfg();
   });
 }
 function renderSum(){
-  const b=builds[cur],o=ORDERS.find(x=>x.id===cur),x=parts(b),p=price(b);
+  const b=builds[cur],o=ORDERS.find(x=>x.id===cur),p=price(b);
   $("#total").textContent=p+" €";$("#bud").textContent=o.budget+" €";
   $("#meterI").style.width=Math.min(100,p/o.budget*100)+"%";$("#meter").classList.toggle("over",p>o.budget);
   $("#leftL").textContent=p<=o.budget?"Zostáva":"Prekročené o";$("#left").textContent=Math.abs(o.budget-p)+" €";
-  $("#draw").textContent=x.cpu&&x.gpu?draw(x)+" W":"–";$("#needW").textContent=x.cpu&&x.gpu?"od "+need(x)+" W":"–";
-  const ev=evaluate(b,o);
-  const cb=ev.C.filter(i=>i.s==="bad").length,rb=ev.R.filter(i=>i.s!=="ok").length;
-  const anyC=ev.C.some(i=>i.s!=="wait");
-  $("#cStat").className="status "+(cb?"bad":anyC&&!ev.C.some(i=>i.s==="wait")?"good":"");
-  $("#cText").textContent=cb?`Kompatibilita: ${cb} ${cb===1?"problém":cb<5?"problémy":"problémov"}`:ev.C.some(i=>i.s==="wait")?"Kompatibilita: zostava nie je úplná":"Kompatibilita: v poriadku";
-  const shown=showAllC?ev.C:ev.C.filter(i=>i.s==="bad");
-  $("#compat").innerHTML=shown.map(i=>`<li class="${i.s}">${esc(i.t)}</li>`).join("");
-  $("#cTog").textContent=showAllC?"Skryť kontroly bez chýb":"Zobraziť všetky kontroly";
-  $("#rStat").className="status "+(rb?"bad":"good");
-  $("#rText").textContent=rb?"Požiadavky zákazníka: nesplnené":"Požiadavky zákazníka: splnené";
-  $("#reqs").innerHTML=ev.R.map(i=>`<li class="${i.s}">${esc(i.t)}</li>`).join("");
+  $("#tries").textContent=tries[cur]||0;
+  const ev=lastEval[cur];$("#evalBox").hidden=!ev;
+  if(ev){
+    const cb=ev.C.filter(i=>i.s!=="ok"),rb=ev.R.filter(i=>i.s!=="ok");
+    $("#cStat").className="status "+(cb.length?"bad":"good");
+    $("#cText").textContent=cb.length?`Kompatibilita: ${cb.length} ${cb.length===1?"problém":cb.length<5?"problémy":"problémov"}`:"Kompatibilita: v poriadku";
+    $("#compat").innerHTML=cb.map(i=>`<li class="bad">${esc(i.t)}</li>`).join("");
+    $("#rStat").className="status "+(rb.length?"bad":"good");
+    $("#rText").textContent=rb.length?"Požiadavky zákazníka: nesplnené":"Požiadavky zákazníka: splnené";
+    $("#reqs").innerHTML=rb.map(i=>`<li class="bad">${esc(i.t)}</li>`).join("");
+  }
 }
-$("#cTog").onclick=()=>{showAllC=!showAllC;renderSum()};
 $("#submit").onclick=()=>{
   const ev=evaluate(builds[cur],ORDERS.find(x=>x.id===cur)),m=$("#smsg");m.hidden=false;
   const oN=ORDERS.find(x=>x.id===cur).no,probs=[...ev.C,...ev.R].filter(i=>i.s!=="ok").map(i=>i.t);
   log("Konfigurátor "+oN,"odovzdanie zostavy",ev.ok?"zostava "+price(builds[cur])+" €":"problémy: "+probs.join(" | "),ev.ok);
+  tries[cur]=(tries[cur]||0)+1;lastEval[cur]={C:ev.C,R:ev.R,sig:JSON.stringify(builds[cur])};
   if(ev.ok){passed[cur]=true;m.className="note ok";m.textContent="Zostava je odovzdaná. Je kompatibilná a spĺňa požiadavky."}
-  else{const n=[...ev.C,...ev.R].filter(i=>i.s!=="ok").length;m.className="note bad";m.textContent=`Zostavu nemožno odovzdať. Nesplnené body: ${n}.`}
+  else{const n=[...ev.C,...ev.R].filter(i=>i.s!=="ok").length;m.className="note bad";m.textContent=`Zostava neprešla kontrolou. Nesplnené body: ${n}. Oprav ich a odovzdaj znova.`}
   renderCfg();
 };
-$("#clear").onclick=()=>{log("Konfigurátor "+ORDERS.find(o=>o.id===cur).no,"vyprázdnil zostavu","");builds[cur]={storage:[]};activeCat="cpu";$("#smsg").hidden=true;renderCfg()};
-function renderCfg(){renderOrders();renderBuild();renderCat();renderSum();upd()}
+function renderCfg(){if(lastEval[cur]&&lastEval[cur].sig!==JSON.stringify(builds[cur])&&lastEval[cur].sig!==undefined){delete lastEval[cur];$("#smsg").hidden=true}
+  renderOrders();renderBuild();renderCat();renderSum();upd()}
 
 /* montáž */
 const STEPS=[
@@ -559,7 +577,30 @@ const STEPS=[
  ["Pripojiť monitor do grafickej karty, zapnúť PC a skontrolovať BIOS","Zapnúť sa dá až po zapojení všetkého."]
 ];
 let aNext=0,aErr=0,order=[];
+function rigSvg(){
+  const v=(from,to)=>aNext>from&&(to===undefined||aNext<=to)?1:0;
+  const B=(dx,dy)=>`<rect class="bd" x="${dx}" y="${dy}" width="140" height="170" rx="3"/>
+   <g opacity="${v(1)}"><rect class="cu" x="${dx+45}" y="${dy+30}" width="34" height="34" rx="2"/><text class="lb" x="${dx+50}" y="${dy+51}" style="fill:#3b4048">CPU</text></g>
+   <g opacity="${v(2)}"><circle class="pt" cx="${dx+62}" cy="${dy+47}" r="24" fill-opacity=".92"/><circle cx="${dx+62}" cy="${dy+47}" r="9" fill="#8b939d"/></g>
+   <g opacity="${v(3)}"><rect class="pt" x="${dx+100}" y="${dy+16}" width="7" height="72"/><rect class="pt" x="${dx+112}" y="${dy+16}" width="7" height="72"/></g>
+   <g opacity="${v(4)}"><rect class="pt" x="${dx+30}" y="${dy+100}" width="62" height="9"/></g>`;
+  return `<svg viewBox="0 0 540 290" role="img" aria-label="Stav montáže">
+   <text class="lb" x="12" y="14">PRACOVNÝ STÔL</text><text class="lb" x="222" y="14">SKRINKA</text>
+   <g opacity="${v(0)}"><circle class="ok" cx="110" cy="10" r="4"/><text class="tx" x="118" y="14">uzemnené</text></g>
+   <rect class="fr" x="12" y="30" width="180" height="200" rx="4"/>
+   <g opacity="${aNext<=6?1:0}">${B(32,45)}</g>
+   <rect class="cs" x="222" y="24" width="300" height="256" rx="6"/>
+   <g opacity="${v(5)}">${[[255,58],[375,58],[255,200],[375,200],[315,130]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3" fill="#8b939d"/>`).join("")}<rect x="236" y="48" width="9" height="46" fill="#8b939d"/></g>
+   <g opacity="${v(6)}">${B(245,45)}</g>
+   <g opacity="${v(7)}"><rect class="pt" x="245" y="232" width="120" height="38" rx="2"/><circle cx="275" cy="251" r="12" fill="none" stroke="#8b939d"/><text class="lb" x="300" y="255" style="fill:#c9cdd3">PSU</text></g>
+   <g opacity="${v(8)}"><path class="cb" d="M340 232 C 410 210, 410 160, 380 140"/><path class="cb" d="M300 232 C 210 200, 220 60, 275 50"/></g>
+   <g opacity="${v(9)}"><rect class="pt" x="255" y="175" width="170" height="20" rx="2"/><circle cx="300" cy="185" r="7" fill="none" stroke="#8b939d"/><circle cx="350" cy="185" r="7" fill="none" stroke="#8b939d"/></g>
+   <g opacity="${v(10)}"><path class="fp" d="M505 50 C 480 120, 470 220, 380 214"/><path class="fp" d="M500 52 C 470 130, 460 225, 372 218"/></g>
+   <g opacity="${v(11)}"><circle class="ok" cx="505" cy="40" r="5"/><text class="tx" x="430" y="268">POST OK</text></g>
+  </svg>`;
+}
 function renderAsm(){
+  $("#rig").innerHTML=rigSvg();
   $("#proc").innerHTML=STEPS.map((s,i)=>i<aNext?`<li>${s[0]}</li>`:i===aNext?`<li class="todo">…</li>`:"").join("");
   $("#pool").innerHTML=order.filter(i=>i>=aNext).map(i=>`<button data-i="${i}">${STEPS[i][0]}</button>`).join("")||'<p class="hint" style="margin:4px">Všetky kroky sú v postupe.</p>';
   $("#aErr").textContent="chyby: "+aErr;
@@ -582,21 +623,21 @@ const BIOS=[
  {s:"Secure Boot",t:"Windows 11 vyžaduje Secure Boot. Čo robí?",o:["Pri štarte púšťa iba podpísaný zavádzač systému","Je to heslo do BIOS-u","Zrýchľuje zapínanie","Šifruje disk"],a:0,e:"Secure Boot bráni spusteniu nepodpísaného kódu pri štarte, napríklad bootkitov. Funguje v režime UEFI, preto je CSM vypnuté."}
 ];
 const DIAG=[
- {s:"Pípanie po čistení",t:"Po zapnutí počítač trikrát dlho pípne a monitor ostane čierny. Deň predtým som ho čistil zvnútra.",o:["Uvoľnená alebo zle zasunutá RAM","Pokazený monitor","Vírus v systéme","Plný disk"],a:0,e:"Pípanie pri štarte hlási POST test. Po čistení sa často uvoľní RAM. Treba ju vybrať a znova zasunúť."},
- {s:"Vypína sa pri hraní",t:"Pri hraní sa počítač po desiatich minútach sám vypne. Ventilátor procesora je strašne hlučný.",o:["Prehrievanie procesora, zaprášený chladič alebo stará pasta","Zlý ovládač myši","Málo RAM","Chybný HDMI kábel"],a:0,e:"Vypnutie pod záťažou je ochrana proti prehriatiu. Treba vyčistiť chladič a vymeniť pastu."},
+ {s:"Pípanie po čistení",ch:[["Pozrieť diagnostické diódy na doske","Svieti dióda DRAM."],["Odpojiť grafickú kartu a skúsiť obraz z dosky","Bez zmeny, počítač stále pípa."],["Prezrieť moduly RAM","Jeden modul nie je celkom zasunutý, poistka slotu nie je zacvaknutá."]],t:"Po zapnutí počítač trikrát dlho pípne a monitor ostane čierny. Deň predtým som ho čistil zvnútra.",o:["Uvoľnená alebo zle zasunutá RAM","Pokazený monitor","Vírus v systéme","Plný disk"],a:0,e:"Pípanie pri štarte hlási POST test. Po čistení sa často uvoľní RAM. Treba ju vybrať a znova zasunúť."},
+ {s:"Vypína sa pri hraní",ch:[["Pozrieť teplotu CPU v programe HWMonitor","V pokoji 72 °C, v hre 99 °C a potom sa PC vypne."],["Otvoriť skrinku a pozrieť chladič","Rebrá chladiča sú zanesené prachom."],["Spustiť test RAM","Test prebehol bez chýb."]],t:"Pri hraní sa počítač po desiatich minútach sám vypne. Ventilátor procesora je strašne hlučný.",o:["Prehrievanie procesora, zaprášený chladič alebo stará pasta","Zlý ovládač myši","Málo RAM","Chybný HDMI kábel"],a:0,e:"Vypnutie pod záťažou je ochrana proti prehriatiu. Treba vyčistiť chladič a vymeniť pastu."},
  {s:"No signal po výmene grafiky",t:"Kúpil som novú grafickú kartu. Počítač beží, ale monitor píše No signal.",o:["Kábel monitora je v konektore na doske, nie v grafickej karte","Pokazený zdroj","Chýba operačný systém","Zlý procesor"],a:0,e:"S grafickou kartou ide obraz z jej výstupov, nie z konektorov dosky."},
- {s:"No bootable device",t:"Pri štarte sa zobrazí No bootable device. Včera všetko fungovalo.",o:["Disk nie je rozpoznaný alebo je pokazený","Chýba RAM","Pokazená klávesnica","Odpojený monitor"],a:0,e:"BIOS nenašiel disk so systémom. Treba skontrolovať, či ho vidno v BIOS-e, a jeho kábel alebo uchytenie."},
- {s:"Vôbec nereaguje",t:"Stlačím tlačidlo a nič. Nesvieti nič, ani dióda na doske.",o:["Napájanie: zásuvka, kábel, vypínač na zdroji alebo zdroj","Pokazená grafická karta","Chýba RAM","Chybný disk"],a:0,e:"Keď nesvieti nič, doska nemá prúd. Postupuje sa od najjednoduchšieho: zásuvka, kábel, vypínač zdroja, zdroj."},
+ {s:"No bootable device",ch:[["Pozrieť zoznam diskov v BIOS-e","NVMe disk sa v zozname nezobrazuje."],["Skontrolovať monitor a kábel","Obraz je v poriadku."],["Skúsiť inú klávesnicu","Klávesnica funguje, v BIOS-e sa dá pohybovať."]],t:"Pri štarte sa zobrazí No bootable device. Včera všetko fungovalo.",o:["Disk nie je rozpoznaný alebo je pokazený","Chýba RAM","Pokazená klávesnica","Odpojený monitor"],a:0,e:"BIOS nenašiel disk so systémom. Treba skontrolovať, či ho vidno v BIOS-e, a jeho kábel alebo uchytenie."},
+ {s:"Vôbec nereaguje",ch:[["Zapojiť do zásuvky iný spotrebič","Zásuvka funguje."],["Pozrieť vypínač na zadnej strane zdroja","Vypínač je v polohe I, teda zapnutý."],["Otestovať zdroj testerom","Tester neukazuje žiadne napätia, ventilátor zdroja sa nerozbehne."]],t:"Stlačím tlačidlo a nič. Nesvieti nič, ani dióda na doske.",o:["Napájanie: zásuvka, kábel, vypínač na zdroji alebo zdroj","Pokazená grafická karta","Chýba RAM","Chybný disk"],a:0,e:"Keď nesvieti nič, doska nemá prúd. Postupuje sa od najjednoduchšieho: zásuvka, kábel, vypínač zdroja, zdroj."},
  {s:"Reštarty pri záťaži",t:"Po výmene grafiky za výkonnejšiu sa počítač pri hraní reštartuje. Zdroj má 450 W.",o:["Slabý zdroj","Málo miesta na disku","Starý monitor","Zlá myš"],a:0,e:"Výkonná grafika má veľkú spotrebu a slabý zdroj sa pri špičke odpojí."},
  {s:"Nový PC nejde zapnúť",t:"Nový počítač sa tlačidlom nezapne. Keď technik spojí piny PWR SW na doske skrutkovačom, nabehne.",o:["Konektor tlačidla z predného panela je zapojený zle","Pokazený zdroj","Chýba procesor","Zlá RAM"],a:0,e:"Doska aj zdroj fungujú. Konektor tlačidla je posunutý alebo na zlých pinoch."},
  {s:"Predné USB nefunguje",t:"Predné USB porty nefungujú, zadné áno.",o:["Nie je zapojený USB konektor predného panela na doske","Pokazený ovládač USB","Slabý zdroj","Zlý procesor"],a:0,e:"Predné porty sú s doskou spojené samostatným káblom."},
  {s:"Disk nie je v Prieskumníkovi",t:"Druhý HDD je vidno v BIOS-e, ale vo Windowse v Prieskumníkovi nie je.",o:["Disk nie je inicializovaný a naformátovaný, treba to urobiť v Správe diskov","Disk je pokazený","Chýba ovládač grafiky","Treba ho pripojiť cez USB"],a:0,e:"Nový disk treba v Správe diskov inicializovať, vytvoriť oddiel a naformátovať."},
  {s:"MEMORY_MANAGEMENT",t:"Počítač náhodne padá do modrej obrazovky s chybou MEMORY_MANAGEMENT.",o:["Otestovať RAM nástrojom Windows Memory Diagnostic alebo MemTest86","Vymeniť monitor","Preinštalovať prehliadač","Vymeniť klávesnicu"],a:0,e:"Táto chyba často znamená chybnú pamäť. Test RAM ukáže chybný modul."},
- {s:"95 °C po zložení",t:"Nový počítač beží, ale procesor má hneď po zapnutí 95 °C.",o:["Chladič nie je dosadený, chýba pasta alebo nie je odlepená fólia","Málo RAM","Zlý zdroj","Pokazený disk"],a:0,e:"Taká teplota bez záťaže znamená zlý kontakt chladiča s procesorom. Častá chyba je neodlepená fólia."},
+ {s:"95 °C po zložení",ch:[["Pozrieť otáčky CPU_FAN v BIOS-e","1500 ot./min, ventilátor sa točí."],["Odmontovať chladič a pozrieť spodok","Na spodku chladiča je lesklá ochranná fólia a na procesore nie je pasta."],["Skontrolovať zdroj","Napätia sú v norme."]],t:"Nový počítač beží, ale procesor má hneď po zapnutí 95 °C.",o:["Chladič nie je dosadený, chýba pasta alebo nie je odlepená fólia","Málo RAM","Zlý zdroj","Pokazený disk"],a:0,e:"Taká teplota bez záťaže znamená zlý kontakt chladiča s procesorom. Častá chyba je neodlepená fólia."},
  {s:"RAM nejde zasunúť",t:"Kúpil som DDR4 pamäte do novej dosky s DDR5 a nedajú sa zasunúť.",o:["DDR4 a DDR5 majú zárez inde a nie sú kompatibilné","Treba zatlačiť silnejšie","Treba aktualizovať BIOS","Sloty sú špinavé"],a:0,e:"Každá generácia DDR má zárez inde, aby sa nedala vložiť do zlého slotu."}
 ];
-function makeDesk(list,root,pre,part){
-  const st=list.map(c=>{const idx=shuffle(c.o.map((_,k)=>k));return{opts:idx.map(k=>c.o[k]),ans:idx.indexOf(c.a),pick:null}});
+function makeDesk(list,root,pre,part,saved){
+  const st=saved||list.map(c=>{const idx=shuffle(c.o.map((_,k)=>k));return{opts:idx.map(k=>c.o[k]),ans:idx.indexOf(c.a),pick:null,seen:[]}});
   let sel=0;
   const draw=()=>{
     const c=list[sel],s=st[sel];
@@ -604,8 +645,10 @@ function makeDesk(list,root,pre,part){
       return `<button data-i="${i}" aria-current="${i===sel}"><span class="dot ${r}"></span><span><span class="q2">${pre}${101+i}</span><br><span class="q1">${q.s}</span></span><span class="q2">${r==="new"?"nová":r==="ok"?"vyriešená":"chybne"}</span></button>`}).join("")}</div>
     <div class="detail"><div class="head"><span>Zákazka <b>${pre}${101+sel}</b></span><span>Stav <b>${s.pick===null?"čaká na diagnostiku":"uzavretá"}</b></span></div>
     <blockquote>${c.t}</blockquote>
-    <div class="opts">${s.opts.map((o,j)=>`<button data-j="${j}" ${s.pick!==null?"disabled":""} class="${s.pick===null?"":j===s.ans?"right":j===s.pick?"wrong":""}"><span class="k">${"ABCD"[j]}</span><span>${o}</span></button>`).join("")}</div>
+    ${c.ch?`<div class="checks-box"><h2>Diagnostika</h2><p class="hint">Najprv vykonaj aspoň jednu kontrolu, potom urči príčinu.</p><div class="chk">${c.ch.map((k,j)=>s.seen.includes(j)?`<div class="chk-r"><b>${k[0]}</b><span>${k[1]}</span></div>`:`<button class="lnk" data-k="${j}" ${s.pick!==null?"disabled":""}>${k[0]}</button>`).join("")}</div></div>`:""}
+    ${c.ch&&!s.seen.length&&s.pick===null?"":`<div class="opts">${s.opts.map((o,j)=>`<button data-j="${j}" ${s.pick!==null?"disabled":""} class="${s.pick===null?"":j===s.ans?"right":j===s.pick?"wrong":""}"><span class="k">${"ABCD"[j]}</span><span>${o}</span></button>`).join("")}</div>`}
     ${s.pick!==null?`<div class="res ${s.pick===s.ans?"ok":"bad"}"><b>${s.pick===s.ans?"Správne":"Nesprávne"}</b>${c.e}</div>${sel<list.length-1?'<button class="lnk nextq" id="nx">Ďalšia zákazka</button>':""}`:""}</div>`;
+    root.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{const j=+b.dataset.k;s.seen.push(j);log(part,pre+(101+sel)+" "+c.s,"kontrola: "+c.ch[j][0]);draw()});
     root.querySelectorAll(".queue button").forEach(b=>b.onclick=()=>{sel=+b.dataset.i;draw()});
     root.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{s.pick=+b.dataset.j;log(part,pre+(101+sel)+" "+c.s,"odpoveď: "+s.opts[s.pick]+(s.pick===s.ans?"":" (správne: "+s.opts[s.ans]+")"),s.pick===s.ans);draw();upd()});
     const nx=root.querySelector("#nx");if(nx)nx.onclick=()=>{sel++;draw()};
@@ -644,9 +687,7 @@ $("#startForm").onsubmit=e=>{e.preventDefault();
   if(!["1.D","2.C","2.G","3.C"].includes(t)){$("#fErr").textContent="Vyber triedu zo zoznamu.";return}
   Object.assign(profile,{meno:m,priezvisko:p,trieda:t});
   $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);upd();window.scrollTo(0,0)};
-window.addEventListener("beforeunload",e=>{if(profile.meno&&!sent){e.preventDefault();e.returnValue=""}});
 /* odoslanie */
-let sent=false;
 $("#send").onclick=async()=>{
   const m=$("#sendMsg");m.hidden=false;
   if(sent)return;
@@ -657,12 +698,22 @@ $("#send").onclick=async()=>{
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
   $("#send").disabled=true;m.className="note";m.textContent="Odosielam…";
   try{await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
-    sent=true;log("Odoslanie","odoslané","");m.className="note ok";m.textContent="Výsledky sú odoslané majstrovi. Môžeš zavrieť stránku.";$("#send").textContent="Odoslané"}
+    sent=true;log("Odoslanie","odoslané","");save();m.className="note ok";m.textContent="Výsledky sú odoslané majstrovi. Môžeš zavrieť stránku.";$("#send").textContent="Odoslané"}
   catch(err){$("#send").disabled=false;m.className="note bad";m.textContent="Odoslanie zlyhalo. Skontroluj pripojenie na internet a skús znova."}
 };
-order=shuffle(STEPS.map((_,i)=>i));renderAsm();
-biosSt=makeDesk(BIOS,$("#biosDesk"),"B-","BIOS");
-diagSt=makeDesk(DIAG,$("#diagDesk"),"S-","Servis");
+let saved=null;try{saved=JSON.parse(localStorage.getItem(SKEY)||"null")}catch(e){}
+if(saved&&saved.profile&&saved.profile.meno){
+  Object.assign(profile,saved.profile);T0=saved.T0;LOG.push(...saved.LOG);
+  Object.keys(saved.builds).forEach(k=>builds[k]=saved.builds[k]);Object.assign(passed,saved.passed);Object.assign(lastEval,saved.lastEval||{});Object.assign(tries,saved.tries||{});
+  aNext=saved.aNext;aErr=saved.aErr;order=saved.order;sent=saved.sent;cur=saved.cur||"o1";
+  (saved.bios||[]).forEach(x=>x.seen=x.seen||[]);(saved.diag||[]).forEach(x=>x.seen=x.seen||[]);
+  $("#start").hidden=true;$("#whoName").textContent=fullName()+" · "+profile.trieda;
+  if(sent){$("#send").disabled=true;$("#send").textContent="Odoslané";$("#sendMsg").hidden=false;$("#sendMsg").className="note ok";$("#sendMsg").textContent="Výsledky už boli odoslané."}
+  log("Štart","pokračoval po obnovení stránky","");
+}else order=shuffle(STEPS.map((_,i)=>i));
+renderAsm();
+biosSt=makeDesk(BIOS,$("#biosDesk"),"B-","BIOS",saved&&saved.profile&&saved.profile.meno?saved.bios:null);
+diagSt=makeDesk(DIAG,$("#diagDesk"),"S-","Servis",saved&&saved.profile&&saved.profile.meno?saved.diag:null);
 renderCfg();
 </script>
 </body>
