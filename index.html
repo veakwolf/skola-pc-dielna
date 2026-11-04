@@ -377,8 +377,8 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const ENDPOINT="https://script.google.com/macros/s/AKfycbw_7tBbz6AAgIeKXCfSS3w8aYwcIfg4nVgFFbOrLszR-tV9SeHu6LVCWn91a-COmwE3/exec"; // URL webovej aplikácie Google Apps Script
 const profile={meno:"",priezvisko:"",trieda:""};
 let sent=false;
-const LOG=[];let T0=Date.now();const SKEY="pcdielna_v1";
-function log(cast,akcia,detail,ok){setTimeout(save,0);LOG.push({t:new Date().toISOString(),sec:Math.round((Date.now()-T0)/1000),cast,akcia,detail,ok:ok===undefined?"":ok?"áno":"nie"})}
+const LOG=[];let T0=null;const SKEY="pcdielna_v1";
+function log(cast,akcia,detail,ok){if(!T0&&cast!=="Štart"&&cast!=="Odoslanie")T0=Date.now();setTimeout(save,0);LOG.push({t:new Date().toISOString(),sec:T0?Math.round((Date.now()-T0)/1000):0,cast,akcia,detail,ok:ok===undefined?"":ok?"áno":"nie"})}
 function save(){if(sent){try{localStorage.removeItem(SKEY)}catch(e){}return}try{localStorage.setItem(SKEY,JSON.stringify({profile,T0,LOG,builds,passed,lastEval,tries,aNext,aErr,order,bios:biosSt,diag:diagSt,sent,cur}))}catch(e){}}
 function fullName(){return (profile.meno+" "+profile.priezvisko).trim()}
 
@@ -695,8 +695,8 @@ $("#send").onclick=async()=>{
   if(sent)return;
   if(!ENDPOINT){m.className="note bad";m.textContent="Odosielanie ešte nie je nastavené. Povedz to majstrovi.";return}
   const bs=sc(biosSt),ds=sc(diagSt),errs=LOG.filter(l=>l.ok==="nie").length;
-  const payload={meno:profile.meno,priezvisko:profile.priezvisko,trieda:profile.trieda,zaciatok:new Date(T0).toISOString(),koniec:new Date().toISOString(),
-    minut:Math.round((Date.now()-T0)/60000),zostavy:Object.keys(passed).length,montaz_hotova:aNext===STEPS.length,montaz_chyby:aErr,
+  const payload={meno:profile.meno,priezvisko:profile.priezvisko,trieda:profile.trieda,zaciatok:new Date(T0||Date.now()).toISOString(),koniec:new Date().toISOString(),
+    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:Object.keys(passed).length,montaz_hotova:aNext===STEPS.length,montaz_chyby:aErr,
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
   $("#send").disabled=true;m.className="note";m.textContent="Odosielam…";
   try{await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
