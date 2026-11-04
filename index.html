@@ -191,7 +191,7 @@ tr:last-child td{border-bottom:0}
 .start{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;padding-top:max(40px,env(safe-area-inset-top,0px));padding-bottom:40px}
 .start form{max-width:440px;margin:0 auto;display:grid;gap:14px}
 .start .fld{display:grid;gap:5px;font-size:13.5px;font-weight:600}
-.start input{font-size:16px;font-weight:400;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+.start input,.start select{font-size:16px;font-weight:400;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
 .start .err{color:var(--bad);font-size:13.5px;min-height:1.2em}
 .start .lnk{padding:11px 14px;font-size:15px}
 .sendbox{padding:16px 18px;display:grid;gap:10px}
@@ -206,7 +206,7 @@ tr:last-child td{border-bottom:0}
     <div><h1>Prihlásenie technika</h1><p class="hint">Vyplň svoje údaje. Zaznamená sa k nim celý postup práce a na konci výsledok odošleš majstrovi.</p></div>
     <label class="fld">Meno<input id="fMeno" autocomplete="given-name" required></label>
     <label class="fld">Priezvisko<input id="fPriez" autocomplete="family-name" required></label>
-    <label class="fld">Trieda<input id="fTrieda" placeholder="napr. III.C" required></label>
+    <label class="fld">Trieda<select id="fTrieda" required><option value="">Vyber triedu</option><option>1.D</option><option>2.C</option><option>2.G</option><option>3.C</option></select></label>
     <div class="err" id="fErr"></div>
     <button class="lnk pri" type="submit">Začať prácu</button>
     <p class="hint" style="font-size:13px">Počas práce stránku neobnovuj, inak sa postup stratí.</p>
@@ -639,8 +639,9 @@ function upd(){
 $("#whoName").textContent="";
 /* štart */
 $("#startForm").onsubmit=e=>{e.preventDefault();
-  const m=$("#fMeno").value.trim(),p=$("#fPriez").value.trim(),t=$("#fTrieda").value.trim();
-  if(!m||!p||!t){$("#fErr").textContent="Vyplň meno, priezvisko aj triedu.";return}
+  const m=$("#fMeno").value.trim(),p=$("#fPriez").value.trim(),t=$("#fTrieda").value;
+  if(!m||!p||!t){$("#fErr").textContent="Vyplň meno, priezvisko a vyber triedu.";return}
+  if(!["1.D","2.C","2.G","3.C"].includes(t)){$("#fErr").textContent="Vyber triedu zo zoznamu.";return}
   Object.assign(profile,{meno:m,priezvisko:p,trieda:t});
   $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);upd();window.scrollTo(0,0)};
 window.addEventListener("beforeunload",e=>{if(profile.meno&&!sent){e.preventDefault();e.returnValue=""}});
