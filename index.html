@@ -359,7 +359,7 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* záznam postupu */
-const ENDPOINT=""; // URL webovej aplikácie Google Apps Script
+const ENDPOINT="https://script.google.com/macros/s/AKfycbw_7tBbz6AAgIeKXCfSS3w8aYwcIfg4nVgFFbOrLszR-tV9SeHu6LVCWn91a-COmwE3/exec"; // URL webovej aplikácie Google Apps Script
 const profile={meno:"",priezvisko:"",trieda:""};
 const LOG=[];const T0=Date.now();
 function log(cast,akcia,detail,ok){LOG.push({t:new Date().toISOString(),sec:Math.round((Date.now()-T0)/1000),cast,akcia,detail,ok:ok===undefined?"":ok?"áno":"nie"})}
