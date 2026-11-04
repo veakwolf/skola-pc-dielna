@@ -228,6 +228,7 @@ tr:last-child td{border-bottom:0}
     <label class="fld">Trieda<select id="fTrieda" required><option value="">Vyber triedu</option><option>1.D</option><option>2.C</option><option>2.G</option><option>3.C</option></select></label>
     <div class="err" id="fErr"></div>
     <button class="lnk pri" type="submit">Začať prácu</button>
+    <p class="hint" style="font-size:13px"><b>Počas práce neodchádzaj z tejto stránky.</b> Každé prepnutie na iné okno alebo kartu sa zaznamená aj s časom.</p>
     <p class="hint" style="font-size:13px">Postup sa priebežne ukladá v tomto prehliadači. Ak stránku omylom zavrieš, po otvorení pokračuješ tam, kde si skončil.</p>
   </form>
 </div>
@@ -360,6 +361,7 @@ tr:last-child td{border-bottom:0}
   <div class="box sendbox">
     <h2>Odoslanie majstrovi</h2>
     <p class="hint">Odoslať môžeš iba raz. Spolu s výsledkami sa odošle aj záznam všetkých tvojich krokov a chýb.</p>
+    <p class="hint" id="awayInfo"></p>
     <div class="act"><button class="lnk pri" id="send">Odoslať výsledky</button></div>
     <div class="note" id="sendMsg" hidden></div>
   </div>
@@ -378,8 +380,8 @@ const ENDPOINT="https://script.google.com/macros/s/AKfycbw_7tBbz6AAgIeKXCfSS3w8a
 const profile={meno:"",priezvisko:"",trieda:""};
 let sent=false;
 const LOG=[];let T0=null;const SKEY="pcdielna_v1";
-function log(cast,akcia,detail,ok){if(!T0&&cast!=="Štart"&&cast!=="Odoslanie")T0=Date.now();setTimeout(save,0);LOG.push({t:new Date().toISOString(),sec:T0?Math.round((Date.now()-T0)/1000):0,cast,akcia,detail,ok:ok===undefined?"":ok?"áno":"nie"})}
-function save(){if(sent){try{localStorage.removeItem(SKEY)}catch(e){}return}try{localStorage.setItem(SKEY,JSON.stringify({profile,T0,LOG,builds,passed,lastEval,tries,aNext,aErr,order,bios:biosSt,diag:diagSt,sent,cur}))}catch(e){}}
+function log(cast,akcia,detail,ok){if(!T0&&cast!=="Štart"&&cast!=="Odoslanie"&&cast!=="Dozor")T0=Date.now();setTimeout(save,0);LOG.push({t:new Date().toISOString(),sec:T0?Math.round((Date.now()-T0)/1000):0,cast,akcia,detail,ok:ok===undefined?"":ok?"áno":"nie"})}
+function save(){if(sent){try{localStorage.removeItem(SKEY)}catch(e){}return}try{localStorage.setItem(SKEY,JSON.stringify({profile,T0,LOG,builds,passed,lastEval,tries,aNext,aErr,order,bios:biosSt,diag:diagSt,sent,cur,awayN,awaySec}))}catch(e){}}
 function fullName(){return (profile.meno+" "+profile.priezvisko).trim()}
 
 /* ikony kategórií */
@@ -689,12 +691,20 @@ $("#startForm").onsubmit=e=>{e.preventDefault();
   if(!["1.D","2.C","2.G","3.C"].includes(t)){$("#fErr").textContent="Vyber triedu zo zoznamu.";return}
   Object.assign(profile,{meno:m,priezvisko:p,trieda:t});
   $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);upd();window.scrollTo(0,0)};
+/* dozor: odchod zo stránky */
+let awayAt=null,awayN=0,awaySec=0;
+function goneAway(){if(!profile.meno||sent||awayAt)return;awayAt=Date.now()}
+function cameBack(){if(!awayAt)return;const sec=Math.round((Date.now()-awayAt)/1000);awayAt=null;if(sec<1)return;
+  awayN++;awaySec+=sec;log("Dozor","opustil stránku","mimo stránky "+sec+" s",false);updAway()}
+document.addEventListener("visibilitychange",()=>document.hidden?goneAway():cameBack());
+window.addEventListener("blur",goneAway);window.addEventListener("focus",cameBack);
+function updAway(){const e=$("#awayInfo");if(e)e.textContent=awayN?`Odchody zo stránky: ${awayN}× (spolu ${awaySec} s)`:"Odchody zo stránky: 0"}
 /* odoslanie */
 $("#send").onclick=async()=>{
   const m=$("#sendMsg");m.hidden=false;
   if(sent)return;
   if(!ENDPOINT){m.className="note bad";m.textContent="Odosielanie ešte nie je nastavené. Povedz to majstrovi.";return}
-  const bs=sc(biosSt),ds=sc(diagSt),errs=LOG.filter(l=>l.ok==="nie").length;
+  const bs=sc(biosSt),ds=sc(diagSt),errs=LOG.filter(l=>l.ok==="nie"&&l.cast!=="Dozor").length;
   const payload={meno:profile.meno,priezvisko:profile.priezvisko,trieda:profile.trieda,zaciatok:new Date(T0||Date.now()).toISOString(),koniec:new Date().toISOString(),
     minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:Object.keys(passed).length,montaz_hotova:aNext===STEPS.length,montaz_chyby:aErr,
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
@@ -708,13 +718,13 @@ if(saved&&saved.sent){try{localStorage.removeItem(SKEY)}catch(e){}saved=null}
 if(saved&&saved.profile&&saved.profile.meno){
   Object.assign(profile,saved.profile);T0=saved.T0;LOG.push(...saved.LOG);
   Object.keys(saved.builds).forEach(k=>builds[k]=saved.builds[k]);Object.assign(passed,saved.passed);Object.assign(lastEval,saved.lastEval||{});Object.assign(tries,saved.tries||{});
-  aNext=saved.aNext;aErr=saved.aErr;order=saved.order;sent=saved.sent;cur=saved.cur||"o1";
+  awayN=saved.awayN||0;awaySec=saved.awaySec||0;aNext=saved.aNext;aErr=saved.aErr;order=saved.order;sent=saved.sent;cur=saved.cur||"o1";
   (saved.bios||[]).forEach(x=>x.seen=x.seen||[]);(saved.diag||[]).forEach(x=>x.seen=x.seen||[]);
   $("#start").hidden=true;$("#whoName").textContent=fullName()+" · "+profile.trieda;
   if(sent){$("#send").disabled=true;$("#send").textContent="Odoslané";$("#sendMsg").hidden=false;$("#sendMsg").className="note ok";$("#sendMsg").textContent="Výsledky už boli odoslané."}
   log("Štart","pokračoval po obnovení stránky","");
 }else order=shuffle(STEPS.map((_,i)=>i));
-renderAsm();
+updAway();renderAsm();
 biosSt=makeDesk(BIOS,$("#biosDesk"),"B-","BIOS",saved&&saved.profile&&saved.profile.meno?saved.bios:null);
 diagSt=makeDesk(DIAG,$("#diagDesk"),"S-","Servis",saved&&saved.profile&&saved.profile.meno?saved.diag:null);
 renderCfg();
