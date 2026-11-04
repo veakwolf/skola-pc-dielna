@@ -408,55 +408,57 @@ const CATS=[
 ];
 const P={
  cpu:[
-  {id:"r5_7500f",n:"AMD Ryzen 5 7500F",socket:"AM5",cores:6,w:65,igpu:false,p:160},
-  {id:"r5_7600",n:"AMD Ryzen 5 7600",socket:"AM5",cores:6,w:65,igpu:true,p:190},
-  {id:"r9_7900x",n:"AMD Ryzen 9 7900X",socket:"AM5",cores:12,w:170,igpu:true,p:380},
-  {id:"i3_13100",n:"Intel Core i3-13100",socket:"LGA1700",cores:4,w:60,igpu:true,p:120},
-  {id:"i5_13400f",n:"Intel Core i5-13400F",socket:"LGA1700",cores:10,w:65,igpu:false,p:170},
-  {id:"i7_14700k",n:"Intel Core i7-14700K",socket:"LGA1700",cores:20,w:253,igpu:true,p:390}],
+  {id:"r5_7400",n:"AMD Ryzen 5 7400",socket:"AM5",cores:6,w:65,igpu:true,p:137},
+  {id:"r5_7600",n:"AMD Ryzen 5 7600",socket:"AM5",cores:6,w:65,igpu:true,p:175},
+  {id:"r9_9900x3d",n:"AMD Ryzen 9 9900X3D",socket:"AM5",cores:12,w:120,igpu:true,p:543},
+  {id:"i3_14100",n:"Intel Core i3-14100",socket:"LGA1700",cores:4,w:60,igpu:true,p:142},
+  {id:"i5_14400f",n:"Intel Core i5-14400F",socket:"LGA1700",cores:10,w:65,igpu:false,p:160},
+  {id:"i7_14700kf",n:"Intel Core i7-14700KF",socket:"LGA1700",cores:20,w:253,igpu:false,p:400}],
  board:[
-  {id:"b650",n:"B650 Gaming ATX",socket:"AM5",ram:"DDR5",form:"ATX",maxRam:128,m2:2,maxCpuW:170,p:170},
-  {id:"a620",n:"A620M-E",socket:"AM5",ram:"DDR5",form:"mATX",maxRam:64,m2:1,maxCpuW:105,p:95},
-  {id:"b760",n:"B760M DDR4",socket:"LGA1700",ram:"DDR4",form:"mATX",maxRam:64,m2:2,maxCpuW:125,p:110},
-  {id:"z790",n:"Z790 Pro ATX",socket:"LGA1700",ram:"DDR5",form:"ATX",maxRam:192,m2:3,maxCpuW:253,p:230}],
+  {id:"b650",n:"GIGABYTE B650 EAGLE AX",socket:"AM5",ram:"DDR5",form:"ATX",maxRam:192,m2:3,maxCpuW:170,p:138},
+  {id:"a620",n:"GIGABYTE A620M H",socket:"AM5",ram:"DDR5",form:"mATX",maxRam:96,m2:1,maxCpuW:105,p:75},
+  {id:"b760",n:"ASUS PRIME B760M-K D4",socket:"LGA1700",ram:"DDR4",form:"mATX",maxRam:64,m2:2,maxCpuW:125,p:85},
+  {id:"z790",n:"GIGABYTE Z790 D",socket:"LGA1700",ram:"DDR5",form:"ATX",maxRam:192,m2:3,maxCpuW:253,p:142}],
  ram:[
-  {id:"d4_16",n:"Value DDR4 16 GB",type:"DDR4",gb:16,mod:"2× 8 GB",mts:3200,p:40},
-  {id:"d5_16",n:"Value DDR5 16 GB",type:"DDR5",gb:16,mod:"2× 8 GB",mts:5600,p:55},
-  {id:"d5_32",n:"Performance DDR5 32 GB",type:"DDR5",gb:32,mod:"2× 16 GB",mts:6000,p:95},
-  {id:"d5_64",n:"Performance DDR5 64 GB",type:"DDR5",gb:64,mod:"2× 32 GB",mts:6000,p:190}],
+  {id:"d4_16",n:"G.SKILL Aegis 16 GB DDR4",type:"DDR4",gb:16,mod:"2× 8 GB",mts:3200,p:125},
+  {id:"d4_32",n:"G.SKILL Aegis 32 GB DDR4",type:"DDR4",gb:32,mod:"2× 16 GB",mts:3200,p:254},
+  {id:"d5_16",n:"Kingston FURY Beast 16 GB DDR5",type:"DDR5",gb:16,mod:"2× 8 GB",mts:5600,p:376},
+  {id:"d5_32",n:"Apacer Panther 32 GB DDR5",type:"DDR5",gb:32,mod:"2× 16 GB",mts:6000,p:480},
+  {id:"d5_64",n:"Corsair Vengeance 64 GB DDR5",type:"DDR5",gb:64,mod:"2× 32 GB",mts:6000,p:1099}],
  gpu:[
   {id:"nogpu",n:"Bez grafickej karty",w:0,len:0,tier:0,p:0},
-  {id:"rtx4060",n:"GeForce RTX 4060",vram:"8 GB",w:115,len:240,tier:1,p:300},
-  {id:"rx7800",n:"Radeon RX 7800 XT",vram:"16 GB",w:263,len:267,tier:2,p:520},
-  {id:"rtx4080",n:"GeForce RTX 4080",vram:"16 GB",w:320,len:336,tier:3,p:1050}],
+  {id:"rtx5060",n:"GeForce RTX 5060",vram:"8 GB",w:145,len:199,tier:1,p:475},
+  {id:"rx9060xt",n:"Radeon RX 9060 XT",vram:"16 GB",w:160,len:249,tier:1,p:648},
+  {id:"rx9070xt",n:"Radeon RX 9070 XT",vram:"16 GB",w:304,len:288,tier:2,p:889},
+  {id:"rtx5080",n:"GeForce RTX 5080",vram:"16 GB",w:360,len:340,tier:3,p:2049}],
  storage:[
-  {id:"ssd500",n:"NVMe SSD 500 GB",nvme:true,tb:.5,p:40},
-  {id:"ssd1t",n:"NVMe SSD 1 TB",nvme:true,tb:1,p:70},
-  {id:"ssd2t",n:"NVMe SSD 2 TB",nvme:true,tb:2,p:130},
-  {id:"hdd2t",n:"HDD 2 TB 7200 ot.",nvme:false,tb:2,p:60}],
+  {id:"ssd500",n:"Kingston NV3 500 GB",nvme:true,tb:.5,p:90},
+  {id:"ssd1t",n:"Kingston NV3 1 TB",nvme:true,tb:1,p:164},
+  {id:"ssd2t",n:"Kingston NV3 2 TB",nvme:true,tb:2,p:300},
+  {id:"hdd2t",n:"Seagate BarraCuda 2 TB",nvme:false,tb:2,p:126}],
  cooler:[
   {id:"box",n:"Boxový chladič",t:"vzduchový, nízky",w:65,p:15},
-  {id:"tower",n:"Vežový chladič 120 mm",t:"vzduchový, vežový",w:180,p:35},
-  {id:"aio",n:"AIO 240 mm",t:"vodný, uzavretý okruh",w:260,p:110}],
+  {id:"tower",n:"ARCTIC Freezer 36",t:"vzduchový, vežový",w:180,p:31},
+  {id:"aio",n:"Montech Light Flow 240",t:"vodný, uzavretý okruh",w:260,p:66}],
  psu:[
-  {id:"psu450",n:"Zdroj 450 W",w:450,cert:"80+ Bronze",p:50},
-  {id:"psu650",n:"Zdroj 650 W",w:650,cert:"80+ Bronze",p:75},
-  {id:"psu850",n:"Zdroj 850 W",w:850,cert:"80+ Gold",p:120},
-  {id:"psu1000",n:"Zdroj 1000 W",w:1000,cert:"80+ Gold",p:170}],
+  {id:"psu450",n:"GIGABYTE P450B",w:450,cert:"80+ Bronze",p:36},
+  {id:"psu650",n:"ADATA XPG Pylon II 650 W",w:650,cert:"80+ Bronze",p:51},
+  {id:"psu850",n:"ASUS Prime 850 W",w:850,cert:"80+ Gold",p:115},
+  {id:"psu1000",n:"be quiet! Pure Power 13 M 1000 W",w:1000,cert:"80+ Gold",p:167}],
  case:[
-  {id:"mini",n:"Mini Tower",forms:["mATX"],gpuMax:280,p:50},
-  {id:"compact",n:"Compact ATX",forms:["ATX","mATX"],gpuMax:300,p:70},
-  {id:"midi",n:"Midi Tower",forms:["ATX","mATX"],gpuMax:360,p:85}]
+  {id:"mini",n:"Mini Tower",forms:["mATX"],gpuMax:280,p:60},
+  {id:"compact",n:"Compact ATX",forms:["ATX","mATX"],gpuMax:300,p:55},
+  {id:"midi",n:"Midi Tower",forms:["ATX","mATX"],gpuMax:380,p:97}]
 };
 const ORDERS=[
  {id:"o1",no:"Z-101",who:"Pani Kováčová, účtovníčka",short:"Kancelársky počítač",budget:850,
   text:"Potrebujem počítač do kancelárie. Píšem faktúry, posielam e-maily a pracujem v internetbankingu. Hry nehrám. Môžem dať najviac 850 €.",
   req:{ramMin:16,storMin:.5,gpuTier:0,coresMin:0}},
- {id:"o2",no:"Z-102",who:"Tomáš, 17 rokov",short:"Herný počítač",budget:1500,
-  text:"Chcem hrať nové hry vo vysokých detailoch. Grafika aspoň na úrovni Radeon RX 7800 XT, 32 GB RAM a aspoň 1 TB SSD. Rozpočet mám 1500 €.",
+ {id:"o2",no:"Z-102",who:"Tomáš, 17 rokov",short:"Herný počítač",budget:1800,
+  text:"Chcem hrať nové hry vo vysokých detailoch. Grafika aspoň na úrovni Radeon RX 9070 XT, 32 GB RAM a aspoň 1 TB SSD. Rozpočet mám 1800 €.",
   req:{ramMin:32,storMin:1,gpuTier:2,coresMin:0}},
- {id:"o3",no:"Z-103",who:"Eva, grafička a strihačka videa",short:"Pracovná stanica",budget:2200,
-  text:"Strihám videá a pracujem vo Photoshope. Potrebujem procesor s aspoň 12 jadrami, 64 GB RAM, SSD na systém a spolu aspoň 3 TB miesta. Grafika stačí na úrovni RTX 4060. Rozpočet 2200 €.",
+ {id:"o3",no:"Z-103",who:"Eva, grafička a strihačka videa",short:"Pracovná stanica",budget:3000,
+  text:"Strihám videá a pracujem vo Photoshope. Potrebujem procesor s aspoň 12 jadrami, 64 GB RAM, SSD na systém a spolu aspoň 3 TB miesta. Grafika stačí na úrovni RTX 5060. Rozpočet 3000 €.",
   req:{ramMin:64,storMin:3,gpuTier:1,coresMin:12}}
 ];
 let cur="o1",activeCat="cpu";
