@@ -351,10 +351,10 @@ tr:last-child td{border-bottom:0}
   <div class="box report">
     <div><div class="rname" id="rName">Meno nevyplnené</div><div class="rdate" id="rDate"></div></div>
     <div class="rgrid">
-      <div><span>Zostavy</span><b id="r1">0 / 3</b></div>
+      <div><span>Zostavy</span><b id="r1">0</b></div>
       <div><span>Montáž</span><b id="r2">–</b></div>
-      <div><span>BIOS</span><b id="r3">0 / 5</b></div>
-      <div><span>Servis</span><b id="r4">0 / 12</b></div>
+      <div><span>BIOS</span><b id="r3">0</b></div>
+      <div><span>Servis</span><b id="r4">0</b></div>
     </div>
   </div>
   <div class="box tw"><table id="rTable"></table></div>
@@ -379,9 +379,9 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const ENDPOINT="https://script.google.com/macros/s/AKfycbw_7tBbz6AAgIeKXCfSS3w8aYwcIfg4nVgFFbOrLszR-tV9SeHu6LVCWn91a-COmwE3/exec"; // URL webovej aplikácie Google Apps Script
 const profile={meno:"",priezvisko:"",trieda:""};
 let sent=false;
-const LOG=[];let T0=null;const SKEY="pcdielna_v1";
+const LOG=[];let T0=null;let PICK=null;const SKEY="pcdielna_v1";
 function log(cast,akcia,detail,ok){if(!T0&&cast!=="Štart"&&cast!=="Odoslanie"&&cast!=="Dozor")T0=Date.now();setTimeout(save,0);LOG.push({t:new Date().toISOString(),sec:T0?Math.round((Date.now()-T0)/1000):0,cast,akcia,detail,ok:ok===undefined?"":ok?"áno":"nie"})}
-function save(){if(sent){try{localStorage.removeItem(SKEY)}catch(e){}return}try{localStorage.setItem(SKEY,JSON.stringify({profile,T0,LOG,builds,passed,lastEval,tries,aNext,aErr,order,bios:biosSt,diag:diagSt,sent,cur,awayN,awaySec}))}catch(e){}}
+function save(){if(sent){try{localStorage.removeItem(SKEY)}catch(e){}return}try{localStorage.setItem(SKEY,JSON.stringify({profile,T0,LOG,builds,passed,lastEval,tries,aNext,aErr,order,bios:biosSt,diag:diagSt,sent,cur,awayN,awaySec,pick:PICK}))}catch(e){}}
 function fullName(){return (profile.meno+" "+profile.priezvisko).trim()}
 
 /* ikony kategórií */
@@ -412,60 +412,139 @@ const P={
  cpu:[
   {id:"r5_7400",n:"AMD Ryzen 5 7400",socket:"AM5",cores:6,w:65,igpu:true,p:137},
   {id:"r5_7600",n:"AMD Ryzen 5 7600",socket:"AM5",cores:6,w:65,igpu:true,p:175},
+  {id:"r5_8600g",n:"AMD Ryzen 5 8600G",socket:"AM5",cores:6,w:65,igpu:true,p:180},
+  {id:"r5_9600x",n:"AMD Ryzen 5 9600X",socket:"AM5",cores:6,w:65,igpu:true,p:205},
+  {id:"r7_9700x",n:"AMD Ryzen 7 9700X",socket:"AM5",cores:8,w:65,igpu:true,p:299},
+  {id:"r7_7800x3d",n:"AMD Ryzen 7 7800X3D",socket:"AM5",cores:8,w:120,igpu:true,p:368},
   {id:"r9_9900x3d",n:"AMD Ryzen 9 9900X3D",socket:"AM5",cores:12,w:120,igpu:true,p:543},
+  {id:"i3_14100f",n:"Intel Core i3-14100F",socket:"LGA1700",cores:4,w:60,igpu:false,p:103},
   {id:"i3_14100",n:"Intel Core i3-14100",socket:"LGA1700",cores:4,w:60,igpu:true,p:142},
+  {id:"i5_12400f",n:"Intel Core i5-12400F",socket:"LGA1700",cores:6,w:65,igpu:false,p:150},
   {id:"i5_14400f",n:"Intel Core i5-14400F",socket:"LGA1700",cores:10,w:65,igpu:false,p:160},
   {id:"i7_14700kf",n:"Intel Core i7-14700KF",socket:"LGA1700",cores:20,w:253,igpu:false,p:400}],
  board:[
-  {id:"b650",n:"GIGABYTE B650 EAGLE AX",socket:"AM5",ram:"DDR5",form:"ATX",maxRam:192,m2:3,maxCpuW:170,p:138},
   {id:"a620",n:"GIGABYTE A620M H",socket:"AM5",ram:"DDR5",form:"mATX",maxRam:96,m2:1,maxCpuW:105,p:75},
+  {id:"b650m",n:"ASRock B650M-H/M.2+",socket:"AM5",ram:"DDR5",form:"mATX",maxRam:96,m2:2,maxCpuW:170,p:88},
+  {id:"b650",n:"GIGABYTE B650 EAGLE AX",socket:"AM5",ram:"DDR5",form:"ATX",maxRam:192,m2:3,maxCpuW:170,p:138},
+  {id:"b650tuf",n:"ASUS TUF GAMING B650-PLUS WIFI",socket:"AM5",ram:"DDR5",form:"ATX",maxRam:192,m2:3,maxCpuW:170,p:146},
+  {id:"b650e",n:"ASUS ROG STRIX B650E-E GAMING WIFI",socket:"AM5",ram:"DDR5",form:"ATX",maxRam:192,m2:4,maxCpuW:230,p:249},
   {id:"b760",n:"ASUS PRIME B760M-K D4",socket:"LGA1700",ram:"DDR4",form:"mATX",maxRam:64,m2:2,maxCpuW:125,p:85},
-  {id:"z790",n:"GIGABYTE Z790 D",socket:"LGA1700",ram:"DDR5",form:"ATX",maxRam:192,m2:3,maxCpuW:253,p:142}],
+  {id:"z790",n:"GIGABYTE Z790 D",socket:"LGA1700",ram:"DDR5",form:"ATX",maxRam:192,m2:3,maxCpuW:253,p:142},
+  {id:"z790a",n:"GIGABYTE Z790 AORUS ELITE AX",socket:"LGA1700",ram:"DDR5",form:"ATX",maxRam:192,m2:4,maxCpuW:253,p:213}],
  ram:[
   {id:"d4_16",n:"G.SKILL Aegis 16 GB DDR4",type:"DDR4",gb:16,mod:"2× 8 GB",mts:3200,p:125},
+  {id:"d4_16c",n:"Corsair Vengeance LPX 16 GB DDR4",type:"DDR4",gb:16,mod:"2× 8 GB",mts:3200,p:159},
   {id:"d4_32",n:"G.SKILL Aegis 32 GB DDR4",type:"DDR4",gb:32,mod:"2× 16 GB",mts:3200,p:254},
-  {id:"d5_16",n:"Kingston FURY Beast 16 GB DDR5",type:"DDR5",gb:16,mod:"2× 8 GB",mts:5600,p:376},
+  {id:"d5_16",n:"Kingston FURY Beast 16 GB DDR5",type:"DDR5",gb:16,mod:"2× 8 GB",mts:6000,p:372},
   {id:"d5_32",n:"Apacer Panther 32 GB DDR5",type:"DDR5",gb:32,mod:"2× 16 GB",mts:6000,p:480},
+  {id:"d5_32a",n:"ADATA 32 GB DDR5",type:"DDR5",gb:32,mod:"2× 16 GB",mts:4800,p:488},
+  {id:"d5_32c",n:"Corsair Vengeance 32 GB DDR5 CL30",type:"DDR5",gb:32,mod:"2× 16 GB",mts:6000,p:606},
   {id:"d5_64",n:"Corsair Vengeance 64 GB DDR5",type:"DDR5",gb:64,mod:"2× 32 GB",mts:6000,p:1099}],
  gpu:[
   {id:"nogpu",n:"Bez grafickej karty",w:0,len:0,tier:0,p:0},
   {id:"rtx5060",n:"GeForce RTX 5060",vram:"8 GB",w:145,len:199,tier:1,p:475},
   {id:"rx9060xt",n:"Radeon RX 9060 XT",vram:"16 GB",w:160,len:249,tier:1,p:648},
+  {id:"rtx5060ti",n:"GeForce RTX 5060 Ti",vram:"16 GB",w:180,len:245,tier:1,p:948},
   {id:"rx9070xt",n:"Radeon RX 9070 XT",vram:"16 GB",w:304,len:288,tier:2,p:889},
-  {id:"rtx5080",n:"GeForce RTX 5080",vram:"16 GB",w:360,len:340,tier:3,p:2049}],
+  {id:"rtx5070",n:"GeForce RTX 5070",vram:"12 GB",w:250,len:268,tier:2,p:935},
+  {id:"rtx5070ti",n:"GeForce RTX 5070 Ti",vram:"16 GB",w:300,len:304,tier:3,p:1369},
+  {id:"rtx5080",n:"GeForce RTX 5080",vram:"16 GB",w:360,len:340,tier:4,p:2049}],
  storage:[
   {id:"ssd500",n:"Kingston NV3 500 GB",nvme:true,tb:.5,p:90},
   {id:"ssd1t",n:"Kingston NV3 1 TB",nvme:true,tb:1,p:164},
+  {id:"ssd2te",n:"Crucial E100 2 TB",nvme:true,tb:2,p:236},
   {id:"ssd2t",n:"Kingston NV3 2 TB",nvme:true,tb:2,p:300},
-  {id:"hdd2t",n:"Seagate BarraCuda 2 TB",nvme:false,tb:2,p:126}],
+  {id:"ssd2ts",n:"Samsung 990 EVO Plus 2 TB",nvme:true,tb:2,p:325},
+  {id:"hdd2t",n:"Seagate BarraCuda 2 TB",nvme:false,tb:2,p:126},
+  {id:"hdd4t",n:"Seagate BarraCuda 4 TB",nvme:false,tb:4,p:184}],
  cooler:[
   {id:"box",n:"Boxový chladič",t:"vzduchový, nízky",w:65,p:15},
   {id:"tower",n:"ARCTIC Freezer 36",t:"vzduchový, vežový",w:180,p:31},
-  {id:"aio",n:"Montech Light Flow 240",t:"vodný, uzavretý okruh",w:260,p:66}],
+  {id:"aio",n:"Montech Light Flow 240",t:"vodný, uzavretý okruh",w:260,p:47}],
  psu:[
   {id:"psu450",n:"GIGABYTE P450B",w:450,cert:"80+ Bronze",p:36},
   {id:"psu650",n:"ADATA XPG Pylon II 650 W",w:650,cert:"80+ Bronze",p:51},
   {id:"psu850",n:"ASUS Prime 850 W",w:850,cert:"80+ Gold",p:115},
   {id:"psu1000",n:"be quiet! Pure Power 13 M 1000 W",w:1000,cert:"80+ Gold",p:167}],
  case:[
-  {id:"mini",n:"Mini Tower",forms:["mATX"],gpuMax:280,p:60},
-  {id:"compact",n:"Compact ATX",forms:["ATX","mATX"],gpuMax:300,p:55},
-  {id:"midi",n:"Midi Tower",forms:["ATX","mATX"],gpuMax:380,p:97}]
+  {id:"mini",n:"Mini Tower (malá)",forms:["mATX"],gpuMax:280,small:true,p:60},
+  {id:"cc560",n:"DeepCool CC560 V2",forms:["ATX","mATX"],gpuMax:370,p:52},
+  {id:"ch560",n:"DeepCool CH560 Digital",forms:["ATX","mATX"],gpuMax:380,p:97},
+  {id:"popair",n:"Fractal Design Pop Air",forms:["ATX","mATX"],gpuMax:405,p:104},
+  {id:"tower600",n:"Thermaltake The Tower 600",forms:["ATX","mATX"],gpuMax:400,p:153}]
 };
-const ORDERS=[
- {id:"o1",no:"Z-101",who:"Pani Kováčová, účtovníčka",short:"Kancelársky počítač",budget:850,
-  text:"Potrebujem počítač do kancelárie. Píšem faktúry, posielam e-maily a pracujem v internetbankingu. Hry nehrám. Môžem dať najviac 850 €.",
+const ORDERS_ALL=[
+ {id:"o1",no:"Z-101",who:"Pani Kováčová, účtovníčka",short:"Kancelársky počítač",budget:700,
+  text:"Potrebujem počítač do kancelárie. Píšem faktúry, posielam e-maily a pracujem v internetbankingu. Hry nehrám. Stačí mi 16 GB RAM a aspoň 500 GB SSD. Môžem dať najviac 700 €.",
   req:{ramMin:16,storMin:.5,gpuTier:0,coresMin:0}},
  {id:"o2",no:"Z-102",who:"Tomáš, 17 rokov",short:"Herný počítač",budget:1800,
-  text:"Chcem hrať nové hry vo vysokých detailoch. Grafika aspoň na úrovni Radeon RX 9070 XT, 32 GB RAM a aspoň 1 TB SSD. Rozpočet mám 1800 €.",
+  text:"Chcem hrať nové hry vo vysokých detailoch. Grafika aspoň na úrovni Radeon RX 9070 XT alebo RTX 5070, 32 GB RAM a aspoň 1 TB SSD. Rozpočet mám 1800 €.",
   req:{ramMin:32,storMin:1,gpuTier:2,coresMin:0}},
- {id:"o3",no:"Z-103",who:"Eva, grafička a strihačka videa",short:"Pracovná stanica",budget:3000,
-  text:"Strihám videá a pracujem vo Photoshope. Potrebujem procesor s aspoň 12 jadrami, 64 GB RAM, SSD na systém a spolu aspoň 3 TB miesta. Grafika stačí na úrovni RTX 5060. Rozpočet 3000 €.",
-  req:{ramMin:64,storMin:3,gpuTier:1,coresMin:12}}
+ {id:"o3",no:"Z-103",who:"Eva, grafička a strihačka videa",short:"Strihová stanica",budget:2900,
+  text:"Strihám videá a pracujem vo Photoshope. Potrebujem procesor s aspoň 12 jadrami, 64 GB RAM, SSD na systém a spolu aspoň 3 TB miesta. Grafika stačí na úrovni RTX 5060. Rozpočet 2900 €.",
+  req:{ramMin:64,storMin:3,gpuTier:1,coresMin:12}},
+ {id:"o4",no:"Z-104",who:"Recepcia hotela Arkáda",short:"Malý počítač na recepciu",budget:650,
+  text:"Potrebujeme malý počítač, ktorý sa zmestí pod pult recepcie, takže iba malú skrinku. Bude na rezervačný systém a tlač faktúr. 16 GB RAM, aspoň 500 GB SSD. Rozpočet 650 €.",
+  req:{ramMin:16,storMin:.5,gpuTier:0,coresMin:0,small:true}},
+ {id:"o5",no:"Z-105",who:"Lukáš, streamer",short:"Herný a streamovací PC",budget:2000,
+  text:"Hrám a zároveň streamujem na Twitch. Chcem procesor aspoň s 8 jadrami, grafiku na úrovni RX 9070 XT alebo RTX 5070, 32 GB RAM a spolu aspoň 2 TB miesta na záznamy. Systém musí byť na SSD. Rozpočet 2000 €.",
+  req:{ramMin:32,storMin:2,gpuTier:2,coresMin:8}},
+ {id:"o6",no:"Z-106",who:"Martin, študent informatiky",short:"Počítač na programovanie",budget:1300,
+  text:"Programujem a púšťam virtuálne počítače. Potrebujem procesor aspoň s 8 jadrami a 32 GB RAM, aspoň 1 TB SSD. Hry nehrám, grafickú kartu nepotrebujem. Rozpočet 1300 €.",
+  req:{ramMin:32,storMin:1,gpuTier:0,coresMin:8}},
+ {id:"o7",no:"Z-107",who:"Samuel, 15 rokov",short:"Lacný herný počítač",budget:1200,
+  text:"Hrám Fortnite a CS2, stačí mi grafika na úrovni RTX 5060. 16 GB RAM a aspoň 1 TB SSD na hry. Rodičia mi dajú najviac 1200 €.",
+  req:{ramMin:16,storMin:1,gpuTier:1,coresMin:0}},
+ {id:"o8",no:"Z-108",who:"Jana, fotografka",short:"Počítač na fotky s archívom",budget:1600,
+  text:"Upravujem fotky v Lightroome a mám veľký archív. Potrebujem 32 GB RAM, procesor aspoň so 6 jadrami, grafiku na úrovni RTX 5060, SSD na systém a spolu aspoň 4 TB miesta. Rozpočet 1600 €.",
+  req:{ramMin:32,storMin:4,gpuTier:1,coresMin:6}}
 ];
+const BIOS_ALL=[
+ {s:"Frekvencia RAM",t:"Pamäte sú predávané ako DDR5-6000, BIOS ukazuje 4800 MT/s. Čo urobíš?",o:["Zapnem profil EXPO (pri Inteli XMP)","Vymením RAM, je pokazená","Nič, 4800 je viac ako 6000","Zapnem CSM"],a:0,e:"Pamäte štartujú na základnej frekvencii. Rýchlosť z obalu zapne až profil EXPO alebo XMP."},
+ {s:"CPU_FAN N/A",t:"Pri CPU_FAN je hodnota N/A. Čo to znamená?",o:["Chladič procesora nie je zapojený v CPU_FAN alebo stojí","Procesor je vypnutý","BIOS nepozná procesor","Ventilátor skrinky je pokazený"],a:0,e:"BIOS nevidí otáčky ventilátora procesora. Treba skontrolovať zapojenie do konektora CPU_FAN."},
+ {s:"Boot priorita",t:"Na prvom mieste v boot priorite je USB kľúč. Kedy je to správne?",o:["Pri inštalácii Windows z USB kľúča","Vždy, USB je najrýchlejšie","Nikdy","Iba pri HDD"],a:0,e:"Pri inštalácii sa štartuje z USB. Potom sa na prvé miesto dá SSD so systémom."},
+ {s:"Teplota CPU",t:"Procesor má v BIOS-e 41 °C bez záťaže. Je to v poriadku?",o:["Áno, je to bežná teplota v pokoji","Nie, procesor sa prehrieva","Nie, je príliš studený","Iba pri procesoroch Intel"],a:0,e:"V pokoji je bežných 30 až 50 °C. Pri 80 °C a viac by chladič nebol dobre dosadený."},
+ {s:"Secure Boot",t:"Windows 11 vyžaduje Secure Boot. Čo robí?",o:["Pri štarte púšťa iba podpísaný zavádzač systému","Je to heslo do BIOS-u","Zrýchľuje zapínanie","Šifruje disk"],a:0,e:"Secure Boot bráni spusteniu nepodpísaného kódu pri štarte, napríklad bootkitov. Funguje v režime UEFI, preto je CSM vypnuté."},
+ {s:"Kapacita RAM",t:"BIOS ukazuje pamäť 32768 MB. Koľko je to GB?",o:["32 GB","3,2 GB","327 GB","16 GB"],a:0,e:"1 GB je 1024 MB, takže 32768 MB je 32 GB."},
+ {s:"Uloženie zmien",t:"Zmenil si nastavenia. Ako ich uložíš a reštartuješ počítač?",o:["Klávesom F10 (Uložiť a reštartovať)","Klávesom F7","Vypnem počítač tlačidlom","Zmeny sa uložia samé"],a:0,e:"Dolný riadok BIOS-u ukazuje F10 ako uloženie a reštart. Bez uloženia sa zmeny stratia."},
+ {s:"CSM vypnuté",t:"Položka CSM je vypnutá. Čo to znamená?",o:["Počítač štartuje iba v režime UEFI, nie v starom režime Legacy","Je vypnutý zvuk","Je vypnutá sieťová karta","Nefunguje USB"],a:0,e:"CSM zapína kompatibilitu so starým BIOS-om (Legacy). Windows 11 potrebuje UEFI, preto je CSM vypnuté."},
+ {s:"Inštalácia sa opakuje",t:"Windows je nainštalovaný, ale po reštarte sa znova spustí inštalácia z USB. Čo urobíš?",o:["Vytiahnem USB kľúč alebo dám NVMe SSD na prvé miesto v boot priorite","Preinštalujem Windows","Vymením SSD","Zapnem CSM"],a:0,e:"Počítač štartuje z prvého zariadenia v poradí. Kým je tam USB kľúč, spustí sa inštalácia."},
+ {s:"Frekvencia CPU",t:"Procesor beží v BIOS-e na 3,8 GHz, výrobca uvádza až 5,1 GHz. Je to chyba?",o:["Nie, 3,8 GHz je základná frekvencia, boost sa zapne pri záťaži","Áno, procesor je pokazený","Áno, treba vymeniť dosku","Áno, chýba RAM"],a:0,e:"Procesor beží na základnej frekvencii a pri záťaži sa automaticky zrýchli (boost)."},
+ {s:"SYS_FAN1",t:"SYS_FAN1 ukazuje 1120 ot./min. Čo je to za ventilátor?",o:["Ventilátor skrinky a točí sa normálne","Ventilátor procesora, ktorý je pokazený","Ventilátor zdroja","Ventilátor grafiky"],a:0,e:"SYS_FAN alebo CHA_FAN sú konektory pre ventilátory skrinky."},
+ {s:"HDD na SATA",t:"Na SATA porte 1 je HDD 2 TB, systém je na NVMe SSD. Prečo je to tak rozdelené?",o:["SSD je rýchle na systém, HDD je lacnejšie miesto na dáta","HDD je rýchlejší ako SSD","Je to chyba, systém má byť na HDD","SATA port je iba na DVD"],a:0,e:"Systém a programy patria na rýchly SSD. Veľký a lacný HDD slúži na archív a dáta."},
+ {s:"Aktualizácia BIOS-u",t:"Čo nesmieš urobiť počas aktualizácie BIOS-u?",o:["Vypnúť počítač alebo odpojiť prúd","Pozerať na obrazovku","Mať pripojenú myš","Mať zapojený monitor"],a:0,e:"Prerušenie aktualizácie môže BIOS poškodiť a doska potom nenaštartuje."}
+];
+const DIAG_ALL=[
+ {s:"Pípanie po čistení",ch:[["Pozrieť diagnostické diódy na doske","Svieti dióda DRAM."],["Odpojiť grafickú kartu a skúsiť obraz z dosky","Bez zmeny, počítač stále pípa."],["Prezrieť moduly RAM","Jeden modul nie je celkom zasunutý, poistka slotu nie je zacvaknutá."]],t:"Po zapnutí počítač trikrát dlho pípne a monitor ostane čierny. Deň predtým som ho čistil zvnútra.",o:["Uvoľnená alebo zle zasunutá RAM","Pokazený monitor","Vírus v systéme","Plný disk"],a:0,e:"Pípanie pri štarte hlási POST test. Po čistení sa často uvoľní RAM. Treba ju vybrať a znova zasunúť."},
+ {s:"Vypína sa pri hraní",ch:[["Pozrieť teplotu CPU v programe HWMonitor","V pokoji 72 °C, v hre 99 °C a potom sa PC vypne."],["Otvoriť skrinku a pozrieť chladič","Rebrá chladiča sú zanesené prachom."],["Spustiť test RAM","Test prebehol bez chýb."]],t:"Pri hraní sa počítač po desiatich minútach sám vypne. Ventilátor procesora je strašne hlučný.",o:["Prehrievanie procesora, zaprášený chladič alebo stará pasta","Zlý ovládač myši","Málo RAM","Chybný HDMI kábel"],a:0,e:"Vypnutie pod záťažou je ochrana proti prehriatiu. Treba vyčistiť chladič a vymeniť pastu."},
+ {s:"No signal po výmene grafiky",t:"Kúpil som novú grafickú kartu. Počítač beží, ale monitor píše No signal.",o:["Kábel monitora je v konektore na doske, nie v grafickej karte","Pokazený zdroj","Chýba operačný systém","Zlý procesor"],a:0,e:"S grafickou kartou ide obraz z jej výstupov, nie z konektorov dosky."},
+ {s:"No bootable device",ch:[["Pozrieť zoznam diskov v BIOS-e","NVMe disk sa v zozname nezobrazuje."],["Skontrolovať monitor a kábel","Obraz je v poriadku."],["Skúsiť inú klávesnicu","Klávesnica funguje, v BIOS-e sa dá pohybovať."]],t:"Pri štarte sa zobrazí No bootable device. Včera všetko fungovalo.",o:["Disk nie je rozpoznaný alebo je pokazený","Chýba RAM","Pokazená klávesnica","Odpojený monitor"],a:0,e:"BIOS nenašiel disk so systémom. Treba skontrolovať, či ho vidno v BIOS-e, a jeho kábel alebo uchytenie."},
+ {s:"Vôbec nereaguje",ch:[["Zapojiť do zásuvky iný spotrebič","Zásuvka funguje."],["Pozrieť vypínač na zadnej strane zdroja","Vypínač je v polohe I, teda zapnutý."],["Otestovať zdroj testerom","Tester neukazuje žiadne napätia, ventilátor zdroja sa nerozbehne."]],t:"Stlačím tlačidlo a nič. Nesvieti nič, ani dióda na doske.",o:["Pokazený zdroj","Pokazená grafická karta","Chýba RAM","Chybný disk"],a:0,e:"Zásuvka aj vypínač sú v poriadku a tester nenameral žiadne napätie, takže zdroj nedodáva prúd."},
+ {s:"Reštarty pri záťaži",t:"Po výmene grafiky za výkonnejšiu sa počítač pri hraní reštartuje. Zdroj má 450 W.",o:["Slabý zdroj","Málo miesta na disku","Starý monitor","Zlá myš"],a:0,e:"Výkonná grafika má veľkú spotrebu a slabý zdroj sa pri špičke odpojí."},
+ {s:"Nový PC nejde zapnúť",t:"Nový počítač sa tlačidlom nezapne. Keď technik spojí piny PWR SW na doske skrutkovačom, nabehne.",o:["Konektor tlačidla z predného panela je zapojený zle","Pokazený zdroj","Chýba procesor","Zlá RAM"],a:0,e:"Doska aj zdroj fungujú. Konektor tlačidla je posunutý alebo na zlých pinoch."},
+ {s:"Predné USB nefunguje",t:"Predné USB porty nefungujú, zadné áno.",o:["Nie je zapojený USB konektor predného panela na doske","Pokazený ovládač USB","Slabý zdroj","Zlý procesor"],a:0,e:"Predné porty sú s doskou spojené samostatným káblom."},
+ {s:"Disk nie je v Prieskumníkovi",t:"Druhý HDD je vidno v BIOS-e, ale vo Windowse v Prieskumníkovi nie je.",o:["Disk nie je inicializovaný a naformátovaný, treba to urobiť v Správe diskov","Disk je pokazený","Chýba ovládač grafiky","Treba ho pripojiť cez USB"],a:0,e:"Nový disk treba v Správe diskov inicializovať, vytvoriť oddiel a naformátovať."},
+ {s:"MEMORY_MANAGEMENT",t:"Počítač náhodne padá do modrej obrazovky s chybou MEMORY_MANAGEMENT.",o:["Otestovať RAM nástrojom Windows Memory Diagnostic alebo MemTest86","Vymeniť monitor","Preinštalovať prehliadač","Vymeniť klávesnicu"],a:0,e:"Táto chyba často znamená chybnú pamäť. Test RAM ukáže chybný modul."},
+ {s:"95 °C po zložení",ch:[["Pozrieť otáčky CPU_FAN v BIOS-e","1500 ot./min, ventilátor sa točí."],["Odmontovať chladič a pozrieť spodok","Na spodku chladiča je lesklá ochranná fólia a na procesore nie je pasta."],["Skontrolovať zdroj","Napätia sú v norme."]],t:"Nový počítač beží, ale procesor má hneď po zapnutí 95 °C.",o:["Chladič nie je dosadený, chýba pasta alebo nie je odlepená fólia","Málo RAM","Zlý zdroj","Pokazený disk"],a:0,e:"Taká teplota bez záťaže znamená zlý kontakt chladiča s procesorom. Častá chyba je neodlepená fólia."},
+ {s:"RAM nejde zasunúť",t:"Kúpil som DDR4 pamäte do novej dosky s DDR5 a nedajú sa zasunúť.",o:["DDR4 a DDR5 majú zárez inde a nie sú kompatibilné","Treba zatlačiť silnejšie","Treba aktualizovať BIOS","Sloty sú špinavé"],a:0,e:"Každá generácia DDR má zárez inde, aby sa nedala vložiť do zlého slotu."},
+ {s:"Pruhy na obrazovke",ch:[["Vymeniť HDMI kábel za iný","Pruhy sú tam aj s novým káblom."],["Pripojiť monitor k notebooku","Na notebooku je obraz čistý."],["Pozrieť obraz v BIOS-e","Pruhy sú aj v BIOS-e, ešte pred Windowsom."]],t:"Na obrazovke sú farebné pruhy a obraz bliká. Je to tak už od zapnutia.",o:["Pokazená grafická karta","Pokazený monitor","Zlý ovládač vo Windowse","Vírus"],a:0,e:"Monitor aj kábel sú v poriadku a chyba je aj v BIOS-e, teda pred načítaním ovládačov. Problém je v grafickej karte."},
+ {s:"Čas sa vracia na rok 2000",ch:[["Pozrieť dátum v BIOS-e","Dátum je 01.01.2000 a BIOS hlási CMOS Checksum Error."],["Zmerať batériu na doske","Batéria CR2032 má 2,1 V namiesto 3 V."],["Spustiť test RAM","Test prebehol bez chýb."]],t:"Vždy keď počítač odpojím z prúdu, má zlý dátum a čas a pri štarte píše chybu CMOS.",o:["Vybitá CMOS batéria na doske","Pokazený procesor","Zlý internet","Málo RAM"],a:0,e:"Batéria CR2032 drží nastavenia BIOS-u a hodiny, keď je počítač bez prúdu. Treba ju vymeniť."},
+ {s:"Veľmi pomalý počítač",ch:[["Pozrieť Správcu úloh","Disk je stále na 100 %, procesor na 8 %."],["Zistiť typ systémového disku","Windows je na HDD 1 TB, 5400 ot./min."],["Pozrieť teplotu CPU","45 °C, v poriadku."]],t:"Starší počítač sa strašne dlho zapína a programy sa otvárajú minútu.",o:["Pomalý HDD, systém treba presunúť na SSD","Slabá grafická karta","Pokazený monitor","Málo miesta na stole"],a:0,e:"Disk je vyťažený naplno a procesor nie. Výmena HDD za SSD je najúčinnejšie zrýchlenie."},
+ {s:"Nefunguje internet cez kábel",ch:[["Pozrieť diódy na sieťovom porte","Na porte nesvieti ani nebliká žiadna dióda."],["Zapojiť iný sieťový kábel","Po výmene kábla diódy svietia a internet ide."],["Reštartovať router","Ostatné zariadenia v sieti internet majú."]],t:"Počítač nemá internet, ikona siete ukazuje „Nepripojené“, hoci je kábel zapojený.",o:["Chybný sieťový kábel","Pokazená grafická karta","Vírus vo Windowse","Málo RAM"],a:0,e:"Po výmene kábla sieť funguje, takže chyba bola v kábli."},
+ {s:"Adresa 169.254.x.x",t:"Počítač je pripojený káblom, ale nemá internet. Príkaz ipconfig ukazuje adresu 169.254.12.40.",o:["Počítač nedostal adresu z DHCP servera","Pokazená klávesnica","Má príliš rýchly internet","Je to správna adresa z routera"],a:0,e:"Adresu 169.254.x.x (APIPA) si Windows pridelí sám, keď nedostane odpoveď od DHCP servera."},
+ {s:"Jedno krátke pípnutie",t:"Počítač pri zapnutí raz krátko pípne a normálne naštartuje.",o:["Je to v poriadku, POST test prebehol bez chyby","Pokazená RAM","Prehriaty procesor","Treba vymeniť zdroj"],a:0,e:"Jedno krátke pípnutie znamená, že POST test prebehol úspešne."},
+ {s:"Grafika sa netočí",ch:[["Pozrieť konektory na grafickej karte","8-pin konektor napájania grafiky nie je zapojený."],["Pozrieť diódy na doske","Svieti dióda VGA."],["Skúsiť iný monitor","Bez zmeny, stále žiadny obraz."]],t:"Po vložení novej grafiky počítač nedá obraz a ventilátory grafiky sa netočia.",o:["Nie je zapojené prídavné napájanie grafiky","Pokazený monitor","Málo RAM","Chýba Windows"],a:0,e:"Výkonnejšie grafiky potrebujú napájanie priamo zo zdroja. Bez neho nefungujú."},
+ {s:"Druhý modul RAM",t:"S jedným modulom RAM počítač ide. Po pridaní druhého, iného typu, nenaštartuje a svieti dióda DRAM.",o:["Moduly spolu nie sú kompatibilné alebo je druhý chybný","Slabá grafická karta","Chýba operačný systém","Pokazený monitor"],a:0,e:"Rôzne moduly (iná frekvencia či časovanie) spolu nemusia fungovať. Treba otestovať každý zvlášť."},
+ {s:"Zdroj páchne",t:"Zo zdroja ide zápach spáleniny a hlasno hučí.",o:["Okamžite vypnúť počítač a vymeniť zdroj","Otvoriť zdroj a opraviť ho","Pokračovať v práci","Zvýšiť otáčky ventilátorov"],a:0,e:"Zdroj je nebezpečný, môže začať horieť a aj vypnutý drží v kondenzátoroch vysoké napätie. Neotvára sa, vymení sa celý."},
+ {s:"Nehrá zvuk",ch:[["Pozrieť, kam je zapojený kábel reproduktorov","Kábel je v ružovom konektore."],["Pozrieť hlasitosť vo Windowse","Hlasitosť je 60 % a nie je stlmená."],["Pripojiť USB slúchadlá","Slúchadlá cez USB hrajú."]],t:"Reproduktory zapojené vzadu do počítača nehrajú.",o:["Reproduktory sú zapojené do vstupu na mikrofón namiesto zeleného výstupu","Pokazená zvuková karta","Pokazený zdroj","Chýba RAM"],a:0,e:"Ružový konektor je mikrofón. Reproduktory patria do zeleného výstupu."},
+ {s:"Výpadok pri aktualizácii BIOS-u",t:"Počas aktualizácie BIOS-u vypadol prúd. Teraz počítač nenaštartuje, ventilátory sa točia, ale nie je obraz.",o:["Poškodený BIOS, treba ho obnoviť cez BIOS Flashback alebo v servise","Pokazený monitor","Vybitá klávesnica","Treba preinštalovať Windows"],a:0,e:"Prerušená aktualizácia poškodí BIOS. Mnohé dosky ho vedia obnoviť funkciou BIOS Flashback z USB kľúča."},
+ {s:"Málo miesta na C:",t:"Windows hlási, že na disku C: (SSD 500 GB) je málo miesta. Druhý disk D: (HDD 2 TB) je skoro prázdny.",o:["Presunúť veľké súbory (videá, fotky) na disk D:","Vymeniť procesor","Preinštalovať ovládače grafiky","Vypnúť Secure Boot"],a:0,e:"Na systémový SSD patrí systém a programy. Veľké dáta sa ukladajú na druhý disk."}
+];
+const ORDERS_PICK=3,BIOS_PICK=6,DIAG_PICK=12;
+let ORDERS=[],BIOS=[],DIAG=[];
 let cur="o1",activeCat="cpu";
 const lastEval={},tries={};
-const builds={o1:{storage:[]},o2:{storage:[]},o3:{storage:[]}};
+const builds={};
 const passed={};
 const get=(c,id)=>P[c].find(x=>x.id===id);
 function parts(b){return{cpu:get("cpu",b.cpu),board:get("board",b.board),ram:get("ram",b.ram),gpu:get("gpu",b.gpu),cooler:get("cooler",b.cooler),psu:get("psu",b.psu),cas:get("case",b.case),st:b.storage.map(id=>get("storage",id))}}
@@ -495,6 +574,7 @@ function evaluate(b,o){
   add(R,x.st.length?tb>=rq.storMin:null,`Úložisko spolu ${tb} TB.`,`Úložisko ${tb} TB, treba aspoň ${rq.storMin} TB.`,`Úložisko aspoň ${rq.storMin} TB`);
   add(R,x.st.length?x.st.some(s=>s.nvme):null,"Systém bude na SSD.","Chýba SSD. Systém na HDD bude pomalý.","Systémový disk SSD");
   if(rq.gpuTier)add(R,x.gpu?x.gpu.tier>=rq.gpuTier:null,"Grafická karta má požadovaný výkon.","Grafická karta je na požiadavky slabá.","Výkon grafickej karty");
+  if(rq.small)add(R,x.cas?!!x.cas.small:null,"Skrinka je malá, zmestí sa pod pult.","Zákazník chce malú skrinku pod pult.","Malá skrinka");
   if(rq.coresMin)add(R,x.cpu?x.cpu.cores>=rq.coresMin:null,`Procesor má ${x.cpu?.cores} jadier.`,`Procesor má ${x.cpu?.cores} jadier, treba aspoň ${rq.coresMin}.`,`Procesor aspoň ${rq.coresMin} jadier`);
   return{C,R,ok:[...C,...R].every(i=>i.s==="ok")};
 }
@@ -619,27 +699,6 @@ function renderAsm(){
 $("#aReset").onclick=()=>{log("Montáž","začal odznova","");aNext=0;aErr=0;order=shuffle(STEPS.map((_,i)=>i));$("#aMsg").className="note";$("#aMsg").textContent="Začni prvým krokom.";renderAsm();upd()};
 
 /* otázky */
-const BIOS=[
- {s:"Frekvencia RAM",t:"Pamäte sú predávané ako DDR5-6000, BIOS ukazuje 4800 MT/s. Čo urobíš?",o:["Zapnem profil EXPO (pri Inteli XMP)","Vymením RAM, je pokazená","Nič, 4800 je viac ako 6000","Zapnem CSM"],a:0,e:"Pamäte štartujú na základnej frekvencii. Rýchlosť z obalu zapne až profil EXPO alebo XMP."},
- {s:"CPU_FAN N/A",t:"Pri CPU_FAN je hodnota N/A. Čo to znamená?",o:["Chladič procesora nie je zapojený v CPU_FAN alebo stojí","Procesor je vypnutý","BIOS nepozná procesor","Ventilátor skrinky je pokazený"],a:0,e:"BIOS nevidí otáčky ventilátora procesora. Treba skontrolovať zapojenie do konektora CPU_FAN."},
- {s:"Boot priorita",t:"Na prvom mieste v boot priorite je USB kľúč. Kedy je to správne?",o:["Pri inštalácii Windows z USB kľúča","Vždy, USB je najrýchlejšie","Nikdy","Iba pri HDD"],a:0,e:"Pri inštalácii sa štartuje z USB. Potom sa na prvé miesto dá SSD so systémom."},
- {s:"Teplota CPU",t:"Procesor má v BIOS-e 41 °C bez záťaže. Je to v poriadku?",o:["Áno, je to bežná teplota v pokoji","Nie, procesor sa prehrieva","Nie, je príliš studený","Iba pri procesoroch Intel"],a:0,e:"V pokoji je bežných 30 až 50 °C. Pri 80 °C a viac by chladič nebol dobre dosadený."},
- {s:"Secure Boot",t:"Windows 11 vyžaduje Secure Boot. Čo robí?",o:["Pri štarte púšťa iba podpísaný zavádzač systému","Je to heslo do BIOS-u","Zrýchľuje zapínanie","Šifruje disk"],a:0,e:"Secure Boot bráni spusteniu nepodpísaného kódu pri štarte, napríklad bootkitov. Funguje v režime UEFI, preto je CSM vypnuté."}
-];
-const DIAG=[
- {s:"Pípanie po čistení",ch:[["Pozrieť diagnostické diódy na doske","Svieti dióda DRAM."],["Odpojiť grafickú kartu a skúsiť obraz z dosky","Bez zmeny, počítač stále pípa."],["Prezrieť moduly RAM","Jeden modul nie je celkom zasunutý, poistka slotu nie je zacvaknutá."]],t:"Po zapnutí počítač trikrát dlho pípne a monitor ostane čierny. Deň predtým som ho čistil zvnútra.",o:["Uvoľnená alebo zle zasunutá RAM","Pokazený monitor","Vírus v systéme","Plný disk"],a:0,e:"Pípanie pri štarte hlási POST test. Po čistení sa často uvoľní RAM. Treba ju vybrať a znova zasunúť."},
- {s:"Vypína sa pri hraní",ch:[["Pozrieť teplotu CPU v programe HWMonitor","V pokoji 72 °C, v hre 99 °C a potom sa PC vypne."],["Otvoriť skrinku a pozrieť chladič","Rebrá chladiča sú zanesené prachom."],["Spustiť test RAM","Test prebehol bez chýb."]],t:"Pri hraní sa počítač po desiatich minútach sám vypne. Ventilátor procesora je strašne hlučný.",o:["Prehrievanie procesora, zaprášený chladič alebo stará pasta","Zlý ovládač myši","Málo RAM","Chybný HDMI kábel"],a:0,e:"Vypnutie pod záťažou je ochrana proti prehriatiu. Treba vyčistiť chladič a vymeniť pastu."},
- {s:"No signal po výmene grafiky",t:"Kúpil som novú grafickú kartu. Počítač beží, ale monitor píše No signal.",o:["Kábel monitora je v konektore na doske, nie v grafickej karte","Pokazený zdroj","Chýba operačný systém","Zlý procesor"],a:0,e:"S grafickou kartou ide obraz z jej výstupov, nie z konektorov dosky."},
- {s:"No bootable device",ch:[["Pozrieť zoznam diskov v BIOS-e","NVMe disk sa v zozname nezobrazuje."],["Skontrolovať monitor a kábel","Obraz je v poriadku."],["Skúsiť inú klávesnicu","Klávesnica funguje, v BIOS-e sa dá pohybovať."]],t:"Pri štarte sa zobrazí No bootable device. Včera všetko fungovalo.",o:["Disk nie je rozpoznaný alebo je pokazený","Chýba RAM","Pokazená klávesnica","Odpojený monitor"],a:0,e:"BIOS nenašiel disk so systémom. Treba skontrolovať, či ho vidno v BIOS-e, a jeho kábel alebo uchytenie."},
- {s:"Vôbec nereaguje",ch:[["Zapojiť do zásuvky iný spotrebič","Zásuvka funguje."],["Pozrieť vypínač na zadnej strane zdroja","Vypínač je v polohe I, teda zapnutý."],["Otestovať zdroj testerom","Tester neukazuje žiadne napätia, ventilátor zdroja sa nerozbehne."]],t:"Stlačím tlačidlo a nič. Nesvieti nič, ani dióda na doske.",o:["Napájanie: zásuvka, kábel, vypínač na zdroji alebo zdroj","Pokazená grafická karta","Chýba RAM","Chybný disk"],a:0,e:"Keď nesvieti nič, doska nemá prúd. Postupuje sa od najjednoduchšieho: zásuvka, kábel, vypínač zdroja, zdroj."},
- {s:"Reštarty pri záťaži",t:"Po výmene grafiky za výkonnejšiu sa počítač pri hraní reštartuje. Zdroj má 450 W.",o:["Slabý zdroj","Málo miesta na disku","Starý monitor","Zlá myš"],a:0,e:"Výkonná grafika má veľkú spotrebu a slabý zdroj sa pri špičke odpojí."},
- {s:"Nový PC nejde zapnúť",t:"Nový počítač sa tlačidlom nezapne. Keď technik spojí piny PWR SW na doske skrutkovačom, nabehne.",o:["Konektor tlačidla z predného panela je zapojený zle","Pokazený zdroj","Chýba procesor","Zlá RAM"],a:0,e:"Doska aj zdroj fungujú. Konektor tlačidla je posunutý alebo na zlých pinoch."},
- {s:"Predné USB nefunguje",t:"Predné USB porty nefungujú, zadné áno.",o:["Nie je zapojený USB konektor predného panela na doske","Pokazený ovládač USB","Slabý zdroj","Zlý procesor"],a:0,e:"Predné porty sú s doskou spojené samostatným káblom."},
- {s:"Disk nie je v Prieskumníkovi",t:"Druhý HDD je vidno v BIOS-e, ale vo Windowse v Prieskumníkovi nie je.",o:["Disk nie je inicializovaný a naformátovaný, treba to urobiť v Správe diskov","Disk je pokazený","Chýba ovládač grafiky","Treba ho pripojiť cez USB"],a:0,e:"Nový disk treba v Správe diskov inicializovať, vytvoriť oddiel a naformátovať."},
- {s:"MEMORY_MANAGEMENT",t:"Počítač náhodne padá do modrej obrazovky s chybou MEMORY_MANAGEMENT.",o:["Otestovať RAM nástrojom Windows Memory Diagnostic alebo MemTest86","Vymeniť monitor","Preinštalovať prehliadač","Vymeniť klávesnicu"],a:0,e:"Táto chyba často znamená chybnú pamäť. Test RAM ukáže chybný modul."},
- {s:"95 °C po zložení",ch:[["Pozrieť otáčky CPU_FAN v BIOS-e","1500 ot./min, ventilátor sa točí."],["Odmontovať chladič a pozrieť spodok","Na spodku chladiča je lesklá ochranná fólia a na procesore nie je pasta."],["Skontrolovať zdroj","Napätia sú v norme."]],t:"Nový počítač beží, ale procesor má hneď po zapnutí 95 °C.",o:["Chladič nie je dosadený, chýba pasta alebo nie je odlepená fólia","Málo RAM","Zlý zdroj","Pokazený disk"],a:0,e:"Taká teplota bez záťaže znamená zlý kontakt chladiča s procesorom. Častá chyba je neodlepená fólia."},
- {s:"RAM nejde zasunúť",t:"Kúpil som DDR4 pamäte do novej dosky s DDR5 a nedajú sa zasunúť.",o:["DDR4 a DDR5 majú zárez inde a nie sú kompatibilné","Treba zatlačiť silnejšie","Treba aktualizovať BIOS","Sloty sú špinavé"],a:0,e:"Každá generácia DDR má zárez inde, aby sa nedala vložiť do zlého slotu."}
-];
 function makeDesk(list,root,pre,part,saved){
   const st=saved||list.map(c=>{const idx=shuffle(c.o.map((_,k)=>k));return{opts:idx.map(k=>c.o[k]),ans:idx.indexOf(c.a),pick:null,seen:[]}});
   let sel=0;
@@ -672,10 +731,10 @@ const sc=a=>({ok:a.filter(s=>s.pick!==null&&s.pick===s.ans).length,done:a.filter
 function upd(){
   const n=fullName()?fullName()+", "+profile.trieda:"";
   const pc=Object.keys(passed).length,bs=sc(biosSt),ds=sc(diagSt),asmDone=aNext===STEPS.length;
-  $("#c1").textContent=pc+"/3";$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;
+  $("#c1").textContent=pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;
   $("#rName").textContent=n||"Meno nevyplnené";
   $("#rDate").textContent="Vyplnené "+new Date().toLocaleString("sk-SK",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"});
-  $("#r1").textContent=pc+" / 3";$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
+  $("#r1").textContent=pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
   $("#r3").textContent=bs.ok+" / "+BIOS.length;$("#r4").textContent=ds.ok+" / "+DIAG.length;
   $("#rTable").innerHTML="<thead><tr><th>Časť</th><th>Stav</th><th>Výsledok</th></tr></thead><tbody>"+
    ORDERS.map(o=>`<tr><td>Zákazka ${o.no} · ${o.short}</td><td>${passed[o.id]?"odovzdaná":"neodovzdaná"}</td><td class="mono">${passed[o.id]?price(builds[o.id])+" € z "+o.budget+" €":"–"}</td></tr>`).join("")+
@@ -690,7 +749,7 @@ $("#startForm").onsubmit=e=>{e.preventDefault();
   if(!m||!p||!t){$("#fErr").textContent="Vyplň meno, priezvisko a vyber triedu.";return}
   if(!["1.D","2.C","2.G","3.C"].includes(t)){$("#fErr").textContent="Vyber triedu zo zoznamu.";return}
   Object.assign(profile,{meno:m,priezvisko:p,trieda:t});
-  $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);upd();window.scrollTo(0,0)};
+  $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);log("Štart","pridelené zadanie","zákazky: "+ORDERS.map(o=>o.no+" "+o.short).join(", ")+" | BIOS: "+BIOS.map(q=>q.s).join(", ")+" | servis: "+DIAG.map(q=>q.s).join(", "));upd();window.scrollTo(0,0)};
 /* dozor: odchod zo stránky */
 let awayAt=null,awayN=0,awaySec=0;
 function goneAway(){if(!profile.meno||sent||awayAt)return;awayAt=Date.now()}
@@ -714,6 +773,7 @@ $("#send").onclick=async()=>{
   catch(err){$("#send").disabled=false;m.className="note bad";m.textContent="Odoslanie zlyhalo. Skontroluj pripojenie na internet a skús znova."}
 };
 let saved=null;try{saved=JSON.parse(localStorage.getItem(SKEY)||"null")}catch(e){}
+if(saved&&!saved.pick)saved=null;
 if(saved&&saved.sent){try{localStorage.removeItem(SKEY)}catch(e){}saved=null}
 if(saved&&saved.profile&&saved.profile.meno){
   Object.assign(profile,saved.profile);T0=saved.T0;LOG.push(...saved.LOG);
@@ -724,6 +784,11 @@ if(saved&&saved.profile&&saved.profile.meno){
   if(sent){$("#send").disabled=true;$("#send").textContent="Odoslané";$("#sendMsg").hidden=false;$("#sendMsg").className="note ok";$("#sendMsg").textContent="Výsledky už boli odoslané."}
   log("Štart","pokračoval po obnovení stránky","");
 }else order=shuffle(STEPS.map((_,i)=>i));
+const pickN=(a,n)=>shuffle(a.map((_,i)=>i)).slice(0,n).sort((x,y)=>x-y);
+PICK=saved&&saved.pick?saved.pick:{o:pickN(ORDERS_ALL,ORDERS_PICK),b:pickN(BIOS_ALL,BIOS_PICK),d:pickN(DIAG_ALL,DIAG_PICK)};
+ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
+ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});
+if(!ORDERS.some(o=>o.id===cur))cur=ORDERS[0].id;
 updAway();renderAsm();
 biosSt=makeDesk(BIOS,$("#biosDesk"),"B-","BIOS",saved&&saved.profile&&saved.profile.meno?saved.bios:null);
 diagSt=makeDesk(DIAG,$("#diagDesk"),"S-","Servis",saved&&saved.profile&&saved.profile.meno?saved.diag:null);
