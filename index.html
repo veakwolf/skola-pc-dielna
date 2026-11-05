@@ -717,7 +717,7 @@ const STEPS=[
  ["Zapojiť predný panel: PWR SW, RESET, LED, USB, audio","Predný panel sa zapája na konci, keď sú hlavné diely na mieste."],
  ["Pripojiť monitor do grafickej karty, zapnúť PC a skontrolovať BIOS","Zapnúť sa dá až po zapojení všetkého."]
 ];
-let aNext=0,aErr=0,order=[];
+let aNext=0,aErr=0,order=[],asmLock=0;
 function rigSvg(){
   const v=(from,to)=>aNext>from&&(to===undefined||aNext<=to)?1:0;
   const B=(dx,dy)=>`<rect class="bd" x="${dx}" y="${dy}" width="140" height="170" rx="3"/>
@@ -746,6 +746,7 @@ function renderAsm(){
   $("#pool").innerHTML=order.filter(i=>i>=aNext).map(i=>`<button data-i="${i}">${STEPS[i][0]}</button>`).join("")||'<p class="hint" style="margin:4px">Všetky kroky sú v postupe.</p>';
   $("#aErr").textContent="chyby: "+aErr;
   $("#pool").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+    if(Date.now()<asmLock)return;asmLock=Date.now()+700;
     const i=+b.dataset.i,m=$("#aMsg");
     log("Montáž","vybral krok",STEPS[i][0]+(i===aNext?"":" (správny bol: "+STEPS[aNext][0]+")"),i===aNext);
     if(i===aNext){aNext++;m.className="note"+(aNext===STEPS.length?" ok":"");m.textContent=aNext===STEPS.length?"Počítač je zložený v správnom poradí.":"Správne. Ďalší krok?";renderAsm()}
