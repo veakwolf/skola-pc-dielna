@@ -541,6 +541,12 @@ const DIAG_ALL=[
  {s:"Málo miesta na C:",t:"Windows hlási, že na disku C: (SSD 500 GB) je málo miesta. Druhý disk D: (HDD 2 TB) je skoro prázdny.",o:["Presunúť veľké súbory (videá, fotky) na disk D:","Vymeniť procesor","Preinštalovať ovládače grafiky","Vypnúť Secure Boot"],a:0,e:"Na systémový SSD patrí systém a programy. Veľké dáta sa ukladajú na druhý disk."}
 ];
 const ORDERS_PICK=3,BIOS_PICK=6,DIAG_PICK=12;
+/* ľahšia obtiažnosť pre prvákov */
+const EASY_CLASSES=["1.D"];
+const EASY={orders:["o1","o4","o6","o7"],
+ bios:["Teplota CPU","Kapacita RAM","Uloženie zmien","Boot priorita","Inštalácia sa opakuje","SYS_FAN1","HDD na SATA","Aktualizácia BIOS-u"],
+ diag:["Pípanie po čistení","Vypína sa pri hraní","No signal po výmene grafiky","Vôbec nereaguje","Reštarty pri záťaži","Predné USB nefunguje","RAM nejde zasunúť","Jedno krátke pípnutie","Zdroj páchne","Nehrá zvuk","Nefunguje internet cez kábel","Málo miesta na C:","Veľmi pomalý počítač","Grafika sa netočí"],
+ n:{o:3,b:5,d:8}};
 let ORDERS=[],BIOS=[],DIAG=[];
 let cur="o1",activeCat="cpu";
 const lastEval={},tries={};
@@ -748,8 +754,8 @@ $("#startForm").onsubmit=e=>{e.preventDefault();
   const m=$("#fMeno").value.trim(),p=$("#fPriez").value.trim(),t=$("#fTrieda").value;
   if(!m||!p||!t){$("#fErr").textContent="Vyplň meno, priezvisko a vyber triedu.";return}
   if(!["1.D","2.C","2.G","3.C"].includes(t)){$("#fErr").textContent="Vyber triedu zo zoznamu.";return}
-  Object.assign(profile,{meno:m,priezvisko:p,trieda:t});
-  $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);log("Štart","pridelené zadanie","zákazky: "+ORDERS.map(o=>o.no+" "+o.short).join(", ")+" | BIOS: "+BIOS.map(q=>q.s).join(", ")+" | servis: "+DIAG.map(q=>q.s).join(", "));upd();window.scrollTo(0,0)};
+  Object.assign(profile,{meno:m,priezvisko:p,trieda:t});applyPick(makePick(t),null);
+  $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);log("Štart","pridelené zadanie","obtiažnosť: "+PICK.lvl+" | zákazky: "+ORDERS.map(o=>o.no+" "+o.short).join(", ")+" | BIOS: "+BIOS.map(q=>q.s).join(", ")+" | servis: "+DIAG.map(q=>q.s).join(", "));upd();window.scrollTo(0,0)};
 /* dozor: odchod zo stránky */
 let awayAt=null,awayN=0,awaySec=0;
 function goneAway(){if(!profile.meno||sent||awayAt)return;awayAt=Date.now()}
@@ -784,15 +790,24 @@ if(saved&&saved.profile&&saved.profile.meno){
   if(sent){$("#send").disabled=true;$("#send").textContent="Odoslané";$("#sendMsg").hidden=false;$("#sendMsg").className="note ok";$("#sendMsg").textContent="Výsledky už boli odoslané."}
   log("Štart","pokračoval po obnovení stránky","");
 }else order=shuffle(STEPS.map((_,i)=>i));
-const pickN=(a,n)=>shuffle(a.map((_,i)=>i)).slice(0,n).sort((x,y)=>x-y);
-PICK=saved&&saved.pick?saved.pick:{o:pickN(ORDERS_ALL,ORDERS_PICK),b:pickN(BIOS_ALL,BIOS_PICK),d:pickN(DIAG_ALL,DIAG_PICK)};
-ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
-ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});
-if(!ORDERS.some(o=>o.id===cur))cur=ORDERS[0].id;
+const pickN=(a,n,ok)=>shuffle(a.map((_,i)=>i).filter(i=>!ok||ok(a[i]))).slice(0,n).sort((x,y)=>x-y);
+function makePick(trieda){
+  if(EASY_CLASSES.includes(trieda))return{lvl:"ľahká",
+    o:pickN(ORDERS_ALL,EASY.n.o,x=>EASY.orders.includes(x.id)),b:pickN(BIOS_ALL,EASY.n.b,x=>EASY.bios.includes(x.s)),d:pickN(DIAG_ALL,EASY.n.d,x=>EASY.diag.includes(x.s))};
+  return{lvl:"štandardná",o:pickN(ORDERS_ALL,ORDERS_PICK),b:pickN(BIOS_ALL,BIOS_PICK),d:pickN(DIAG_ALL,DIAG_PICK)};
+}
+function applyPick(pk,savedDesks){
+  PICK=pk;
+  ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
+  ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});
+  if(!ORDERS.some(o=>o.id===cur))cur=ORDERS[0].id;
+  biosSt=makeDesk(BIOS,$("#biosDesk"),"B-","BIOS",savedDesks?savedDesks.bios:null);
+  diagSt=makeDesk(DIAG,$("#diagDesk"),"S-","Servis",savedDesks?savedDesks.diag:null);
+  renderCfg();
+}
 updAway();renderAsm();
-biosSt=makeDesk(BIOS,$("#biosDesk"),"B-","BIOS",saved&&saved.profile&&saved.profile.meno?saved.bios:null);
-diagSt=makeDesk(DIAG,$("#diagDesk"),"S-","Servis",saved&&saved.profile&&saved.profile.meno?saved.diag:null);
-renderCfg();
+if(saved&&saved.profile&&saved.profile.meno)applyPick(saved.pick,saved);
+else applyPick(makePick(""),null);
 </script>
 </body>
 </html>
