@@ -753,7 +753,7 @@ function renderAsm(){
     upd();
   });
 }
-$("#aReset").onclick=()=>{log("Montáž","začal odznova","");aNext=0;aErr=0;order=shuffle(STEPS.map((_,i)=>i));$("#aMsg").className="note";$("#aMsg").textContent="Začni prvým krokom.";renderAsm();upd()};
+$("#aReset").onclick=()=>{log("Montáž","začal odznova","");aNext=0;order=shuffle(STEPS.map((_,i)=>i));$("#aMsg").className="note";$("#aMsg").textContent="Začni prvým krokom.";renderAsm();upd()};
 
 /* otázky */
 function makeDesk(list,root,pre,part,saved){
