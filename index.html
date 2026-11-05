@@ -95,6 +95,16 @@ tr:last-child td{border-bottom:0}
 .cat-table td{white-space:nowrap}
 .cat-table td.nm{white-space:normal;font-weight:600;min-width:170px}
 .cat-table tr.sel td{background:var(--ok-soft)}
+.tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:5px;border-radius:50%;border:1px solid var(--muted);color:var(--muted);font-size:10px;font-weight:700;cursor:help;vertical-align:1px}
+.tip:hover,.tip:focus{border-color:var(--accent);color:var(--accent);outline:none}
+.tip .tt{display:none}
+#ttip{position:fixed;max-width:260px;z-index:60;pointer-events:none;background:var(--bar);color:var(--bar-fg);font:400 12.5px/1.45 var(--sans);text-transform:none;letter-spacing:0;white-space:normal;text-align:left;padding:8px 10px;border-radius:4px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#ttip[hidden]{display:none}
+.fb{display:grid;gap:14px}
+.fb h3{font-family:var(--cond);font-size:16px;margin:0 0 4px}
+.fb ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:14px}
+.fb .ok{color:var(--ok)}.fb .bad{color:var(--bad)}
+.fb .why{color:var(--muted)}
 .cat-table td.pr{text-align:right;font-family:var(--mono);font-weight:600}
 .yes{color:var(--ok)}.no{color:var(--muted)}
 
@@ -365,6 +375,7 @@ tr:last-child td{border-bottom:0}
     <div class="act"><button class="lnk pri" id="send">Odoslať výsledky</button></div>
     <div class="note" id="sendMsg" hidden></div>
   </div>
+  <div class="box sendbox" id="feedback" hidden></div>
 </section>
 
 </div>
@@ -538,14 +549,14 @@ const DIAG_ALL=[
  {s:"Zdroj páchne",t:"Zo zdroja ide zápach spáleniny a hlasno hučí.",o:["Okamžite vypnúť počítač a vymeniť zdroj","Otvoriť zdroj a opraviť ho","Pokračovať v práci","Zvýšiť otáčky ventilátorov"],a:0,e:"Zdroj je nebezpečný, môže začať horieť a aj vypnutý drží v kondenzátoroch vysoké napätie. Neotvára sa, vymení sa celý."},
  {s:"Nehrá zvuk",ch:[["Pozrieť, kam je zapojený kábel reproduktorov","Kábel je v ružovom konektore."],["Pozrieť hlasitosť vo Windowse","Hlasitosť je 60 % a nie je stlmená."],["Pripojiť USB slúchadlá","Slúchadlá cez USB hrajú."]],t:"Reproduktory zapojené vzadu do počítača nehrajú.",o:["Reproduktory sú zapojené do vstupu na mikrofón namiesto zeleného výstupu","Pokazená zvuková karta","Pokazený zdroj","Chýba RAM"],a:0,e:"Ružový konektor je mikrofón. Reproduktory patria do zeleného výstupu."},
  {s:"Výpadok pri aktualizácii BIOS-u",t:"Počas aktualizácie BIOS-u vypadol prúd. Teraz počítač nenaštartuje, ventilátory sa točia, ale nie je obraz.",o:["Poškodený BIOS, treba ho obnoviť cez BIOS Flashback alebo v servise","Pokazený monitor","Vybitá klávesnica","Treba preinštalovať Windows"],a:0,e:"Prerušená aktualizácia poškodí BIOS. Mnohé dosky ho vedia obnoviť funkciou BIOS Flashback z USB kľúča."},
- {s:"Málo miesta na C:",t:"Windows hlási, že na disku C: (SSD 500 GB) je málo miesta. Druhý disk D: (HDD 2 TB) je skoro prázdny.",o:["Presunúť veľké súbory (videá, fotky) na disk D:","Vymeniť procesor","Preinštalovať ovládače grafiky","Vypnúť Secure Boot"],a:0,e:"Na systémový SSD patrí systém a programy. Veľké dáta sa ukladajú na druhý disk."}
+ {s:"Málo miesta na disku C",t:"Windows hlási, že na disku C: (SSD 500 GB) je málo miesta. Druhý disk D: (HDD 2 TB) je skoro prázdny.",o:["Presunúť veľké súbory (videá, fotky) na disk D:","Vymeniť procesor","Preinštalovať ovládače grafiky","Vypnúť Secure Boot"],a:0,e:"Na systémový SSD patrí systém a programy. Veľké dáta sa ukladajú na druhý disk."}
 ];
 const ORDERS_PICK=3,BIOS_PICK=6,DIAG_PICK=12;
 /* ľahšia obtiažnosť pre prvákov */
 const EASY_CLASSES=["1.D"];
 const EASY={orders:["o1","o4","o6","o7"],
  bios:["Teplota CPU","Kapacita RAM","Uloženie zmien","Boot priorita","Inštalácia sa opakuje","SYS_FAN1","HDD na SATA","Aktualizácia BIOS-u"],
- diag:["Pípanie po čistení","Vypína sa pri hraní","No signal po výmene grafiky","Vôbec nereaguje","Reštarty pri záťaži","Predné USB nefunguje","RAM nejde zasunúť","Jedno krátke pípnutie","Zdroj páchne","Nehrá zvuk","Nefunguje internet cez kábel","Málo miesta na C:","Veľmi pomalý počítač","Grafika sa netočí"],
+ diag:["Pípanie po čistení","Vypína sa pri hraní","No signal po výmene grafiky","Vôbec nereaguje","Reštarty pri záťaži","Predné USB nefunguje","RAM nejde zasunúť","Jedno krátke pípnutie","Zdroj páchne","Nehrá zvuk","Nefunguje internet cez kábel","Málo miesta na disku C","Veľmi pomalý počítač","Grafika sa netočí"],
  n:{o:3,b:5,d:8}};
 let ORDERS=[],BIOS=[],DIAG=[];
 let cur="o1",activeCat="cpu";
@@ -604,11 +615,50 @@ function renderBuild(){
   $("#build").querySelectorAll("[data-c]").forEach(e=>e.onclick=()=>{activeCat=e.dataset.c;renderCfg();$("#catBox").scrollIntoView({behavior:"smooth",block:"nearest"})});
   $("#build").querySelectorAll("[data-rm]").forEach(e=>e.onclick=()=>{if(passed[cur])delete passed[cur];log("Konfigurátor "+ORDERS.find(o=>o.id===cur).no,"odobral",CATS.find(c=>c.k===e.dataset.rm).n+": "+get(e.dataset.rm,builds[cur][e.dataset.rm]).n);delete builds[cur][e.dataset.rm];renderCfg()});
 }
+const TIPS={
+ "cpu:Socket":"Typ pätice na doske. Procesor a doska musia mať rovnaký socket, napríklad AM5 alebo LGA1700.",
+ "cpu:Jadrá":"Počet jadier procesora. Viac jadier pomáha pri strihu videa, streamovaní alebo virtuálnych počítačoch.",
+ "cpu:TDP":"Tepelný výkon procesora vo wattoch. Podľa neho vyberáš chladič, doska ho musí vedieť napájať a započítava sa do výkonu zdroja.",
+ "cpu:Integrovaná grafika":"Grafický čip priamo v procesore. Procesor bez neho (napríklad s písmenom F na konci) potrebuje grafickú kartu, inak nebude obraz.",
+ "board:Socket":"Pätica pre procesor. Musí sa zhodovať so socketom procesora.",
+ "board:Pamäť":"Typ RAM, ktorý doska podporuje. DDR4 a DDR5 nie sú zameniteľné, majú zárez na inom mieste.",
+ "board:Formát":"Veľkosť dosky. ATX je veľká, mATX (Micro ATX) menšia. Skrinka musí daný formát podporovať.",
+ "board:Max. RAM":"Najväčšia kapacita operačnej pamäte, ktorú doska zvládne.",
+ "board:M.2":"Počet slotov na rýchle SSD disky M.2 NVMe priamo na doske. Viac M.2 diskov, ako je slotov, nevložíš.",
+ "board:CPU do":"Najvyššie TDP procesora, ktoré doska bezpečne napája. Lacné dosky nezvládnu výkonné procesory.",
+ "ram:Typ":"Generácia pamäte DDR4 alebo DDR5. Musí sedieť s typom pamäte na doske.",
+ "ram:Kapacita":"Celková veľkosť pamäte v sade.",
+ "ram:Moduly":"Z koľkých kusov sa sada skladá. Dva moduly bežia v dvojkanálovom režime, ktorý je rýchlejší.",
+ "ram:Rýchlosť":"Frekvencia pamäte v MT/s. Vyššia je rýchlejšia. Plnú rýchlosť zapína v BIOS-e profil EXPO alebo XMP.",
+ "gpu:Pamäť":"VRAM, vlastná pamäť grafickej karty. Potrebujú ju hry s vysokými detailmi a vysokým rozlíšením.",
+ "gpu:Spotreba":"Odber grafickej karty vo wattoch. Spolu s TDP procesora určuje, aký silný zdroj potrebuješ.",
+ "gpu:Dĺžka":"Dĺžka karty v milimetroch. Musí sa zmestiť do skrinky, pozri stĺpec Grafika do pri skrinkách.",
+ "storage:Rozhranie":"M.2 NVMe je rýchly disk vložený priamo do dosky. SATA sa pripája káblom a je pomalšie.",
+ "storage:Kapacita":"Veľkosť disku. 1 TB je 1000 GB.",
+ "storage:Typ":"SSD nemá pohyblivé časti a je mnohonásobne rýchlejší. HDD má točiace sa platne, je pomalší, ale lacnejší za 1 TB.",
+ "cooler:Typ":"Vzduchový chladič má rebrá a ventilátor. Vodný (AIO) odvádza teplo kvapalinou do radiátora.",
+ "cooler:Uchladí do":"Najvyššie TDP, ktoré chladič zvládne. Musí byť aspoň také ako TDP procesora.",
+ "psu:Výkon":"Najvyšší výkon, ktorý zdroj dodá. Potrebný výkon = TDP procesora + spotreba grafiky + 100 W, k tomu rezerva 25 %.",
+ "psu:Certifikát":"Účinnosť zdroja. 80+ Gold premení na teplo menej energie ako 80+ Bronze.",
+ "case:Dosky":"Formáty základných dosiek, ktoré sa do skrinky zmestia.",
+ "case:Grafika do":"Najdlhšia grafická karta v milimetroch, ktorá sa do skrinky zmestí."
+};
+const ttip=document.createElement("div");ttip.id="ttip";ttip.hidden=true;document.body.appendChild(ttip);
+function showTip(el){const t=el.querySelector(".tt");if(!t)return;ttip.textContent=t.textContent;ttip.hidden=false;
+  const r=el.getBoundingClientRect(),w=ttip.offsetWidth,h=ttip.offsetHeight;
+  let x=r.left+r.width/2-w/2;x=Math.max(8,Math.min(x,innerWidth-w-8));let y=r.bottom+8;if(y+h>innerHeight-8)y=r.top-h-8;
+  ttip.style.left=x+"px";ttip.style.top=y+"px"}
+function hideTip(){ttip.hidden=true}
+["mouseover","focusin"].forEach(ev=>document.addEventListener(ev,e=>{const el=e.target.closest&&e.target.closest(".tip");if(el)showTip(el)}));
+["mouseout","focusout"].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest(".tip"))hideTip()}));
+document.addEventListener("click",e=>{const el=e.target.closest&&e.target.closest(".tip");el?showTip(el):hideTip()});
+addEventListener("scroll",hideTip,true);
+const tip=t=>t?`<span class="tip" tabindex="0" aria-label="Vysvetlivka">?<span class="tt">${t}</span></span>`:"";
 function renderCat(){
   const c=CATS.find(x=>x.k===activeCat),b=builds[cur];
   $("#catTitle").textContent=c.n;
   $("#catHint").textContent=c.multi?"Môžeš pridať až 3 disky.":P[c.k].length+" položiek";
-  $("#catTable").innerHTML=`<thead><tr><th>Názov</th>${c.cols.map(h=>`<th>${h[0]}</th>`).join("")}<th style="text-align:right">Cena</th><th></th></tr></thead><tbody>`+
+  $("#catTable").innerHTML=`<thead><tr><th>Názov</th>${c.cols.map(h=>`<th>${h[0]}${tip(TIPS[c.k+":"+h[0]])}</th>`).join("")}<th style="text-align:right">Cena</th><th></th></tr></thead><tbody>`+
   P[c.k].map(p=>{const on=c.multi?b.storage.includes(p.id):b[c.k]===p.id;
     return `<tr class="${on?"sel":""}"><td class="nm">${p.n}</td>${c.cols.map(h=>`<td>${h[1](p)}</td>`).join("")}<td class="pr num">${p.p} €</td><td style="text-align:right"><button class="lnk${on?"":" pri"}" data-p="${p.id}">${on?"Odobrať":"Pridať"}</button></td></tr>`}).join("")+"</tbody>";
   $("#catTable").querySelectorAll("[data-p]").forEach(e=>e.onclick=()=>{
@@ -630,12 +680,13 @@ function renderSum(){
   $("#tries").textContent=tries[cur]||0;
   const ev=lastEval[cur];$("#evalBox").hidden=!ev;
   if(ev){
-    const cb=ev.C.filter(i=>i.s!=="ok"),rb=ev.R.filter(i=>i.s!=="ok");
+    const cb=ev.C.filter(i=>i.s==="bad"),rb=ev.R.filter(i=>i.s==="bad");
     $("#cStat").className="status "+(cb.length?"bad":"good");
     $("#cText").textContent=cb.length?`Kompatibilita: ${cb.length} ${cb.length===1?"problém":cb.length<5?"problémy":"problémov"}`:"Kompatibilita: v poriadku";
     $("#compat").innerHTML=cb.map(i=>`<li class="bad">${esc(i.t)}</li>`).join("");
     $("#rStat").className="status "+(rb.length?"bad":"good");
-    $("#rText").textContent=rb.length?"Požiadavky zákazníka: nesplnené":"Požiadavky zákazníka: splnené";
+    const rw=ev.R.some(i=>i.s==="wait");if(rw&&!rb.length)$("#rStat").className="status";
+    $("#rText").textContent=rb.length?"Požiadavky zákazníka: nesplnené":rw?"Požiadavky zákazníka: zostava nie je úplná":"Požiadavky zákazníka: splnené";
     $("#reqs").innerHTML=rb.map(i=>`<li class="bad">${esc(i.t)}</li>`).join("");
   }
 }
@@ -764,6 +815,30 @@ function cameBack(){if(!awayAt)return;const sec=Math.round((Date.now()-awayAt)/1
 document.addEventListener("visibilitychange",()=>document.hidden?goneAway():cameBack());
 window.addEventListener("blur",goneAway);window.addEventListener("focus",cameBack);
 function updAway(){const e=$("#awayInfo");if(e)e.textContent=awayN?`Odchody zo stránky: ${awayN}× (spolu ${awaySec} s)`:"Odchody zo stránky: 0"}
+/* spätná väzba po odoslaní */
+function renderFeedback(){
+  const li=(cls,t)=>`<li class="${cls}">${t}</li>`;
+  let h=`<h2>Spätná väzba</h2><p class="hint">Takto dopadla tvoja práca. Po obnovení stránky sa tento prehľad stratí.</p><div class="fb">`;
+  h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
+    const ev=lastEval[o.id],t=tries[o.id]||0;
+    if(passed[o.id])return li("ok",`<b>${o.no} ${o.short}:</b> odovzdaná, ${price(builds[o.id])} € z ${o.budget} €, pokusov: ${t}.`);
+    if(!ev)return li("bad",`<b>${o.no} ${o.short}:</b> zostavu si neodovzdal.`);
+    const pr=[...ev.C,...ev.R].filter(i=>i.s==="bad").map(i=>esc(i.t));
+    return li("bad",`<b>${o.no} ${o.short}:</b> neprešla kontrolou (pokusov: ${t}).<ul>${pr.map(x=>`<li class="why">${x}</li>`).join("")}</ul>`);
+  }).join("")+`</ul></div>`;
+  const wrongSteps=LOG.filter(l=>l.cast==="Montáž"&&l.ok==="nie").map(l=>l.detail);
+  h+=`<div><h3>Montáž</h3><ul>`+(aNext===STEPS.length?li(aErr?"bad":"ok",`Dokončená, chybných krokov: ${aErr}.`):li("bad",`Nedokončená, hotových ${aNext} z ${STEPS.length} krokov.`))+
+    wrongSteps.slice(0,6).map(d=>li("why","Vybral si: "+esc(d.replace(/ \(správny bol: /," → správne bolo: ").replace(/\)$/,"")))).join("")+
+    (wrongSteps.length>6?li("why",`a ďalších ${wrongSteps.length-6} chybných krokov.`):"")+`</ul></div>`;
+  const desk=(name,list,st)=>{const bad=[];list.forEach((q,i)=>{const x=st[i];
+      if(x.pick===null)bad.push(li("bad",`<b>${q.s}:</b> nezodpovedané. <span class="why">Správne: ${esc(x.opts[x.ans])}. ${esc(q.e)}</span>`));
+      else if(x.pick!==x.ans)bad.push(li("bad",`<b>${q.s}:</b> tvoja odpoveď „${esc(x.opts[x.pick])}“. <span class="why">Správne: ${esc(x.opts[x.ans])}. ${esc(q.e)}</span>`));});
+    const ok=st.filter(x=>x.pick!==null&&x.pick===x.ans).length;
+    return `<div><h3>${name}: ${ok} z ${list.length} správne</h3><ul>${bad.join("")||li("ok","Všetko správne.")}</ul></div>`;};
+  h+=desk("BIOS",BIOS,biosSt)+desk("Servis",DIAG,diagSt);
+  h+=`<div><h3>Odchody zo stránky</h3><ul>${li(awayN?"bad":"ok",awayN?`Stránku si opustil ${awayN}× (spolu ${awaySec} s).`:"Stránku si počas práce neopustil.")}</ul></div></div>`;
+  const fb=$("#feedback");fb.innerHTML=h;fb.hidden=false;fb.scrollIntoView({behavior:"smooth",block:"start"});
+}
 /* odoslanie */
 $("#send").onclick=async()=>{
   const m=$("#sendMsg");m.hidden=false;
@@ -775,7 +850,7 @@ $("#send").onclick=async()=>{
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
   $("#send").disabled=true;m.className="note";m.textContent="Odosielam…";
   try{await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
-    sent=true;try{localStorage.removeItem(SKEY)}catch(e){}m.className="note ok";m.textContent="Výsledky sú odoslané majstrovi. Po obnovení stránky budeš odhlásený.";$("#send").textContent="Odoslané"}
+    sent=true;try{localStorage.removeItem(SKEY)}catch(e){}m.className="note ok";m.textContent="Výsledky sú odoslané majstrovi. Nižšie vidíš spätnú väzbu. Po obnovení stránky budeš odhlásený.";renderFeedback();$("#send").textContent="Odoslané"}
   catch(err){$("#send").disabled=false;m.className="note bad";m.textContent="Odoslanie zlyhalo. Skontroluj pripojenie na internet a skús znova."}
 };
 let saved=null;try{saved=JSON.parse(localStorage.getItem(SKEY)||"null")}catch(e){}
