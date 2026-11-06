@@ -1052,7 +1052,8 @@ function vrRun(src){
   if(env.mode[8]!==1||env.mode[9]!==1)R.push("Piny 8 (bzučiak) a 9 (relé) musia byť v setup() nastavené ako OUTPUT, inak sa nedajú zapnúť.");
   try{
     // 1. nikto nič nestláča
-    let t0=env.tl.length;loopN(20);
+    let t0=env.tl.length;const ti=env.t;loopN(20);
+    if(env.t-ti>1000)R.push("Keď nikto nič nestláča, program aj tak čaká (delay je mimo podmienky alebo vo vetve inak). Zvonček by potom reagoval s oneskorením. Daj delay(3000) iba medzi zapnutie a vypnutie relé.");
     if(env.tl.slice(t0).some(x=>x.v===1)||env.out[8]||env.out[9])R.push("Keď nikto nič nestláča, bzučiak aj relé majú byť vypnuté.");
     // 2. zvonček
     env.inp[2]=0;t0=env.tl.length;loopN(5);
@@ -1195,7 +1196,7 @@ function goneAway(){if(!profile.meno||sent||awayAt)return;awayAt=Date.now()}
 function cameBack(){if(!awayAt)return;const sec=Math.round((Date.now()-awayAt)/1000);awayAt=null;if(sec<1)return;
   awayN++;awaySec+=sec;log("Dozor","opustil stránku","mimo stránky "+sec+" s",false);updAway()}
 document.addEventListener("visibilitychange",()=>document.hidden?goneAway():cameBack());
-window.addEventListener("blur",goneAway);window.addEventListener("focus",cameBack);
+window.addEventListener("blur",()=>{setTimeout(()=>{const a=document.activeElement;if(document.hidden||!a||a.tagName!=="SELECT")goneAway()},0)});window.addEventListener("focus",cameBack);
 function updAway(){const e=$("#awayInfo");if(e)e.textContent=awayN?`Odchody zo stránky: ${awayN}× (spolu ${awaySec} s)`:"Odchody zo stránky: 0"}
 /* spätná väzba po odoslaní */
 function renderFeedback(){
