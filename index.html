@@ -224,6 +224,11 @@ tr:last-child td{border-bottom:0}
 .start .err{color:var(--bad);font-size:13.5px;min-height:1.2em}
 .start .lnk{padding:11px 14px;font-size:15px}
 .sendbox{padding:16px 18px;display:grid;gap:10px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid var(--line);vertical-align:-2px;margin-right:6px}
+.sw.empty{background:repeating-linear-gradient(45deg,var(--sunk),var(--sunk) 3px,var(--line) 3px,var(--line) 5px)}
+#svTable select{font-size:14px;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface);min-width:120px}
+.svrule{padding:14px 16px;display:grid;gap:8px;font-size:14.5px;max-width:80ch}
+.svrule .chips{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -268,6 +273,20 @@ tr:last-child td{border-bottom:0}
   <div class="ph"><h1>Konfigurátor zostavy</h1><p class="hint">Zostavu odovzdáš, keď je kompatibilná a spĺňa všetky požiadavky zákazníka.</p></div>
   <div class="orders" id="orders"></div>
   <div class="box req" id="req"></div>
+  <div id="svork" hidden style="display:grid;gap:18px">
+    <div class="box svrule">
+      <h2>Zadanie</h2>
+      <p>Do poschodovej svorkovnice LSA s 10 pozíciami zapájaš <b id="svPairs"></b> 25-párového telefónneho kábla. Na pozíciu 1 patrí prvý z nich, na pozíciu 2 druhý a tak ďalej. Pri každej pozícii vyber farbu žily a a žily b.</p>
+      <p><b>Farebný kód:</b> každý pár má žilu a v hlavnej farbe a žilu b vo vedľajšej farbe. Hlavné farby idú v poradí a každá platí pre päť párov za sebou. Vedľajšie farby sa v každej päťke opakujú v rovnakom poradí. Pár 1 je biela–modrá.</p>
+      <div class="chips"><span><b>Hlavné:</b> biela, červená, čierna, žltá, fialová</span><span><b>Vedľajšie:</b> modrá, oranžová, zelená, hnedá, sivá</span></div>
+    </div>
+    <div class="box tw"><table id="svTable"></table></div>
+    <div class="box sendbox">
+      <div class="act"><button class="lnk pri" id="svCheck">Skontrolovať zapojenie</button></div>
+      <div class="kv" style="margin:0"><span>Pokusy o kontrolu</span><b class="num" id="svTries">0</b></div>
+      <div class="note" id="svMsg" hidden></div>
+    </div>
+  </div>
   <div class="cfg">
     <div style="display:grid;gap:18px;min-width:0">
       <div class="box tw"><table class="build" id="build"></table></div>
@@ -390,9 +409,9 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const ENDPOINT="https://script.google.com/macros/s/AKfycbw_7tBbz6AAgIeKXCfSS3w8aYwcIfg4nVgFFbOrLszR-tV9SeHu6LVCWn91a-COmwE3/exec"; // URL webovej aplikácie Google Apps Script
 const profile={meno:"",priezvisko:"",trieda:""};
 let sent=false;
-const LOG=[];let T0=null;let PICK=null;const SKEY="pcdielna_v1";
+const LOG=[];let T0=null;let PICK=null;let TEL=false;const SKEY="pcdielna_v1";
 function log(cast,akcia,detail,ok){if(!T0&&cast!=="Štart"&&cast!=="Odoslanie"&&cast!=="Dozor")T0=Date.now();setTimeout(save,0);LOG.push({t:new Date().toISOString(),sec:T0?Math.round((Date.now()-T0)/1000):0,cast,akcia,detail,ok:ok===undefined?"":ok?"áno":"nie"})}
-function save(){if(sent){try{localStorage.removeItem(SKEY)}catch(e){}return}try{localStorage.setItem(SKEY,JSON.stringify({profile,T0,LOG,builds,passed,lastEval,tries,aNext,aErr,order,bios:biosSt,diag:diagSt,sent,cur,awayN,awaySec,pick:PICK}))}catch(e){}}
+function save(){if(sent){try{localStorage.removeItem(SKEY)}catch(e){}return}try{localStorage.setItem(SKEY,JSON.stringify({profile,T0,LOG,builds,passed,lastEval,tries,aNext,aErr,order,bios:biosSt,diag:diagSt,sent,cur,awayN,awaySec,pick:PICK,sv:SV}))}catch(e){}}
 function fullName(){return (profile.meno+" "+profile.priezvisko).trim()}
 
 /* ikony kategórií */
@@ -703,7 +722,7 @@ function renderCfg(){if(lastEval[cur]&&lastEval[cur].sig!==JSON.stringify(builds
   renderOrders();renderBuild();renderCat();renderSum();upd()}
 
 /* montáž */
-const STEPS=[
+const PC_STEPS=[
  ["Uzemniť sa antistatickým náramkom a pripraviť pracovisko","Najprv sa treba uzemniť. Statický výboj môže zničiť komponenty."],
  ["Vložiť procesor do socketu (zarovnať značku trojuholníka)","Procesor sa vkladá do dosky mimo skrinky, keď je k socketu dobrý prístup."],
  ["Naniesť teplovodivú pastu, namontovať chladič a zapojiť ho do CPU_FAN","Chladič patrí na procesor hneď po jeho vložení."],
@@ -717,7 +736,104 @@ const STEPS=[
  ["Zapojiť predný panel: PWR SW, RESET, LED, USB, audio","Predný panel sa zapája na konci, keď sú hlavné diely na mieste."],
  ["Pripojiť monitor do grafickej karty, zapnúť PC a skontrolovať BIOS","Zapnúť sa dá až po zapojení všetkého."]
 ];
+let STEPS=PC_STEPS;
+/* ===== 2.G: vnútorné telekomunikačné zariadenia ===== */
+const TEL_CLASSES=["2.G"];
+const SV_PRI=["biela","červená","čierna","žltá","fialová"],SV_SEC=["modrá","oranžová","zelená","hnedá","sivá"];
+const SV_HEX={"biela":"#f4f4f4","červená":"#d32f2f","čierna":"#151515","žltá":"#f2c400","fialová":"#7b3fa0","modrá":"#1e6fd9","oranžová":"#f07d16","zelená":"#2e8b3d","hnedá":"#7a4b26","sivá":"#8a8f96"};
+const TEL_STEPS=[
+ ["Preštudovať projektovú dokumentáciu a urobiť obhliadku trasy","Najprv treba z dokumentácie a obhliadky zistiť trasu, počet účastníkov a miesta svorkovníc."],
+ ["Vyznačiť trasu rozvodu, miesta svorkovníc a účastníckych zásuviek","Trasa a miesta sa vyznačia skôr, než sa začne vŕtať a montovať."],
+ ["Namontovať žľaby, trubky (chráničky) a príchytky","Káble sa ťahajú až do hotových žľabov a trubiek, preto idú pred zaťahovaním káblov."],
+ ["Zatiahnuť kábel stúpacieho vedenia a horizontálne rozvody s rezervou","Kábel sa zaťahuje do hotovej trasy, bez ostrých ohybov a s rezervou na ukončenie."],
+ ["Označiť oba konce každého kábla","Káble sa označia hneď po zatiahnutí, kým je jasné, ktorý kam vedie."],
+ ["Namontovať svorkovnicu a upevniť pred ňou prívodné káble","Svorkovnica musí byť pevne na mieste skôr, než do nej zapojíš páry."],
+ ["Odstrániť plášť a zapojiť páry do svorkovnice narážacím nástrojom (LSA)","Páry sa zapájajú do už namontovanej svorkovnice podľa farebného kódu."],
+ ["Ukončiť kábel v účastníckej zásuvke","Druhý koniec vedenia sa ukončí v zásuvke u účastníka."],
+ ["Zmerať vedenie: spojitosť, poradie párov a izolačný odpor","Merať sa dá až vtedy, keď je vedenie ukončené na oboch koncoch."],
+ ["Pripojiť účastnícku stanicu (telefón) do zásuvky","Telefón sa pripája až na premerané vedenie."],
+ ["Overiť prevádzku: oznamovací tón, volanie a vyzváňanie","Prevádzka sa skúša s pripojenou stanicou."],
+ ["Zapísať namerané hodnoty do protokolu a doplniť dokumentáciu","Protokol a dokumentácia sú posledný krok, keď je všetko overené."]
+];
+const TEL_Q=[
+ {s:"Stúpacie vedenie",t:"Čo je stúpacie vedenie v budove?",o:["Zvislý rozvod medzi podlažiami, z ktorého sa na poschodiach odbočuje k bytom","Vonkajší kábel medzi dvoma budovami","Šnúra medzi zásuvkou a telefónom","Uzemňovací vodič bleskozvodu"],a:0,e:"Stúpacie (vertikálne) vedenie spája hlavnú svorkovnicu s poschodovými svorkovnicami na jednotlivých podlažiach."},
+ {s:"Horizontálny rozvod",t:"Čo je horizontálny rozvod?",o:["Rozvod na jednom podlaží od poschodovej svorkovnice k zásuvkám v bytoch alebo kanceláriách","Kábel vedený v zemi popri budove","Rozvod medzi podlažiami","Kábel antény na streche"],a:0,e:"Horizontálny rozvod vedie po podlaží od poschodovej svorkovnice až ku koncovým zásuvkám."},
+ {s:"Účel svorkovnice",t:"Na čo slúži svorkovnica?",o:["Na prepájanie a rozbočovanie párov a na odpojenie a meranie vedenia","Na napájanie telefónov 230 V","Na zosilnenie signálu","Na uzemnenie budovy"],a:0,e:"Na svorkovnici sa páry prepájajú medzi káblami. Vedenie sa na nej dá aj odpojiť a premerať."},
+ {s:"Náradie LSA",t:"Akým náradím zapojíš žilu do svorkovnice LSA-Plus?",o:["Narážacím nástrojom LSA, ktorý žilu zatlačí a prebytok odreže","Spájkovačkou","Krimpovacími kliešťami na RJ45","Plochým skrutkovačom"],a:0,e:"Narážací nástroj zatlačí žilu do svorky a zároveň odreže prečnievajúci koniec."},
+ {s:"Odizolovanie žíl",t:"Musíš pred zapojením do svorky LSA odizolovať jednotlivé žily?",o:["Nie, svorka sama prereže izoláciu žily","Áno, vždy aspoň 1 cm","Áno, a konce treba pocínovať","Nie, žila sa iba omotá okolo skrutky"],a:0,e:"Svorky LSA prerezávajú izoláciu pri zatlačení. Odstraňuje sa iba vonkajší plášť kábla."},
+ {s:"Trubka alebo žľab",t:"Kedy použiješ trubku (chráničku) namiesto žľabu?",o:["Keď vedieš kábel pod omietkou alebo ho treba chrániť pred poškodením","Keď chceš neskôr ľahko pridávať ďalšie káble na povrchu","Vždy, žľaby sa nepoužívajú","Iba pre silové káble"],a:0,e:"Trubky sa používajú hlavne pod omietku a tam, kde treba kábel chrániť. Žľaby sú na povrchovú montáž a ľahko sa do nich dopĺňajú káble."},
+ {s:"Súbeh so silovým vedením",t:"Ako vedieš telekomunikačný kábel popri silovom rozvode 230 V?",o:["V samostatnom žľabe alebo oddelenej komore s predpísanou vzdialenosťou","V jednej trubke spolu so silovým káblom","Je to jedno, napätie sa neovplyvňuje","Zmotaný so silovým káblom, aby sa ušetrilo miesto"],a:0,e:"Silové vedenie ruší telekomunikačné a pri poruche môže byť aj nebezpečné. Preto sa vedú oddelene."},
+ {s:"Polomer ohybu",t:"Prečo nesmieš kábel pri ťahaní ostro zalomiť?",o:["Poškodia sa žily a zhorší sa prenos, dodržiava sa minimálny polomer ohybu","Kábel by bol príliš krátky","Zmenila by sa farba žíl","Nič sa nestane, je to iba estetika"],a:0,e:"Ostrý ohyb môže žily zlomiť alebo zmeniť ich vlastnosti. Výrobca určuje minimálny polomer ohybu."},
+ {s:"Rezerva kábla",t:"Prečo sa pri ukončení kábla nechá malá rezerva?",o:["Aby sa dal kábel znova ukončiť pri oprave alebo presune","Aby kábel lepšie chladil","Lebo sa kábel časom zmrští","Rezerva sa nenecháva"],a:0,e:"S rezervou sa dá koniec kábla odstrihnúť a ukončiť nanovo bez naťahovania nového kábla."},
+ {s:"Farebný kód: pár 1",t:"Aké farby má pár č. 1 v 25-párovom telefónnom kábli?",o:["biela – modrá","červená – oranžová","čierna – zelená","modrá – biela – zelená"],a:0,e:"Prvá hlavná farba je biela a prvá vedľajšia modrá, preto je pár 1 biela–modrá."},
+ {s:"Farebný kód: pár 7",t:"Aké farby má pár č. 7 v 25-párovom kábli?",o:["červená – oranžová","biela – zelená","čierna – oranžová","červená – zelená"],a:0,e:"Páry 6 až 10 majú hlavnú farbu červenú. Pár 7 je v tejto päťke druhý, preto má vedľajšiu farbu oranžovú."},
+ {s:"Napätie na linke",t:"Aké napätie je približne na analógovej telefónnej linke, keď je telefón zavesený?",o:["Asi 48 V jednosmerných","230 V striedavých","5 V jednosmerných","12 V striedavých"],a:0,e:"Ústredňa napája analógovú linku jednosmerným napätím okolo 48 V. Pri vyzváňaní je na linke aj striedavé vyzváňacie napätie."},
+ {s:"Konektor telefónu",t:"Ktorý konektor sa bežne používa na pripojenie analógového telefónu?",o:["RJ11","RJ45","HDMI","USB-C"],a:0,e:"Analógový telefón sa pripája konektorom RJ11. RJ45 je na počítačovú sieť."},
+ {s:"Časti vrátnika",t:"Z čoho sa skladá domový vrátnik?",o:["Vstupný panel s tlačidlami, napájací zdroj, elektrický zámok a domáce telefóny v bytoch","Iba z tlačidla zvončeka","Z routera a Wi-Fi kamery","Zo spínača svetla na chodbe"],a:0,e:"Vrátnik tvorí vstupný panel, zdroj, elektrický zámok dverí a domáce telefóny prepojené rozvodom."},
+ {s:"Otvorenie dverí",t:"Ako otvorí obyvateľ vchodové dvere cez vrátnik?",o:["Tlačidlom na domácom telefóne, ktoré cez zdroj zopne elektrický zámok","Hlasovým povelom do mikrofónu","Zdvihnutím slúchadla sa dvere otvoria samé","Iba kľúčom"],a:0,e:"Tlačidlo na domácom telefóne pustí napätie zo zdroja do elektrického zámku a ten uvoľní dvere."},
+ {s:"Izolačný odpor",t:"Čo zisťuješ meraním izolačného odporu vedenia?",o:["Či nie je porušená izolácia medzi žilami alebo voči zemi","Dĺžku kábla","Rýchlosť internetu","Farbu žíl"],a:0,e:"Nízky izolačný odpor znamená poškodenú alebo vlhkú izoláciu, ktorá spôsobuje šum alebo úplnú poruchu."},
+ {s:"Telefónny automat",t:"Čo je verejný telefónny automat?",o:["Verejne prístupná telefónna stanica, kde sa platí mincami alebo kartou","Záznamník v byte","Mobilný telefón na predaj","Ústredňa v pivnici"],a:0,e:"Verejný telefónny automat je verejne prístupná stanica s platbou za hovor."}
+];
+const TEL_D=[
+ {s:"Žiadny oznamovací tón",ch:[["Pripojiť iný telefón do zásuvky","Stále ticho, tón nie je."],["Zmerať napätie na zásuvke","0 V."],["Zmerať napätie na poschodovej svorkovnici","Na páre bytu je 48 V."]],t:"V novom byte nemá telefón po zdvihnutí žiadny tón.",o:["Prerušené vedenie medzi poschodovou svorkovnicou a zásuvkou","Pokazený telefón","Výpadok celej ústredne","Zlý konektor RJ45"],a:0,e:"Napätie je na svorkovnici, ale nie na zásuvke. Vedenie medzi nimi je prerušené alebo nezapojené."},
+ {s:"Šum a praskanie",ch:[["Vymeniť šnúru telefónu","Bez zmeny, stále praská."],["Pripojiť iný telefón","Praská aj iný telefón."],["Pozrieť svorkovnicu","Jedna žila páru je v svorke zatlačená iba do polovice."]],t:"Počas hovoru je na linke šum a praskanie.",o:["Zlý kontakt žily na svorkovnici","Slabá batéria v telefóne","Príliš hlasný hovor","Pokazená ústredňa"],a:0,e:"Nedotlačená žila má prerušovaný kontakt. Treba ju znova zatlačiť narážacím nástrojom."},
+ {s:"Zvoní v inom byte",ch:[["Skontrolovať označenie káblov na svorkovnici","Káble bytov 12 a 14 nie sú označené."],["Zmerať pár bytu 12 testerom","Tón testera je počuť na zásuvke v byte 14."]],t:"Keď volajú do bytu 12, zvoní telefón v byte 14.",o:["Prehodené páry bytov na svorkovnici","Pokazený telefón v byte 12","Zlé číslo u operátora","Slabý signál"],a:0,e:"Páry bytov sú na svorkovnici prehodené. Preto je dôležité káble hneď po zatiahnutí označiť."},
+ {s:"Telefón nezvoní",ch:[["Zavolať na číslo a pripojiť iný telefón","Iný telefón normálne zvoní."],["Pozrieť nastavenia telefónu","Hlasitosť vyzváňania je na nule."]],t:"Z telefónu sa dá volať, ale keď niekto volá, telefón nezvoní.",o:["Vypnuté vyzváňanie v telefóne","Prerušené vedenie","Pokazená svorkovnica","Chýba oznamovací tón"],a:0,e:"Volať sa dá a iný telefón zvoní, takže vedenie je v poriadku. Problém je v nastavení telefónu."},
+ {s:"Dvere sa neotvoria",ch:[["Vyskúšať hovor s panelom","Hovor funguje oboma smermi."],["Zmerať napätie na zámku pri stlačení tlačidla","Na zámok prichádza 12 V."],["Pozrieť elektrický zámok","Mechanizmus zámku je zaseknutý."]],t:"Hovor cez vrátnik funguje, ale po stlačení tlačidla sa vchodové dvere neotvoria.",o:["Pokazený elektrický zámok","Pokazený mikrofón na paneli","Vybitá batéria v telefóne","Zlý konektor RJ11"],a:0,e:"Napätie na zámok prichádza, takže zdroj aj tlačidlo fungujú. Chyba je v samotnom zámku."},
+ {s:"Vrátnik nejde v celom dome",ch:[["Pozrieť vstupný panel","Nesvieti ani podsvietenie tlačidiel."],["Zmerať výstup napájacieho zdroja vrátnika","0 V."],["Skontrolovať istič v rozvádzači","Istič je zapnutý, 230 V na zdroj prichádza."]],t:"Vrátnik nefunguje v žiadnom byte, panel je úplne tmavý.",o:["Pokazený napájací zdroj vrátnika","Pokazené telefóny vo všetkých bytoch","Zlý elektrický zámok","Prerušený kábel do jedného bytu"],a:0,e:"Na zdroj ide 230 V, ale na výstupe nie je nič. Zdroj je pokazený."},
+ {s:"V jednom byte nepočuť",t:"Vrátnik funguje vo všetkých bytoch okrem jedného, kde nepočuť návštevu.",o:["Chyba v domácom telefóne alebo v jeho vedení v tom byte","Pokazený napájací zdroj","Pokazený vstupný panel","Pokazený elektrický zámok"],a:0,e:"Keď ide vrátnik všade okrem jedného bytu, spoločné časti fungujú. Chyba je v telefóne alebo vedení toho bytu."},
+ {s:"Šum po daždi",ch:[["Zmerať izolačný odpor páru","Odpor je výrazne nižší ako na ostatných pároch."],["Prejsť trasu kábla","Kábel vedie cez vlhkú pivnicu a spojka je bez krytu."]],t:"Po každom daždi je na linke silný šum, keď vyschne, prestane.",o:["Vlhkosť v spojke alebo kábli zhoršuje izoláciu","Telefón je starý","Ústredňa je preťažená","Zlé nastavenie hlasitosti"],a:0,e:"Vlhkosť znižuje izolačný odpor. Spojku treba vysušiť, utesniť alebo vymeniť."},
+ {s:"Linka stále obsadená",ch:[["Odpojiť telefón a zmerať odpor medzi žilami a–b","Takmer 0 Ω, aj keď nie je nič pripojené."],["Pozrieť ukončenie v zásuvke","Žily a a b sa pod svorkou dotýkajú."]],t:"Po zapojení novej zásuvky je linka stále obsadená, akoby bol telefón zdvihnutý.",o:["Skrat medzi žilami a a b v zásuvke","Prerušené vedenie","Vypnuté vyzváňanie","Zlý telefón"],a:0,e:"Skrat medzi žilami pôsobí ako trvalo zdvihnutý telefón. Zásuvku treba prepojiť správne."},
+ {s:"Prevŕtaný kábel",t:"Sused vŕtal poličku a odvtedy nejdú telefóny v dvoch bytoch.",o:["Kábel bol v stene prevŕtaný, poškodený úsek treba opraviť alebo vymeniť","Výpadok operátora","Pokazené telefóny","Treba reštartovať router"],a:0,e:"Vŕtanie do trasy kábla je častá príčina poruchy. Preto sa trasy vedú podľa pravidiel a zakresľujú do dokumentácie."},
+ {s:"Brum v slúchadle",ch:[["Prejsť trasu kábla","Kábel vedie v jednom žľabe so silovým káblom 230 V."],["Pripojiť iný telefón","Brum je aj na inom telefóne."]],t:"V slúchadle je počuť stály hlboký brum.",o:["Rušenie od silového vedenia v spoločnom žľabe","Pokazený telefón","Slabé napätie linky","Zlé označenie kábla"],a:0,e:"Silové vedenie 230 V indukuje do telefónneho kábla brum 50 Hz. Káble treba viesť oddelene."},
+ {s:"Automat neberie mince",t:"Verejný telefónny automat vracia všetky mince, kartou sa však zaplatiť dá.",o:["Porucha alebo zaseknutie mincového mechanizmu","Prerušená linka","Vybitá batéria telefónu","Zlé číslo"],a:0,e:"Keď platba kartou funguje, linka aj automat sú v poriadku. Chyba je v mincovom mechanizme."}
+];
+let SV={start:1,sel:{},ok:false,tries:0};
+function svExpect(n){return{a:SV_PRI[Math.floor((n-1)/5)%5],b:SV_SEC[(n-1)%5]}}
+function renderSvork(){
+  const opt=(list,v)=>`<option value="">vyber</option>`+list.map(c=>`<option ${c===v?"selected":""}>${c}</option>`).join("");
+  const sw=c=>c?`<span class="sw" style="background:${SV_HEX[c]}"></span>`:`<span class="sw empty"></span>`;
+  let rows="";
+  for(let k=0;k<10;k++){const n=SV.start+k,s=SV.sel[k]||{};
+    rows+=`<tr><td class="mono">${k+1}</td><td class="mono">pár ${n}</td>
+      <td>${sw(s.a)}<select id="sa${k}" data-k="${k}" data-w="a" ${SV.ok?"disabled":""}>${opt(SV_PRI,s.a)}</select></td>
+      <td>${sw(s.b)}<select id="sb${k}" data-k="${k}" data-w="b" ${SV.ok?"disabled":""}>${opt(SV_SEC,s.b)}</select></td></tr>`}
+  $("#svTable").innerHTML=`<thead><tr><th>Pozícia na svorkovnici</th><th>Pár kábla</th><th>Žila a</th><th>Žila b</th></tr></thead><tbody>${rows}</tbody>`;
+  $("#svPairs").textContent=`páry ${SV.start} až ${SV.start+9}`;
+  $("#svTries").textContent=SV.tries;
+  $("#svCheck").disabled=SV.ok;
+  $("#svTable").querySelectorAll("select").forEach(e=>e.onchange=()=>{const k=+e.dataset.k;SV.sel[k]=SV.sel[k]||{};SV.sel[k][e.dataset.w]=e.value;
+    log("Svorkovnica","nastavil farbu",`pozícia ${k+1} (pár ${SV.start+k}), žila ${e.dataset.w}: ${e.value||"nič"}`);renderSvork();upd()});
+}
+function checkSvork(){
+  if(SV.ok)return;
+  const bad=[];for(let k=0;k<10;k++){const n=SV.start+k,ex=svExpect(n),s=SV.sel[k]||{};if(s.a!==ex.a||s.b!==ex.b)bad.push(k)}
+  SV.tries++;const m=$("#svMsg");m.hidden=false;
+  if(!bad.length){SV.ok=true;m.className="note ok";m.textContent="Svorkovnica je zapojená správne.";log("Svorkovnica","kontrola zapojenia","všetkých 10 párov správne",true)}
+  else{m.className="note bad";m.textContent=`Zapojenie nie je správne. Chybné pozície: ${bad.map(k=>k+1).join(", ")}. Oprav ich a skontroluj znova.`;
+    log("Svorkovnica","kontrola zapojenia","chybné pozície: "+bad.map(k=>{const s=SV.sel[k]||{};return `${k+1} (pár ${SV.start+k}: ${s.a||"?"}–${s.b||"?"})`}).join(", "),false)}
+  renderSvork();upd();
+}
+let PC_LABELS=null;
+function setMode(){
+  if(!PC_LABELS)PC_LABELS={nav:[...document.querySelectorAll(".nav button")].slice(0,4).map(b=>b.firstChild.nodeValue),
+    h:["p1","p2","p3","p4"].map(id=>[$("#"+id+" .ph h1").textContent,$("#"+id+" .ph .hint").textContent]),
+    rg:[...document.querySelectorAll(".rgrid span")].map(e=>e.textContent)};
+  const T=TEL;
+  const nav=T?["Svorkovnica ","Montáž rozvodu ","Teória ","Poruchy "]:PC_LABELS.nav;
+  [...document.querySelectorAll(".nav button")].slice(0,4).forEach((b,i)=>b.firstChild.nodeValue=nav[i]);
+  const H=T?[["Zapojenie svorkovnice","Zapoj páry kábla do svorkovnice podľa farebného kódu a skontroluj zapojenie."],
+             ["Montáž vnútorného rozvodu","Vyberaj kroky v poradí, v akom ich robíš pri montáži rozvodu a stúpacieho vedenia."],
+             ["Teória","Odpovedz na otázky k vnútorným rozvodom, svorkovniciam, účastníckym staniciam a domovému vrátniku."],
+             ["Poruchy","Vyber zákazku vľavo, sprav kontroly a urči príčinu poruchy. Odpovedať môžeš iba raz."]]:PC_LABELS.h;
+  ["p1","p2","p3","p4"].forEach((id,i)=>{$("#"+id+" .ph h1").textContent=H[i][0];$("#"+id+" .ph .hint").textContent=H[i][1]});
+  const rg=T?["Svorkovnica","Montáž","Teória","Poruchy"]:PC_LABELS.rg;document.querySelectorAll(".rgrid span").forEach((e,i)=>e.textContent=rg[i]);
+  $("#orders").hidden=T;$("#req").hidden=T;$("#p1 .cfg").hidden=T;$("#svork").hidden=!T;$("#rig").hidden=T;$("#p3 .bios").hidden=T;
+  if(T)renderSvork();
+}
+
 let aNext=0,aErr=0,order=[],asmLock=0;
+$("#svCheck").onclick=checkSvork;
 function rigSvg(){
   const v=(from,to)=>aNext>from&&(to===undefined||aNext<=to)?1:0;
   const B=(dx,dy)=>`<rect class="bd" x="${dx}" y="${dy}" width="140" height="170" rx="3"/>
@@ -749,7 +865,7 @@ function renderAsm(){
     if(Date.now()<asmLock)return;asmLock=Date.now()+700;
     const i=+b.dataset.i,m=$("#aMsg");
     log("Montáž","vybral krok",STEPS[i][0]+(i===aNext?"":" (správny bol: "+STEPS[aNext][0]+")"),i===aNext);
-    if(i===aNext){aNext++;m.className="note"+(aNext===STEPS.length?" ok":"");m.textContent=aNext===STEPS.length?"Počítač je zložený v správnom poradí.":"Správne. Ďalší krok?";renderAsm()}
+    if(i===aNext){aNext++;m.className="note"+(aNext===STEPS.length?" ok":"");m.textContent=aNext===STEPS.length?(TEL?"Rozvod je namontovaný v správnom poradí.":"Počítač je zložený v správnom poradí."):"Správne. Ďalší krok?";renderAsm()}
     else{aErr++;m.className="note bad";m.textContent="Toto ešte nie. "+STEPS[aNext][1];b.classList.add("shake");setTimeout(()=>b.classList.remove("shake"),600);$("#aErr").textContent="chyby: "+aErr}
     upd();
   });
@@ -789,16 +905,16 @@ const sc=a=>({ok:a.filter(s=>s.pick!==null&&s.pick===s.ans).length,done:a.filter
 function upd(){
   const n=fullName()?fullName()+", "+profile.trieda:"";
   const pc=Object.keys(passed).length,bs=sc(biosSt),ds=sc(diagSt),asmDone=aNext===STEPS.length;
-  $("#c1").textContent=pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;
+  $("#c1").textContent=TEL?(SV.ok?"✓":"–"):pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;
   $("#rName").textContent=n||"Meno nevyplnené";
   $("#rDate").textContent="Vyplnené "+new Date().toLocaleString("sk-SK",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"});
-  $("#r1").textContent=pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
+  $("#r1").textContent=TEL?(SV.ok?"hotová":"nehotová"):pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
   $("#r3").textContent=bs.ok+" / "+BIOS.length;$("#r4").textContent=ds.ok+" / "+DIAG.length;
   $("#rTable").innerHTML="<thead><tr><th>Časť</th><th>Stav</th><th>Výsledok</th></tr></thead><tbody>"+
-   ORDERS.map(o=>`<tr><td>Zákazka ${o.no} · ${o.short}</td><td>${passed[o.id]?"odovzdaná":"neodovzdaná"}</td><td class="mono">${passed[o.id]?price(builds[o.id])+" € z "+o.budget+" €":"–"}</td></tr>`).join("")+
+   (TEL?`<tr><td>Svorkovnica (${SV.start}–${SV.start+9})</td><td>${SV.ok?"zapojená správne":"nedokončená"}</td><td class="mono">pokusov: ${SV.tries}</td></tr>`:"")+ORDERS.map(o=>`<tr><td>Zákazka ${o.no} · ${o.short}</td><td>${passed[o.id]?"odovzdaná":"neodovzdaná"}</td><td class="mono">${passed[o.id]?price(builds[o.id])+" € z "+o.budget+" €":"–"}</td></tr>`).join("")+
    `<tr><td>Montáž</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>
-    <tr><td>BIOS</td><td>${bs.done} / ${BIOS.length} zodpovedaných</td><td class="mono">${bs.ok} správne</td></tr>
-    <tr><td>Servisné zákazky</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${ds.ok} správne</td></tr></tbody>`;
+    <tr><td>${TEL?"Teória":"BIOS"}</td><td>${bs.done} / ${BIOS.length} zodpovedaných</td><td class="mono">${bs.ok} správne</td></tr>
+    <tr><td>${TEL?"Poruchy":"Servisné zákazky"}</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${ds.ok} správne</td></tr></tbody>`;
 }
 $("#whoName").textContent="";
 /* štart */
@@ -807,7 +923,7 @@ $("#startForm").onsubmit=e=>{e.preventDefault();
   if(!m||!p||!t){$("#fErr").textContent="Vyplň meno, priezvisko a vyber triedu.";return}
   if(!["1.D","2.C","2.G","3.C"].includes(t)){$("#fErr").textContent="Vyber triedu zo zoznamu.";return}
   Object.assign(profile,{meno:m,priezvisko:p,trieda:t});applyPick(makePick(t),null);
-  $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);log("Štart","pridelené zadanie","obtiažnosť: "+PICK.lvl+" | zákazky: "+ORDERS.map(o=>o.no+" "+o.short).join(", ")+" | BIOS: "+BIOS.map(q=>q.s).join(", ")+" | servis: "+DIAG.map(q=>q.s).join(", "));upd();window.scrollTo(0,0)};
+  $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);log("Štart","pridelené zadanie","obtiažnosť: "+PICK.lvl+(TEL?" | svorkovnica: páry "+SV.start+"–"+(SV.start+9)+" | teória: "+BIOS.map(q=>q.s).join(", ")+" | poruchy: "+DIAG.map(q=>q.s).join(", "):" | zákazky: "+ORDERS.map(o=>o.no+" "+o.short).join(", ")+" | BIOS: "+BIOS.map(q=>q.s).join(", ")+" | servis: "+DIAG.map(q=>q.s).join(", ")));upd();window.scrollTo(0,0)};
 /* dozor: odchod zo stránky */
 let awayAt=null,awayN=0,awaySec=0;
 function goneAway(){if(!profile.meno||sent||awayAt)return;awayAt=Date.now()}
@@ -820,7 +936,8 @@ function updAway(){const e=$("#awayInfo");if(e)e.textContent=awayN?`Odchody zo s
 function renderFeedback(){
   const li=(cls,t)=>`<li class="${cls}">${t}</li>`;
   let h=`<h2>Spätná väzba</h2><p class="hint">Takto dopadla tvoja práca. Po obnovení stránky sa tento prehľad stratí.</p><div class="fb">`;
-  h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
+  if(TEL)h+=`<div><h3>Svorkovnica</h3><ul>${SV.ok?li("ok",`Zapojená správne, pokusov o kontrolu: ${SV.tries}.`):li("bad",`Nezapojená správne (pokusov: ${SV.tries}).`)+[...Array(10).keys()].filter(k=>{const e=svExpect(SV.start+k),x=SV.sel[k]||{};return x.a!==e.a||x.b!==e.b}).map(k=>{const e=svExpect(SV.start+k),x=SV.sel[k]||{};return li("why",`Pozícia ${k+1} (pár ${SV.start+k}): mal si ${x.a||"?"}–${x.b||"?"}, správne je ${e.a}–${e.b}.`)}).join("")}</ul></div>`;
+  else h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
     const ev=lastEval[o.id],t=tries[o.id]||0;
     if(passed[o.id])return li("ok",`<b>${o.no} ${o.short}:</b> odovzdaná, ${price(builds[o.id])} € z ${o.budget} €, pokusov: ${t}.`);
     if(!ev)return li("bad",`<b>${o.no} ${o.short}:</b> zostavu si neodovzdal.`);
@@ -836,7 +953,7 @@ function renderFeedback(){
       else if(x.pick!==x.ans)bad.push(li("bad",`<b>${q.s}:</b> tvoja odpoveď „${esc(x.opts[x.pick])}“. <span class="why">Správne: ${esc(x.opts[x.ans])}. ${esc(q.e)}</span>`));});
     const ok=st.filter(x=>x.pick!==null&&x.pick===x.ans).length;
     return `<div><h3>${name}: ${ok} z ${list.length} správne</h3><ul>${bad.join("")||li("ok","Všetko správne.")}</ul></div>`;};
-  h+=desk("BIOS",BIOS,biosSt)+desk("Servis",DIAG,diagSt);
+  h+=desk(TEL?"Teória":"BIOS",BIOS,biosSt)+desk(TEL?"Poruchy":"Servis",DIAG,diagSt);
   h+=`<div><h3>Odchody zo stránky</h3><ul>${li(awayN?"bad":"ok",awayN?`Stránku si opustil ${awayN}× (spolu ${awaySec} s).`:"Stránku si počas práce neopustil.")}</ul></div></div>`;
   const fb=$("#feedback");fb.innerHTML=h;fb.hidden=false;fb.scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -847,7 +964,7 @@ $("#send").onclick=async()=>{
   if(!ENDPOINT){m.className="note bad";m.textContent="Odosielanie ešte nie je nastavené. Povedz to majstrovi.";return}
   const bs=sc(biosSt),ds=sc(diagSt),errs=LOG.filter(l=>l.ok==="nie"&&l.cast!=="Dozor").length;
   const payload={meno:profile.meno,priezvisko:profile.priezvisko,trieda:profile.trieda,zaciatok:new Date(T0||Date.now()).toISOString(),koniec:new Date().toISOString(),
-    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:Object.keys(passed).length,montaz_hotova:aNext===STEPS.length,montaz_chyby:aErr,
+    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:TEL?(SV.ok?1:0):Object.keys(passed).length,montaz_hotova:aNext===STEPS.length,montaz_chyby:aErr,
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
   $("#send").disabled=true;m.className="note";m.textContent="Odosielam…";
   try{await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
@@ -856,11 +973,12 @@ $("#send").onclick=async()=>{
 };
 let saved=null;try{saved=JSON.parse(localStorage.getItem(SKEY)||"null")}catch(e){}
 if(saved&&!saved.pick)saved=null;
+if(saved&&saved.profile&&TEL_CLASSES.includes(saved.profile.trieda)&&!saved.pick.tel)saved=null;
 if(saved&&saved.sent){try{localStorage.removeItem(SKEY)}catch(e){}saved=null}
 if(saved&&saved.profile&&saved.profile.meno){
   Object.assign(profile,saved.profile);T0=saved.T0;LOG.push(...saved.LOG);
   Object.keys(saved.builds).forEach(k=>builds[k]=saved.builds[k]);Object.assign(passed,saved.passed);Object.assign(lastEval,saved.lastEval||{});Object.assign(tries,saved.tries||{});
-  awayN=saved.awayN||0;awaySec=saved.awaySec||0;aNext=saved.aNext;aErr=saved.aErr;order=saved.order;sent=saved.sent;cur=saved.cur||"o1";
+  if(saved.sv)SV=saved.sv;awayN=saved.awayN||0;awaySec=saved.awaySec||0;aNext=saved.aNext;aErr=saved.aErr;order=saved.order;sent=saved.sent;cur=saved.cur||"o1";
   (saved.bios||[]).forEach(x=>x.seen=x.seen||[]);(saved.diag||[]).forEach(x=>x.seen=x.seen||[]);
   $("#start").hidden=true;$("#whoName").textContent=fullName()+" · "+profile.trieda;
   if(sent){$("#send").disabled=true;$("#send").textContent="Odoslané";$("#sendMsg").hidden=false;$("#sendMsg").className="note ok";$("#sendMsg").textContent="Výsledky už boli odoslané."}
@@ -868,18 +986,23 @@ if(saved&&saved.profile&&saved.profile.meno){
 }else order=shuffle(STEPS.map((_,i)=>i));
 const pickN=(a,n,ok)=>shuffle(a.map((_,i)=>i).filter(i=>!ok||ok(a[i]))).slice(0,n).sort((x,y)=>x-y);
 function makePick(trieda){
+  if(TEL_CLASSES.includes(trieda))return{lvl:"telekom",tel:true,o:[],b:pickN(TEL_Q,8),d:pickN(TEL_D,8),sv:[1,6,11,16][Math.floor(Math.random()*4)]};
   if(EASY_CLASSES.includes(trieda))return{lvl:"ľahká",
     o:pickN(ORDERS_ALL,EASY.n.o,x=>EASY.orders.includes(x.id)),b:pickN(BIOS_ALL,EASY.n.b,x=>EASY.bios.includes(x.s)),d:pickN(DIAG_ALL,EASY.n.d,x=>EASY.diag.includes(x.s))};
   return{lvl:"štandardná",o:pickN(ORDERS_ALL,ORDERS_PICK),b:pickN(BIOS_ALL,BIOS_PICK),d:pickN(DIAG_ALL,DIAG_PICK)};
 }
 function applyPick(pk,savedDesks){
-  PICK=pk;
-  ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
-  ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});
-  if(!ORDERS.some(o=>o.id===cur))cur=ORDERS[0].id;
-  biosSt=makeDesk(BIOS,$("#biosDesk"),"B-","BIOS",savedDesks?savedDesks.bios:null);
-  diagSt=makeDesk(DIAG,$("#diagDesk"),"S-","Servis",savedDesks?savedDesks.diag:null);
-  renderCfg();
+  PICK=pk;TEL=!!pk.tel;
+  const prevLen=STEPS.length;STEPS=TEL?TEL_STEPS:PC_STEPS;
+  if(!savedDesks||order.length!==STEPS.length){order=shuffle(STEPS.map((_,i)=>i));if(!savedDesks){aNext=0;aErr=0}}
+  if(TEL){ORDERS=[];BIOS=PICK.b.map(i=>TEL_Q[i]);DIAG=PICK.d.map(i=>TEL_D[i]);if(!savedDesks)SV={start:pk.sv||1,sel:{},ok:false,tries:0}}
+  else{ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
+    ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});
+    if(!ORDERS.some(o=>o.id===cur))cur=ORDERS[0].id;}
+  biosSt=makeDesk(BIOS,$("#biosDesk"),TEL?"T-":"B-",TEL?"Teória":"BIOS",savedDesks?savedDesks.bios:null);
+  diagSt=makeDesk(DIAG,$("#diagDesk"),TEL?"P-":"S-",TEL?"Poruchy":"Servis",savedDesks?savedDesks.diag:null);
+  setMode();renderAsm();
+  if(TEL)upd();else renderCfg();
 }
 updAway();renderAsm();
 if(saved&&saved.profile&&saved.profile.meno)applyPick(saved.pick,saved);
