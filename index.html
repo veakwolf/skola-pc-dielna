@@ -226,6 +226,7 @@ tr:last-child td{border-bottom:0}
 .start .lnk{padding:11px 14px;font-size:15px}
 .sendbox{padding:16px 18px;display:grid;gap:10px}
 .sw{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid var(--line);vertical-align:-2px;margin-right:6px}
+.sw.ws{background:linear-gradient(90deg,#f4f4f4 0 35%,var(--c) 35% 65%,#f4f4f4 65%)}
 .sw.empty{background:repeating-linear-gradient(45deg,var(--sunk),var(--sunk) 3px,var(--line) 3px,var(--line) 5px)}
 #svTable select{font-size:14px;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface);min-width:120px}
 .svrule{padding:14px 16px;display:grid;gap:8px;font-size:14.5px;max-width:80ch}
@@ -274,6 +275,22 @@ tr:last-child td{border-bottom:0}
   <div class="ph"><h1>Konfigurátor zostavy</h1><p class="hint">Zostavu odovzdáš, keď je kompatibilná a spĺňa všetky požiadavky zákazníka.</p></div>
   <div class="orders" id="orders"></div>
   <div class="box req" id="req"></div>
+  <div id="rj" hidden style="display:grid;gap:18px">
+    <div class="box svrule">
+      <h2>Zadanie</h2>
+      <p>Zákazník potrebuje <b id="rjTyp"></b> sieťový kábel. Kábel má 4 páry, teda 8 žíl, a na oboch koncoch konektor RJ45. Pre každý koniec urč, ktorá žila patrí na ktorý pin, a skontroluj zapojenie.</p>
+      <p><b>Ako čítať piny:</b> konektor drž zámkom (západkou) dole a kontaktmi k sebe, kábel ide od teba. Pin 1 je vľavo, pin 8 vpravo.</p>
+      <p><b>Norma T568B</b> (najpoužívanejšia): 1 biela-oranžová, 2 oranžová, 3 biela-zelená, 4 modrá, 5 biela-modrá, 6 zelená, 7 biela-hnedá, 8 hnedá.</p>
+      <p><b>Norma T568A</b> je rovnaká, len oranžový a zelený pár si vymenia miesta. Modrý a hnedý pár ostávajú.</p>
+      <p><b>Priamy kábel</b> (počítač – switch) má na oboch koncoch rovnakú normu, zvyčajne T568B. <b>Krížený kábel</b> (počítač – počítač) má na jednom konci T568A a na druhom T568B.</p>
+    </div>
+    <div class="box tw"><table id="rjTable"></table></div>
+    <div class="box sendbox">
+      <div class="act"><button class="lnk pri" id="rjCheck">Skontrolovať zapojenie</button></div>
+      <div class="kv" style="margin:0"><span>Pokusy o kontrolu</span><b class="num" id="rjTries">0</b></div>
+      <div class="note" id="rjMsg" hidden></div>
+    </div>
+  </div>
   <div id="svork" hidden style="display:grid;gap:18px">
     <div class="box svrule">
       <h2>Zadanie</h2>
@@ -823,23 +840,46 @@ function checkSvork(){
     log("Svorkovnica","kontrola zapojenia","chybné pozície: "+bad.map(k=>{const s=SV.sel[k]||{};return `${k+1} (pár ${SV.start+k}: ${s.a||"?"}–${s.b||"?"})`}).join(", "),false)}
   renderSvork();upd();
 }
+const RJ_B=["biela-oranžová","oranžová","biela-zelená","modrá","biela-modrá","zelená","biela-hnedá","hnedá"];
+const RJ_A=["biela-zelená","zelená","biela-oranžová","modrá","biela-modrá","oranžová","biela-hnedá","hnedá"];
+const RJ_ALL=["biela-hnedá","biela-modrá","biela-oranžová","biela-zelená","hnedá","modrá","oranžová","zelená"];
+function rjInit(t){return{typ:t,sel:{L:[],R:[]},ok:false,tries:0}}
+function rjExp(end){return SV.rj.typ==="krížený"&&end==="R"?RJ_A:RJ_B}
+function rjEndName(end){return SV.rj.typ==="krížený"?(end==="L"?"Koniec 1 (T568B)":"Koniec 2 (T568A)"):(end==="L"?"Koniec 1 (T568B)":"Koniec 2 (T568B)")}
+function renderRJ(){
+  const R=SV.rj,sw=c=>{if(!c)return `<span class="sw empty"></span>`;const w=c.startsWith("biela-"),base=w?c.slice(6):c;return `<span class="sw${w?" ws":""}" style="${w?"--c":"background"}:${SV_HEX[base]}"></span>`};
+  const opt=v=>`<option value="">vyber</option>`+RJ_ALL.map(c=>`<option ${c===v?"selected":""}>${c}</option>`).join("");
+  let rows="";for(let k=0;k<8;k++)rows+=`<tr><td class="mono">pin ${k+1}</td>`+["L","R"].map(e=>`<td>${sw(R.sel[e][k])}<select data-e="${e}" data-k="${k}" ${R.ok?"disabled":""}>${opt(R.sel[e][k])}</select></td>`).join("")+`</tr>`;
+  $("#rjTable").innerHTML=`<thead><tr><th>Pin</th><th>${rjEndName("L")}</th><th>${rjEndName("R")}</th></tr></thead><tbody>${rows}</tbody>`;
+  $("#rjTyp").textContent=R.typ==="krížený"?"krížený (crossover)":"priamy (straight-through)";
+  $("#rjTries").textContent=R.tries;$("#rjCheck").disabled=R.ok;
+  $("#rjTable").querySelectorAll("select").forEach(s=>s.onchange=()=>{R.sel[s.dataset.e][+s.dataset.k]=s.value;
+    log("RJ45","nastavil žilu",`${rjEndName(s.dataset.e)}, pin ${+s.dataset.k+1}: ${s.value||"nič"}`);renderRJ();upd()});
+}
+function rjBad(){const b=[];["L","R"].forEach(e=>{const x=rjExp(e);for(let k=0;k<8;k++)if(SV.rj.sel[e][k]!==x[k])b.push([e,k])});return b}
+function checkRJ(){
+  const R=SV.rj;if(R.ok)return;const bad=rjBad(),m=$("#rjMsg");R.tries++;m.hidden=false;
+  if(!bad.length){R.ok=true;m.className="note ok";m.textContent="Kábel je zapojený správne.";log("RJ45","kontrola zapojenia","oba konce správne",true)}
+  else{const t=bad.map(([e,k])=>(e==="L"?"koniec 1":"koniec 2")+" pin "+(k+1));m.className="note bad";m.textContent="Zapojenie nie je správne. Chyby: "+t.join(", ")+". Oprav ich a skontroluj znova.";log("RJ45","kontrola zapojenia","chyby: "+t.join(", "),false)}
+  renderRJ();upd();
+}
+$("#rjCheck").onclick=checkRJ;
 let PC_LABELS=null;
 function setMode(){
   if(!PC_LABELS)PC_LABELS={nav:[...document.querySelectorAll(".nav button")].slice(0,4).map(b=>b.firstChild.nodeValue),
     h:["p1","p2","p3","p4"].map(id=>[$("#"+id+" .ph h1").textContent,$("#"+id+" .ph .hint").textContent]),
     rg:[...document.querySelectorAll(".rgrid span")].map(e=>e.textContent)};
   const T=TEL;
-  const nav=T?["Svorkovnica ","Montáž rozvodu ","Teória ","Poruchy "]:PC_LABELS.nav;
+  const nav=T?["Kábel RJ45 ","Montáž rozvodu ","Teória ","Poruchy "]:PC_LABELS.nav;
   [...document.querySelectorAll(".nav button")].slice(0,4).forEach((b,i)=>b.firstChild.nodeValue=nav[i]);
-  const H=T?[["Zapojenie svorkovnice","Zapoj páry kábla do svorkovnice podľa farebného kódu a skontroluj zapojenie."],
+  const H=T?[["Zapojenie kábla RJ45","Urči poradie žíl v konektoroch RJ45 podľa normy a skontroluj zapojenie. Kontrolovať môžeš koľkokrát chceš."],
              ["Montáž vnútorného rozvodu","Vyberaj kroky v poradí, v akom ich robíš pri montáži rozvodu a stúpacieho vedenia."],
              ["Teória","Pri každej otázke si najprv prečítaj krátke vysvetlenie, potom odpovedz. Ak sa pomýliš, môžeš to skúsiť znova. Niektoré otázky sú z učiva, ktoré už poznáš (BOZP, meranie, súčiastky)."],
              ["Poruchy","Vyber zákazku vľavo, prečítaj si tip, sprav kontroly a urči príčinu poruchy. Ak sa pomýliš, môžeš to skúsiť znova."]]:PC_LABELS.h;
   ["p1","p2","p3","p4"].forEach((id,i)=>{$("#"+id+" .ph h1").textContent=H[i][0];$("#"+id+" .ph .hint").textContent=H[i][1]});
-  const rg=T?["Svorkovnica","Montáž","Teória","Poruchy"]:PC_LABELS.rg;document.querySelectorAll(".rgrid span").forEach((e,i)=>e.textContent=rg[i]);
+  const rg=T?["Kábel RJ45","Montáž","Teória","Poruchy"]:PC_LABELS.rg;document.querySelectorAll(".rgrid span").forEach((e,i)=>e.textContent=rg[i]);
   $("#orders").hidden=T;$("#req").hidden=T;$("#p1 .cfg").hidden=T;$("#svork").hidden=!T;$("#rig").hidden=T;$("#p3 .bios").hidden=T;
-  const n1=document.querySelector('.nav [data-p="p1"]');n1.hidden=T;document.querySelector(".rgrid div").hidden=T;
-  if(T&&!$("#p1").hidden)n1.parentNode.querySelector('[data-p="p2"]').click();
+  $("#svork").hidden=true;$("#rj").hidden=!T;if(T)renderRJ();
 }
 
 let aNext=0,aErr=0,order=[],asmLock=0;
@@ -917,13 +957,13 @@ const sc=a=>({ok:a.filter(s=>s.pick!==null&&s.pick===s.ans).length,done:a.filter
 function upd(){
   const n=fullName()?fullName()+", "+profile.trieda:"";
   const pc=Object.keys(passed).length,bs=sc(biosSt),ds=sc(diagSt),asmDone=aNext===STEPS.length;
-  $("#c1").textContent=TEL?(SV.ok?"✓":"–"):pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;
+  $("#c1").textContent=TEL?(SV.rj&&SV.rj.ok?"✓":"–"):pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;
   $("#rName").textContent=n||"Meno nevyplnené";
   $("#rDate").textContent="Vyplnené "+new Date().toLocaleString("sk-SK",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"});
-  $("#r1").textContent=TEL?(SV.ok?"hotová":"nehotová"):pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
+  $("#r1").textContent=TEL?(SV.rj&&SV.rj.ok?"hotový":"nehotový"):pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
   $("#r3").textContent=bs.ok+" / "+BIOS.length;$("#r4").textContent=ds.ok+" / "+DIAG.length;
   $("#rTable").innerHTML="<thead><tr><th>Časť</th><th>Stav</th><th>Výsledok</th></tr></thead><tbody>"+
-   (false?`<tr><td>Svorkovnica (${SV.start}–${SV.start+9})</td><td>${SV.ok?"zapojená správne":"nedokončená"}</td><td class="mono">pokusov: ${SV.tries}</td></tr>`:"")+ORDERS.map(o=>`<tr><td>Zákazka ${o.no} · ${o.short}</td><td>${passed[o.id]?"odovzdaná":"neodovzdaná"}</td><td class="mono">${passed[o.id]?price(builds[o.id])+" € z "+o.budget+" €":"–"}</td></tr>`).join("")+
+   (TEL?`<tr><td>Kábel RJ45 (${SV.rj.typ})</td><td>${SV.rj.ok?"zapojený správne":"nedokončený"}</td><td class="mono">pokusov: ${SV.rj.tries}</td></tr>`:"")+ORDERS.map(o=>`<tr><td>Zákazka ${o.no} · ${o.short}</td><td>${passed[o.id]?"odovzdaná":"neodovzdaná"}</td><td class="mono">${passed[o.id]?price(builds[o.id])+" € z "+o.budget+" €":"–"}</td></tr>`).join("")+
    `<tr><td>Montáž</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>
     <tr><td>${TEL?"Teória":"BIOS"}</td><td>${bs.done} / ${BIOS.length} zodpovedaných</td><td class="mono">${bs.ok} správne</td></tr>
     <tr><td>${TEL?"Poruchy":"Servisné zákazky"}</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${ds.ok} správne</td></tr></tbody>`;
@@ -935,7 +975,7 @@ $("#startForm").onsubmit=e=>{e.preventDefault();
   if(!m||!p||!t){$("#fErr").textContent="Vyplň meno, priezvisko a vyber triedu.";return}
   if(!["1.D","2.C","2.G","3.C"].includes(t)){$("#fErr").textContent="Vyber triedu zo zoznamu.";return}
   Object.assign(profile,{meno:m,priezvisko:p,trieda:t});applyPick(makePick(t),null);
-  $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);log("Štart","pridelené zadanie","obtiažnosť: "+PICK.lvl+(TEL?" | teória: "+BIOS.map(q=>q.s).join(", ")+" | poruchy: "+DIAG.map(q=>q.s).join(", "):" | zákazky: "+ORDERS.map(o=>o.no+" "+o.short).join(", ")+" | BIOS: "+BIOS.map(q=>q.s).join(", ")+" | servis: "+DIAG.map(q=>q.s).join(", ")));upd();window.scrollTo(0,0)};
+  $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);log("Štart","pridelené zadanie","obtiažnosť: "+PICK.lvl+(TEL?" | kábel RJ45: "+SV.rj.typ+" | teória: "+BIOS.map(q=>q.s).join(", ")+" | poruchy: "+DIAG.map(q=>q.s).join(", "):" | zákazky: "+ORDERS.map(o=>o.no+" "+o.short).join(", ")+" | BIOS: "+BIOS.map(q=>q.s).join(", ")+" | servis: "+DIAG.map(q=>q.s).join(", ")));upd();window.scrollTo(0,0)};
 /* dozor: odchod zo stránky */
 let awayAt=null,awayN=0,awaySec=0;
 function goneAway(){if(!profile.meno||sent||awayAt)return;awayAt=Date.now()}
@@ -948,7 +988,7 @@ function updAway(){const e=$("#awayInfo");if(e)e.textContent=awayN?`Odchody zo s
 function renderFeedback(){
   const li=(cls,t)=>`<li class="${cls}">${t}</li>`;
   let h=`<h2>Spätná väzba</h2><p class="hint">Takto dopadla tvoja práca. Po obnovení stránky sa tento prehľad stratí.</p><div class="fb">`;
-  if(false)h+=`<div><h3>Svorkovnica</h3><ul>${SV.ok?li("ok",`Zapojená správne, pokusov o kontrolu: ${SV.tries}.`):li("bad",`Nezapojená správne (pokusov: ${SV.tries}).`)+[...Array(10).keys()].filter(k=>{const e=svExpect(SV.start+k),x=SV.sel[k]||{};return x.a!==e.a||x.b!==e.b}).map(k=>{const e=svExpect(SV.start+k),x=SV.sel[k]||{};return li("why",`Pozícia ${k+1} (pár ${SV.start+k}): mal si ${x.a||"?"}–${x.b||"?"}, správne je ${e.a}–${e.b}.`)}).join("")}</ul></div>`;
+  if(TEL)h+=`<div><h3>Kábel RJ45 (${SV.rj.typ})</h3><ul>${SV.rj.ok?li("ok",`Zapojený správne, pokusov o kontrolu: ${SV.rj.tries}.`):li("bad",`Nezapojený správne (pokusov: ${SV.rj.tries}).`)+rjBad().map(([e,k])=>li("why",`${rjEndName(e)}, pin ${k+1}: mal si ${SV.rj.sel[e][k]||"nič"}, správne je ${rjExp(e)[k]}.`)).join("")}</ul></div>`;
   else h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
     const ev=lastEval[o.id],t=tries[o.id]||0;
     if(passed[o.id])return li("ok",`<b>${o.no} ${o.short}:</b> odovzdaná, ${price(builds[o.id])} € z ${o.budget} €, pokusov: ${t}.`);
@@ -976,7 +1016,7 @@ $("#send").onclick=async()=>{
   if(!ENDPOINT){m.className="note bad";m.textContent="Odosielanie ešte nie je nastavené. Povedz to majstrovi.";return}
   const bs=sc(biosSt),ds=sc(diagSt),errs=LOG.filter(l=>l.ok==="nie"&&l.cast!=="Dozor").length;
   const payload={meno:profile.meno,priezvisko:profile.priezvisko,trieda:profile.trieda,zaciatok:new Date(T0||Date.now()).toISOString(),koniec:new Date().toISOString(),
-    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:TEL?"":Object.keys(passed).length,montaz_hotova:aNext===STEPS.length,montaz_chyby:aErr,
+    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:TEL?(SV.rj&&SV.rj.ok?1:0):Object.keys(passed).length,montaz_hotova:aNext===STEPS.length,montaz_chyby:aErr,
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
   $("#send").disabled=true;m.className="note";m.textContent="Odosielam…";
   try{await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
@@ -998,7 +1038,7 @@ if(saved&&saved.profile&&saved.profile.meno){
 }else order=shuffle(STEPS.map((_,i)=>i));
 const pickN=(a,n,ok)=>shuffle(a.map((_,i)=>i).filter(i=>!ok||ok(a[i]))).slice(0,n).sort((x,y)=>x-y);
 function makePick(trieda){
-  if(TEL_CLASSES.includes(trieda))return{lvl:"telekom",tel:true,o:[],b:[...pickN(TEL_Q,5,x=>!x.k&&!x.x),...pickN(TEL_Q,3,x=>x.k)],d:pickN(TEL_D,8),sv:[1,6,11,16][Math.floor(Math.random()*4)]};
+  if(TEL_CLASSES.includes(trieda))return{lvl:"telekom",tel:true,o:[],b:[...pickN(TEL_Q,5,x=>!x.k&&!x.x),...pickN(TEL_Q,3,x=>x.k)],d:pickN(TEL_D,8),sv:[1,6,11,16][Math.floor(Math.random()*4)],rj:Math.random()<.5?"priamy":"krížený"};
   if(EASY_CLASSES.includes(trieda))return{lvl:"ľahká",
     o:pickN(ORDERS_ALL,EASY.n.o,x=>EASY.orders.includes(x.id)),b:pickN(BIOS_ALL,EASY.n.b,x=>EASY.bios.includes(x.s)),d:pickN(DIAG_ALL,EASY.n.d,x=>EASY.diag.includes(x.s))};
   return{lvl:"štandardná",o:pickN(ORDERS_ALL,ORDERS_PICK),b:pickN(BIOS_ALL,BIOS_PICK),d:pickN(DIAG_ALL,DIAG_PICK)};
@@ -1007,7 +1047,7 @@ function applyPick(pk,savedDesks){
   PICK=pk;TEL=!!pk.tel;
   const prevLen=STEPS.length;STEPS=TEL?TEL_STEPS:PC_STEPS;
   if(!savedDesks||order.length!==STEPS.length){order=shuffle(STEPS.map((_,i)=>i));if(!savedDesks){aNext=0;aErr=0}}
-  if(TEL){ORDERS=[];BIOS=PICK.b.map(i=>TEL_Q[i]);DIAG=PICK.d.map(i=>TEL_D[i]);if(!savedDesks)SV={start:pk.sv||1,sel:{},ok:false,tries:0}}
+  if(TEL){ORDERS=[];BIOS=PICK.b.map(i=>TEL_Q[i]);DIAG=PICK.d.map(i=>TEL_D[i]);if(!savedDesks)SV={start:pk.sv||1,sel:{},ok:false,tries:0};if(!SV.rj)SV.rj=rjInit(pk.rj||"priamy")}
   else{ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
     ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});
     if(!ORDERS.some(o=>o.id===cur))cur=ORDERS[0].id;}
