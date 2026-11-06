@@ -227,6 +227,24 @@ tr:last-child td{border-bottom:0}
 .sendbox{padding:16px 18px;display:grid;gap:10px}
 .sw{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid var(--line);vertical-align:-2px;margin-right:6px}
 .sw.ws{background:linear-gradient(90deg,#f4f4f4 0 35%,var(--c) 35% 65%,#f4f4f4 65%)}
+
+.vsvg{width:100%;min-width:640px;height:auto;display:block}
+.vsvg .vb,.vsvg .vt,.vsvg .vs{pointer-events:none}
+.vsvg .vb{fill:var(--sunk);stroke:var(--line)}
+.vsvg .vt{font:600 14px var(--sans);fill:var(--fg)}.vsvg .vs{font:12px var(--sans);fill:var(--muted)}
+.vsvg .vw{stroke:var(--accent);stroke-width:4;stroke-linecap:round;cursor:pointer}.vsvg .vw:hover{stroke:var(--bad)}
+.vsvg .vp{cursor:pointer}.vsvg .vp circle{fill:var(--surface);stroke:var(--fg);stroke-width:2}.vsvg .vp:hover circle{fill:var(--accent-soft)}
+.vsvg .vp.on circle{fill:var(--accent);stroke:var(--accent)}.vsvg .vp text{font:600 12px var(--mono);fill:var(--fg)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:12px}.seg button{border:0;background:none;padding:6px 14px;font-weight:600;font-size:13px}.seg button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.bcols{display:grid;grid-template-columns:1fr 1fr;gap:18px}@media(max-width:800px){.bcols{grid-template-columns:1fr}}
+.bcols h3{font-size:13px;margin:0 0 8px}
+.bk{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 8px;border-radius:5px;margin-bottom:5px;color:#fff;font-size:13.5px;font-weight:600}
+.bk select{font-size:13px;border-radius:3px;border:0;padding:2px 4px}
+.bk-pin{background:#5b6b7f}.bk-set{background:#2e7d4f}.bk-wait{background:#b8860b}.bk-if,.bk-else,.bk-end{background:#c2571a}
+.bkx{margin-left:auto;display:flex;gap:2px}.bkx button{background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:3px;width:24px;height:22px;font-weight:700}
+.bpal{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.bcode,#vrCode{font:13px/1.5 var(--mono);background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:10px 12px;margin:0;white-space:pre;overflow:auto;color:var(--fg)}
+#vrCode{width:100%;box-sizing:border-box;resize:vertical;tab-size:2}
 .sw.empty{background:repeating-linear-gradient(45deg,var(--sunk),var(--sunk) 3px,var(--line) 3px,var(--line) 5px)}
 #svTable select{font-size:14px;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface);min-width:120px}
 .svrule{padding:14px 16px;display:grid;gap:8px;font-size:14.5px;max-width:80ch}
@@ -261,6 +279,7 @@ tr:last-child td{border-bottom:0}
       <button data-p="p2">Montáž <span class="cnt" id="c2"></span></button>
       <button data-p="p3">BIOS <span class="cnt" id="c3"></span></button>
       <button data-p="p4">Servis <span class="cnt" id="c4"></span></button>
+      <button data-p="p6" hidden>Vrátnik <span class="cnt" id="c6"></span></button>
       <button data-p="p5">Výkaz</button>
     </nav>
     <div class="who">Technik <b id="whoName" style="color:var(--bar-fg);font-weight:600"></b></div>
@@ -390,6 +409,37 @@ tr:last-child td{border-bottom:0}
 <section class="page" id="p4" hidden>
   <div class="ph"><h1>Servisné zákazky</h1><p class="hint">Vyber zákazku vľavo, prečítaj si popis od zákazníka a urči najpravdepodobnejšiu príčinu. Odpovedať môžeš iba raz.</p></div>
   <div class="box desk" id="diagDesk"></div>
+</section>
+
+<!-- VRÁTNIK -->
+<section class="page" id="p6" hidden>
+  <div class="ph"><h1>Domový vrátnik</h1><p class="hint">Najprv zapoj schému, potom napíš program pre riadiacu jednotku. Kontrolovať môžeš koľkokrát chceš.</p></div>
+  <div class="box svrule">
+    <h2>Zadanie</h2>
+    <p>Navrhni jednoduchý domový vrátnik pre jeden byt. Keď návšteva stlačí <b>tlačidlo na paneli</b> pri dverách, v byte zaznie <b>bzučiak</b>. Keď obyvateľ stlačí <b>tlačidlo otvoriť</b>, <b>elektrický zámok</b> sa na 3 sekundy uvoľní a dvere sa dajú otvoriť.</p>
+    <p><b>Súčiastky:</b> zdroj 12 V napája všetko. Riadiaca jednotka (ako Arduino) číta tlačidlá na vstupoch D2 a D3 a ovláda výstupy D8 (bzučiak) a D9. Zámok potrebuje 12 V a väčší prúd, ako vie dať výstup jednotky, preto ho spína <b>relé</b>: jednotka zapne relé (IN) a kontakt relé (COM → NO) pustí +12 V do zámku. Je to rovnaký princíp ako tranzistor ako spínač.</p>
+    <p><b>Tlačidlá</b> zapoj medzi vstup a GND. Vstup bude mať v programe zapnutý vnútorný pull-up rezistor, takže nestlačené tlačidlo číta HIGH a stlačené LOW.</p>
+  </div>
+  <div class="box" style="padding:14px 16px">
+    <h2 style="margin:0 0 4px">1. Schéma</h2>
+    <p class="hint" style="margin:0 0 10px">Klikni na jeden kontakt a potom na druhý, vznikne medzi nimi vodič. Kliknutím na vodič ho zmažeš. Jeden kontakt môže mať viac vodičov.</p>
+    <div id="vrSch" class="tw"></div>
+    <div class="act" style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="lnk pri" id="vrSchCheck">Skontrolovať schému</button><button class="lnk" id="vrClear">Zmazať všetky vodiče</button><span class="hint">Pokusy: <b id="vrSchTries">0</b></span></div>
+    <div class="note" id="vrSchMsg" hidden style="margin-top:10px"></div>
+  </div>
+  <div class="box" style="padding:14px 16px">
+    <h2 style="margin:0 0 4px">2. Program</h2>
+    <p class="hint" id="vrProgLock">Program odomkneš, keď budeš mať správne zapojenú schému.</p>
+    <div id="vrProg" hidden>
+      <p class="hint" style="margin:0 0 6px">Program musí: <b>(1)</b> v setup nastaviť piny 2 a 3 ako INPUT_PULLUP a piny 8 a 9 ako OUTPUT, <b>(2)</b> kým je stlačené tlačidlo na paneli, zapnúť bzučiak, inak ho vypnúť, <b>(3)</b> keď je stlačené tlačidlo otvoriť, zapnúť relé, počkať 3000 ms a relé vypnúť.</p>
+      <p class="hint" style="margin:0 0 10px">Príkazy: <code>pinMode(pin, OUTPUT)</code>, <code>digitalWrite(pin, HIGH)</code> zapne, <code>digitalWrite(pin, LOW)</code> vypne, <code>digitalRead(pin)</code> vráti HIGH alebo LOW, <code>delay(ms)</code> čaká.</p>
+      <div id="vrMode" class="seg"><button data-m="bloky">Bloky</button><button data-m="text">Text (kód)</button></div>
+      <div id="vrBlocks"></div>
+      <div id="vrText" hidden><textarea id="vrCode" spellcheck="false" rows="22"></textarea></div>
+      <div class="act" style="margin-top:10px;display:flex;gap:8px;align-items:center"><button class="lnk pri" id="vrRun">Otestovať program</button><span class="hint">Pokusy: <b id="vrProgTries">0</b></span></div>
+      <div class="note" id="vrProgMsg" hidden style="margin-top:10px"></div>
+    </div>
+  </div>
 </section>
 
 <!-- VÝKAZ -->
@@ -864,6 +914,169 @@ function checkRJ(){
   renderRJ();upd();
 }
 $("#rjCheck").onclick=checkRJ;
+/* vrátnik: schéma + program */
+const VR_T={ // terminály: id:[x,y,popis,strana]
+ "zd+":[190,72,"Zdroj +12 V","r"],"zd-":[190,108,"Zdroj −","r"],
+ "zv1":[190,250,"Tlačidlo na paneli, kontakt 1","r"],"zv2":[190,272,"Tlačidlo na paneli, kontakt 2","r"],
+ "ot1":[190,362,"Tlačidlo otvoriť, kontakt 1","r"],"ot2":[190,384,"Tlačidlo otvoriť, kontakt 2","r"],
+ "VIN":[360,115,"Jednotka VIN","l"],"5V":[360,150,"Jednotka 5V","l"],"GND":[360,185,"Jednotka GND","l"],"D2":[360,250,"Jednotka D2","l"],"D3":[360,300,"Jednotka D3","l"],
+ "D8":[540,95,"Jednotka D8","r"],"D9":[540,215,"Jednotka D9","r"],
+ "bz+":[700,82,"Bzučiak +","l"],"bz-":[700,108,"Bzučiak −","l"],
+ "rIN":[700,200,"Relé IN","l"],"rVCC":[700,228,"Relé VCC","l"],"rGND":[700,256,"Relé GND","l"],"COM":[860,212,"Relé COM","r"],"NO":[860,252,"Relé NO","r"],
+ "zm+":[700,370,"Zámok +","l"],"zm-":[700,394,"Zámok −","l"]
+};
+const VR_LBL={"zd+":"+12V","zd-":"−","zv1":"1","zv2":"2","ot1":"1","ot2":"2","VIN":"VIN","5V":"5V","GND":"GND","D2":"D2","D3":"D3","D8":"D8","D9":"D9","bz+":"+","bz-":"−","rIN":"IN","rVCC":"VCC","rGND":"GND","COM":"COM","NO":"NO","zm+":"+","zm-":"−"};
+const VR_NETS=[
+ {id:"P",t:["zd+","VIN","COM"],n:"napájanie +12 V",h:"Zdroj +12 V napája riadiacu jednotku (VIN) a cez kontakt relé (COM) aj elektrický zámok."},
+ {id:"G",t:["zd-","GND","rGND","bz-","zm-","zv2","ot2"],n:"spoločná zem (−, GND)",h:"Všetky súčiastky musia mať spoločnú zem: zdroj −, GND jednotky, GND relé, − bzučiaka, − zámku a druhý kontakt oboch tlačidiel."},
+ {id:"5",t:["5V","rVCC"],n:"napájanie relé 5 V",h:"Modul relé sa napája 5 V z riadiacej jednotky (5V → VCC)."},
+ {id:"D2",t:["D2","zv1"],n:"tlačidlo na paneli",h:"Tlačidlo na paneli: jeden kontakt na vstup D2, druhý na GND."},
+ {id:"D3",t:["D3","ot1"],n:"tlačidlo otvoriť",h:"Tlačidlo otvoriť v byte: jeden kontakt na vstup D3, druhý na GND."},
+ {id:"D8",t:["D8","bz+"],n:"bzučiak",h:"Bzučiak v byte: + na výstup D8, − na GND."},
+ {id:"D9",t:["D9","rIN"],n:"ovládanie relé",h:"Výstup D9 ovláda relé (D9 → IN)."},
+ {id:"Z",t:["NO","zm+"],n:"zámok cez relé",h:"Zámok potrebuje viac prúdu, ako dá jednotka, preto ho spína relé: COM na +12 V, NO na + zámku."}
+];
+function vrInit(){return{w:[],sel:null,schOk:false,schTries:0,mode:"bloky",code:VR_TEMPLATE,setup:[],loop:[],progOk:false,progTries:0}}
+const VR_TEMPLATE=`void setup() {
+  pinMode(2, INPUT_PULLUP);   // tlačidlo na paneli
+  pinMode(3, INPUT_PULLUP);   // tlačidlo otvoriť
+  // doplň: piny 8 (bzučiak) a 9 (relé) nastav ako výstupy
+}
+
+void loop() {
+  // stlačené tlačidlo = LOW
+  if (digitalRead(2) == LOW) {
+    // doplň: zapni bzučiak
+  } else {
+    // doplň: vypni bzučiak
+  }
+
+  // doplň: ak je stlačené tlačidlo otvoriť (pin 3),
+  // zopni relé (pin 9), počkaj 3000 ms a relé vypni
+}
+`;
+function vrUF(){const p={};const f=x=>{while((p[x]??x)!==x)x=p[x];return x};
+  (SV.vr.w).forEach(([a,b])=>{const ra=f(a),rb=f(b);if(ra!==rb)p[ra]=rb});return f}
+function vrCheckSch(){
+  const f=vrUF(),errs=[];
+  // tlačidlá môžu byť otočené
+  const swap=(a,b,net)=>(f(b)===f(net)&&f(a)!==f(net))?[b,a]:[a,b];
+  const [z1,z2]=swap("zv1","zv2","D2"),[o1,o2]=swap("ot1","ot2","D3");
+  const map={zv1:z1,zv2:z2,ot1:o1,ot2:o2},T=x=>map[x]||x;
+  VR_NETS.forEach(n=>{const ts=n.t.map(T),r=f(ts[0]);const miss=ts.filter(x=>f(x)!==r);if(miss.length)errs.push({net:n,miss})});
+  // skraty: dva rôzne obvody spojené
+  const roots={};VR_NETS.forEach(n=>{n.t.map(T).forEach(x=>{const r=f(x);(roots[r]=roots[r]||new Set()).add(n.id)})});
+  const shorts=Object.values(roots).filter(s=>s.size>1).map(s=>[...s].map(id=>VR_NETS.find(n=>n.id===id).n));
+  return{errs,shorts}
+}
+function vrSvg(){
+  const V=SV.vr,box=(x,y,w,h,t,s)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" class="vb"/><text x="${x+10}" y="${y+20}" class="vt">${t}</text>${s?`<text x="${x+10}" y="${y+36}" class="vs">${s}</text>`:""}`;
+  let g=box(40,40,150,90,"Zdroj 12 V","230 V → 12 V DC")+box(40,205,150,80,"Tlačidlo","na paneli pri dverách")+box(40,315,150,82,"Tlačidlo otvoriť","domáci telefón v byte")
+   +box(360,50,180,330,"Riadiaca jednotka","(ako Arduino)")+box(700,40,160,85,"Bzučiak","v byte")+box(700,150,160,125,"Modul relé","spína zámok")+box(700,320,160,90,"Elektrický zámok","12 V, dvere");
+  g+=V.w.map(([a,b],i)=>{const A=VR_T[a],B=VR_T[b];return `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" class="vw" data-w="${i}"/>`}).join("");
+  g+=Object.entries(VR_T).map(([id,[x,y,,s]])=>`<g class="vp${V.sel===id?" on":""}" data-t="${id}"><circle cx="${x}" cy="${y}" r="14" fill="transparent" stroke="none" style="fill:transparent;stroke:none"/><circle cx="${x}" cy="${y}" r="7"/><text x="${s==="r"?x-12:x+12}" y="${y+4}" text-anchor="${s==="r"?"end":"start"}">${VR_LBL[id]}</text></g>`).join("");
+  return `<svg viewBox="0 0 900 425" class="vsvg">${g}</svg>`;
+}
+function renderVR(){
+  const V=SV.vr;$("#vrSch").innerHTML=vrSvg();
+  $("#vrSchTries").textContent=V.schTries;
+  $("#vrSch").querySelectorAll("[data-t]").forEach(e=>e.onclick=()=>{if(V.schOk)return;const id=e.dataset.t;
+    if(!V.sel)V.sel=id;else if(V.sel===id)V.sel=null;else{const a=V.sel;V.sel=null;
+      if(!V.w.some(([x,y])=>(x===a&&y===id)||(x===id&&y===a))){V.w.push([a,id]);log("Vrátnik","pridal vodič",VR_T[a][2]+" ↔ "+VR_T[id][2])}}
+    renderVR();save()});
+  $("#vrSch").querySelectorAll("[data-w]").forEach(e=>e.onclick=()=>{if(V.schOk)return;const [a,b]=V.w[+e.dataset.w];V.w.splice(+e.dataset.w,1);log("Vrátnik","zmazal vodič",VR_T[a][2]+" ↔ "+VR_T[b][2]);renderVR();save()});
+  $("#vrClear").disabled=$("#vrSchCheck").disabled=V.schOk;
+  $("#vrProg").hidden=!V.schOk;$("#vrProgLock").hidden=V.schOk;
+  document.querySelectorAll("#vrMode button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===V.mode));
+  $("#vrBlocks").hidden=V.mode!=="bloky";$("#vrText").hidden=V.mode!=="text";
+  if(V.mode==="bloky")renderBlocks();else if($("#vrCode").value!==V.code)$("#vrCode").value=V.code;
+  $("#vrProgTries").textContent=V.progTries;$("#vrRun").disabled=V.progOk;$("#vrCode").readOnly=V.progOk;
+  upd();
+}
+$("#vrClear").onclick=()=>{SV.vr.w=[];SV.vr.sel=null;log("Vrátnik","zmazal všetky vodiče","");renderVR();save()};
+$("#vrSchCheck").onclick=()=>{const V=SV.vr,{errs,shorts}=vrCheckSch(),m=$("#vrSchMsg");V.schTries++;m.hidden=false;
+  if(!errs.length&&!shorts.length){V.schOk=true;m.className="note ok";m.innerHTML="Schéma je zapojená správne. Pokračuj programom nižšie.";log("Vrátnik","kontrola schémy","správne",true)}
+  else{m.className="note bad";m.innerHTML="Schéma ešte nie je správna:<ul>"+shorts.map(s=>`<li><b>Skrat:</b> spolu sú spojené ${s.join(" a ")}. Tieto obvody musia byť oddelené.</li>`).join("")+errs.map(e=>`<li><b>${e.net.n}:</b> ${e.net.h}</li>`).join("")+"</ul>";
+    log("Vrátnik","kontrola schémy","chyby: "+[...shorts.map(s=>"skrat "+s.join("+")),...errs.map(e=>e.net.n)].join(", "),false)}
+  renderVR();save()};
+document.querySelectorAll("#vrMode button").forEach(b=>b.onclick=()=>{if(SV.vr.mode===b.dataset.m)return;
+  if(b.dataset.m==="text"&&(SV.vr.setup.length||SV.vr.loop.length))SV.vr.code=blocksCode();
+  SV.vr.mode=b.dataset.m;log("Vrátnik","prepol program na",b.dataset.m);renderVR();save()});
+$("#vrCode").oninput=()=>{SV.vr.code=$("#vrCode").value;save()};
+$("#vrCode").onkeydown=e=>{if(e.key==="Tab"){e.preventDefault();const t=e.target,s=t.selectionStart;t.setRangeText("  ",s,t.selectionEnd,"end");SV.vr.code=t.value}};
+
+/* bloky */
+const BK={
+ pin:{lbl:"nastav pin",f:[["n",["2","3","8","9"]],["m",["vstup s pull-up","výstup"]]],c:b=>`pinMode(${b.n}, ${b.m==="výstup"?"OUTPUT":"INPUT_PULLUP"});`},
+ set:{lbl:"",f:[["v",["zapni","vypni"]],["o",["bzučiak (pin 8)","relé zámku (pin 9)"]]],c:b=>`digitalWrite(${b.o.includes("8")?8:9}, ${b.v==="zapni"?"HIGH":"LOW"});`},
+ wait:{lbl:"čakaj",f:[["ms",["500","1000","2000","3000","5000"]]],post:"ms",c:b=>`delay(${b.ms});`},
+ if:{lbl:"ak",f:[["i",["tlačidlo na paneli (pin 2)","tlačidlo otvoriť (pin 3)"]],["s",["je stlačené","nie je stlačené"]]],c:b=>`if (digitalRead(${b.i.includes("2")?2:3}) == ${b.s==="je stlačené"?"LOW":"HIGH"}) {`,open:1},
+ else:{lbl:"inak",f:[],c:()=>"} else {",mid:1},
+ end:{lbl:"koniec ak",f:[],c:()=>"}",close:1}
+};
+const BK_SET={setup:["pin"],loop:["if","else","end","set","wait"]};
+function blocksCode(){const V=SV.vr;const out=(list,ind)=>{let d=ind,s="";list.forEach(b=>{const k=BK[b.k];if(k.close||k.mid)d=Math.max(ind,d-1);s+="  ".repeat(d)+k.c(b)+"\n";if(k.open||k.mid)d++});while(d>ind){d--;s+="  ".repeat(d)+"}\n"}return s};
+  return "void setup() {\n"+out(V.setup,1)+"}\n\nvoid loop() {\n"+out(V.loop,1)+"}\n"}
+function renderBlocks(){
+  const V=SV.vr,lock=V.progOk;
+  const one=(list,w,b,i,d)=>{const k=BK[b.k];return `<div class="bk bk-${b.k}" style="margin-left:${d*22}px"><span class="bl">${k.lbl}</span>${k.f.map(([fn,opts])=>`<select data-l="${w}" data-i="${i}" data-f="${fn}" ${lock?"disabled":""}>${opts.map(o=>`<option ${o===b[fn]?"selected":""}>${o}</option>`).join("")}</select>`).join("")}${k.post?`<span class="bl">${k.post}</span>`:""}
+    ${lock?"":`<span class="bkx"><button data-l="${w}" data-i="${i}" data-a="up" title="Posunúť vyššie">↑</button><button data-l="${w}" data-i="${i}" data-a="dn" title="Posunúť nižšie">↓</button><button data-l="${w}" data-i="${i}" data-a="del" title="Zmazať">×</button></span>`}</div>`};
+  const list=w=>{let d=0;return V[w].map((b,i)=>{const k=BK[b.k];if(k.close||k.mid)d=Math.max(0,d-1);const h=one(w,w,b,i,d);if(k.open||k.mid)d++;return h}).join("")||`<p class="hint" style="margin:6px 0">Zatiaľ prázdne. Pridaj blok tlačidlom nižšie.</p>`};
+  const pal=w=>lock?"":`<div class="bpal">${BK_SET[w].map(k=>`<button class="lnk" data-add="${k}" data-l="${w}">+ ${({pin:"nastav pin",if:"ak …",else:"inak",end:"koniec ak",set:"zapni / vypni",wait:"čakaj"})[k]}</button>`).join("")}</div>`;
+  $("#vrBlocks").innerHTML=`<div class="bcols"><div><h3>Pri zapnutí (setup) – vykoná sa raz</h3>${list("setup")}${pal("setup")}<h3 style="margin-top:16px">Stále dookola (loop)</h3>${list("loop")}${pal("loop")}</div>
+    <div><h3>Takto vyzerá tvoj program ako text</h3><pre class="bcode">${esc(blocksCode())}</pre></div></div>`;
+  $("#vrBlocks").querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{const k=b.dataset.add,o={k};BK[k].f.forEach(([fn,opts])=>o[fn]=opts[0]);V[b.dataset.l].push(o);log("Vrátnik","pridal blok",BK[k].lbl||k);renderBlocks();save()});
+  $("#vrBlocks").querySelectorAll("select").forEach(s=>s.onchange=()=>{V[s.dataset.l][+s.dataset.i][s.dataset.f]=s.value;renderBlocks();save()});
+  $("#vrBlocks").querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{const L=V[b.dataset.l],i=+b.dataset.i,a=b.dataset.a;
+    if(a==="del")L.splice(i,1);else{const j=a==="up"?i-1:i+1;if(j<0||j>=L.length)return;[L[i],L[j]]=[L[j],L[i]]}renderBlocks();save()});
+}
+
+/* simulátor */
+function vrCompile(src){
+  let js=src.replace(/\bvoid\s+(setup|loop)\s*\(\s*\)/g,"function $1()")
+    .replace(/\b(const\s+)?(unsigned\s+)?(int|long|bool|boolean|byte|float|double)\s+(?=[A-Za-z_])/g,"let ")
+    .replace(/\bwhile\s*\(/g,"while(__g()&&").replace(/\bfor\s*\(([^;]*);([^;]*);/g,"for($1;__g()&&($2);");
+  return new Function("pinMode","digitalWrite","digitalRead","delay","millis","HIGH","LOW","INPUT","OUTPUT","INPUT_PULLUP","__g",
+    js+"\n;return{setup:typeof setup==='function'?setup:null,loop:typeof loop==='function'?loop:null};");
+}
+function vrRun(src){
+  let F;try{F=vrCompile(src)}catch(e){return{fatal:"V programe je chyba zápisu (syntax): "+e.message+". Skontroluj zátvorky { } ( ) a bodkočiarky ;"}}
+  const env={mode:{},out:{8:0,9:0},inp:{2:1,3:1},t:0,tl:[],ops:0};
+  const api=[(p,m)=>{env.mode[p]=m},(p,v)=>{v=v?1:0;if(env.mode[p]!==1)env.badOut=p;if(env.out[p]!==v){env.out[p]=v;env.tl.push({t:env.t,p,v})}},
+    p=>{if(env.mode[p]!==2&&env.mode[p]!==0)env.badIn=p;return env.inp[p]??0},ms=>{env.t+=Math.max(0,+ms||0)},()=>env.t,1,0,0,1,2,()=>++env.ops<200000];
+  let prog;try{prog=F(...api)}catch(e){return{fatal:"Program sa nedá spustiť: "+e.message}}
+  if(!prog.setup||!prog.loop)return{fatal:"Program musí mať časti void setup() { … } aj void loop() { … }."};
+  try{prog.setup()}catch(e){return{fatal:"Chyba v setup(): "+e.message}}
+  const R=[],loopN=(n)=>{for(let i=0;i<n;i++){env.t+=1;prog.loop();if(env.ops>=200000)throw Error("nekonečný cyklus")}};
+  if(env.mode[2]!==2||env.mode[3]!==2)R.push("Piny 2 a 3 (tlačidlá) musia byť v setup() nastavené ako INPUT_PULLUP.");
+  if(env.mode[8]!==1||env.mode[9]!==1)R.push("Piny 8 (bzučiak) a 9 (relé) musia byť v setup() nastavené ako OUTPUT, inak sa nedajú zapnúť.");
+  try{
+    // 1. nikto nič nestláča
+    let t0=env.tl.length;loopN(20);
+    if(env.tl.slice(t0).some(x=>x.v===1)||env.out[8]||env.out[9])R.push("Keď nikto nič nestláča, bzučiak aj relé majú byť vypnuté.");
+    // 2. zvonček
+    env.inp[2]=0;t0=env.tl.length;loopN(5);
+    if(!env.out[8])R.push("Keď návšteva drží tlačidlo na paneli (pin 2 je LOW), má byť bzučiak (pin 8) zapnutý.");
+    if(env.tl.slice(t0).some(x=>x.p===9&&x.v===1))R.push("Tlačidlo na paneli nesmie otvoriť dvere. Relé (pin 9) má ovládať iba tlačidlo otvoriť.");
+    env.inp[2]=1;loopN(5);
+    if(env.out[8])R.push("Keď návšteva tlačidlo pustí, bzučiak sa má vypnúť. Chýba vetva inak (else) s vypnutím?");
+    // 3. otvoriť
+    env.inp[3]=0;t0=env.tl.length;const start=env.t;loopN(1);env.inp[3]=1;let k=0;while(env.out[9]&&k<50){loopN(1);k++}loopN(3);
+    const ev=env.tl.slice(t0).filter(x=>x.p===9),on=ev.find(x=>x.v===1),off=on&&ev.find(x=>x.v===0&&x.t>=on.t);
+    if(!on)R.push("Po stlačení tlačidla otvoriť (pin 3 je LOW) sa má zopnúť relé (pin 9 na HIGH).");
+    else if(!off)R.push("Relé sa zopne, ale už sa nevypne. Po čakaní ho vypni (pin 9 na LOW).");
+    else{const d=off.t-on.t;if(d<2500)R.push(`Relé je zopnuté iba ${d} ms, dvere by sa nestihli otvoriť. Medzi zapnutím a vypnutím má byť delay(3000).`);
+      else if(d>3600)R.push(`Relé je zopnuté ${d} ms, má to byť približne 3000 ms.`)}
+    if(env.tl.slice(t0).some(x=>x.p===8&&x.v===1))R.push("Tlačidlo otvoriť nemá zapínať bzučiak.");
+  }catch(e){return{fatal:e.message==="nekonečný cyklus"?"Program sa zacyklil (nekonečný while alebo for). loop() sa opakuje sám, cyklus netreba.":"Chyba počas behu programu: "+e.message}}
+  return{R};
+}
+$("#vrRun").onclick=()=>{const V=SV.vr,src=V.mode==="bloky"?blocksCode():V.code,res=vrRun(src),m=$("#vrProgMsg");V.progTries++;m.hidden=false;
+  if(res.fatal){m.className="note bad";m.textContent=res.fatal;log("Vrátnik","test programu ("+V.mode+")","chyba: "+res.fatal+" | kód: "+src.replace(/\s+/g," ").slice(0,400),false)}
+  else if(!res.R.length){V.progOk=true;m.className="note ok";m.textContent="Program funguje: zvonček zvoní, kým je tlačidlo stlačené, a tlačidlo otvoriť otvorí zámok na 3 sekundy.";log("Vrátnik","test programu ("+V.mode+")","správne | kód: "+src.replace(/\s+/g," ").slice(0,400),true)}
+  else{m.className="note bad";m.innerHTML="Test programu našiel problémy:<ul>"+res.R.map(x=>`<li>${esc(x)}</li>`).join("")+"</ul>";log("Vrátnik","test programu ("+V.mode+")","problémy: "+res.R.join(" | ")+" | kód: "+src.replace(/\s+/g," ").slice(0,400),false)}
+  renderVR();save()};
+
 let PC_LABELS=null;
 function setMode(){
   if(!PC_LABELS)PC_LABELS={nav:[...document.querySelectorAll(".nav button")].slice(0,4).map(b=>b.firstChild.nodeValue),
@@ -879,7 +1092,7 @@ function setMode(){
   ["p1","p2","p3","p4"].forEach((id,i)=>{$("#"+id+" .ph h1").textContent=H[i][0];$("#"+id+" .ph .hint").textContent=H[i][1]});
   const rg=T?["Kábel RJ45","Montáž","Teória","Poruchy"]:PC_LABELS.rg;document.querySelectorAll(".rgrid span").forEach((e,i)=>e.textContent=rg[i]);
   $("#orders").hidden=T;$("#req").hidden=T;$("#p1 .cfg").hidden=T;$("#svork").hidden=!T;$("#rig").hidden=T;$("#p3 .bios").hidden=T;
-  $("#svork").hidden=true;$("#rj").hidden=!T;if(T)renderRJ();
+  $("#svork").hidden=true;$("#rj").hidden=!T;if(T)renderRJ();document.querySelector('.nav [data-p="p6"]').hidden=!T;if(T)renderVR();
 }
 
 let aNext=0,aErr=0,order=[],asmLock=0;
@@ -949,7 +1162,7 @@ function makeDesk(list,root,pre,part,saved){
 document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll(".nav button").forEach(x=>x.toggleAttribute("aria-current",x===b));
   b.setAttribute("aria-current","page");
-  ["p1","p2","p3","p4","p5"].forEach(id=>$("#"+id).hidden=id!==b.dataset.p);
+  ["p1","p2","p3","p4","p5","p6"].forEach(id=>$("#"+id).hidden=id!==b.dataset.p);
   window.scrollTo(0,0);
 });
 let biosSt=[],diagSt=[];
@@ -957,7 +1170,7 @@ const sc=a=>({ok:a.filter(s=>s.pick!==null&&s.pick===s.ans).length,done:a.filter
 function upd(){
   const n=fullName()?fullName()+", "+profile.trieda:"";
   const pc=Object.keys(passed).length,bs=sc(biosSt),ds=sc(diagSt),asmDone=aNext===STEPS.length;
-  $("#c1").textContent=TEL?(SV.rj&&SV.rj.ok?"✓":"–"):pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;
+  $("#c1").textContent=TEL?(SV.rj&&SV.rj.ok?"✓":"–"):pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;if(TEL&&SV.vr)$("#c6").textContent=(SV.vr.schOk?1:0)+(SV.vr.progOk?1:0)+"/2";
   $("#rName").textContent=n||"Meno nevyplnené";
   $("#rDate").textContent="Vyplnené "+new Date().toLocaleString("sk-SK",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"});
   $("#r1").textContent=TEL?(SV.rj&&SV.rj.ok?"hotový":"nehotový"):pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
@@ -966,7 +1179,7 @@ function upd(){
    (TEL?`<tr><td>Kábel RJ45 (${SV.rj.typ})</td><td>${SV.rj.ok?"zapojený správne":"nedokončený"}</td><td class="mono">pokusov: ${SV.rj.tries}</td></tr>`:"")+ORDERS.map(o=>`<tr><td>Zákazka ${o.no} · ${o.short}</td><td>${passed[o.id]?"odovzdaná":"neodovzdaná"}</td><td class="mono">${passed[o.id]?price(builds[o.id])+" € z "+o.budget+" €":"–"}</td></tr>`).join("")+
    `<tr><td>Montáž</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>
     <tr><td>${TEL?"Teória":"BIOS"}</td><td>${bs.done} / ${BIOS.length} zodpovedaných</td><td class="mono">${bs.ok} správne</td></tr>
-    <tr><td>${TEL?"Poruchy":"Servisné zákazky"}</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${ds.ok} správne</td></tr></tbody>`;
+    <tr><td>${TEL?"Poruchy":"Servisné zákazky"}</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${ds.ok} správne</td></tr>${TEL&&SV.vr?`<tr><td>Vrátnik – schéma</td><td>${SV.vr.schOk?"správna":"nedokončená"}</td><td class="mono">pokusov: ${SV.vr.schTries}</td></tr><tr><td>Vrátnik – program</td><td>${SV.vr.progOk?"funguje":"nedokončený"}</td><td class="mono">pokusov: ${SV.vr.progTries}</td></tr>`:""}</tbody>`;
 }
 $("#whoName").textContent="";
 /* štart */
@@ -988,7 +1201,7 @@ function updAway(){const e=$("#awayInfo");if(e)e.textContent=awayN?`Odchody zo s
 function renderFeedback(){
   const li=(cls,t)=>`<li class="${cls}">${t}</li>`;
   let h=`<h2>Spätná väzba</h2><p class="hint">Takto dopadla tvoja práca. Po obnovení stránky sa tento prehľad stratí.</p><div class="fb">`;
-  if(TEL)h+=`<div><h3>Kábel RJ45 (${SV.rj.typ})</h3><ul>${SV.rj.ok?li("ok",`Zapojený správne, pokusov o kontrolu: ${SV.rj.tries}.`):li("bad",`Nezapojený správne (pokusov: ${SV.rj.tries}).`)+rjBad().map(([e,k])=>li("why",`${rjEndName(e)}, pin ${k+1}: mal si ${SV.rj.sel[e][k]||"nič"}, správne je ${rjExp(e)[k]}.`)).join("")}</ul></div>`;
+  if(TEL)h+=`<div><h3>Kábel RJ45 (${SV.rj.typ})</h3><ul>${SV.rj.ok?li("ok",`Zapojený správne, pokusov o kontrolu: ${SV.rj.tries}.`):li("bad",`Nezapojený správne (pokusov: ${SV.rj.tries}).`)+rjBad().map(([e,k])=>li("why",`${rjEndName(e)}, pin ${k+1}: mal si ${SV.rj.sel[e][k]||"nič"}, správne je ${rjExp(e)[k]}.`)).join("")}</ul></div><div><h3>Vrátnik</h3><ul>${li(SV.vr.schOk?"ok":"bad",SV.vr.schOk?`Schéma správna (pokusov: ${SV.vr.schTries}).`:`Schéma nie je dokončená (pokusov: ${SV.vr.schTries}).`)}${li(SV.vr.progOk?"ok":"bad",SV.vr.progOk?`Program funguje (pokusov: ${SV.vr.progTries}, spôsob: ${SV.vr.mode}).`:`Program nie je dokončený (pokusov: ${SV.vr.progTries}).`)}</ul></div>`;
   else h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
     const ev=lastEval[o.id],t=tries[o.id]||0;
     if(passed[o.id])return li("ok",`<b>${o.no} ${o.short}:</b> odovzdaná, ${price(builds[o.id])} € z ${o.budget} €, pokusov: ${t}.`);
@@ -1047,7 +1260,7 @@ function applyPick(pk,savedDesks){
   PICK=pk;TEL=!!pk.tel;
   const prevLen=STEPS.length;STEPS=TEL?TEL_STEPS:PC_STEPS;
   if(!savedDesks||order.length!==STEPS.length){order=shuffle(STEPS.map((_,i)=>i));if(!savedDesks){aNext=0;aErr=0}}
-  if(TEL){ORDERS=[];BIOS=PICK.b.map(i=>TEL_Q[i]);DIAG=PICK.d.map(i=>TEL_D[i]);if(!savedDesks)SV={start:pk.sv||1,sel:{},ok:false,tries:0};if(!SV.rj)SV.rj=rjInit(pk.rj||"priamy")}
+  if(TEL){ORDERS=[];BIOS=PICK.b.map(i=>TEL_Q[i]);DIAG=PICK.d.map(i=>TEL_D[i]);if(!savedDesks)SV={start:pk.sv||1,sel:{},ok:false,tries:0};if(!SV.rj)SV.rj=rjInit(pk.rj||"priamy");if(!SV.vr)SV.vr=vrInit()}
   else{ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
     ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});
     if(!ORDERS.some(o=>o.id===cur))cur=ORDERS[0].id;}
