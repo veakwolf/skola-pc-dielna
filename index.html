@@ -1342,7 +1342,11 @@ function cameBack(){if(!awayAt)return;const sec=Math.round((Date.now()-awayAt)/1
   awayN++;awaySec+=sec;log("Dozor","opustil stránku","mimo stránky "+sec+" s",false);updAway()}
 document.addEventListener("visibilitychange",()=>document.hidden?goneAway():cameBack());
 window.addEventListener("blur",()=>{setTimeout(()=>{const a=document.activeElement;if(document.hidden||!a||a.tagName!=="SELECT")goneAway()},0)});window.addEventListener("focus",cameBack);
-function updAway(){const e=$("#awayInfo");if(e)e.textContent=awayN?`Odchody zo stránky: ${awayN}× (spolu ${awaySec} s)`:"Odchody zo stránky: 0"}
+let pasteN=0;
+document.addEventListener("paste",e=>{if(!profile.meno||sent)return;const t=e.target,txt=((e.clipboardData&&e.clipboardData.getData("text"))||"").trim().slice(0,60);
+  let kde="stránka";if(t&&t.dataset&&t.dataset.i!==undefined&&SV.lg&&t.closest("#lgPr")){const p=SV.lg.pr[+t.dataset.i];kde="prevod "+p.q}else if(t&&t.id==="vrCode")kde="program vrátnika";else if(t&&t.id)kde=t.id;
+  pasteN++;log("Dozor","vložil text (Ctrl+V)",kde+": "+txt,false);updAway()});
+function updAway(){const e=$("#awayInfo");if(e)e.textContent=(awayN?`Odchody zo stránky: ${awayN}× (spolu ${awaySec} s)`:"Odchody zo stránky: 0")+(typeof pasteN!=="undefined"&&pasteN?` · Vložený text: ${pasteN}×`:"")}
 /* spätná väzba po odoslaní */
 function renderFeedback(){
   const li=(cls,t)=>`<li class="${cls}">${t}</li>`;
