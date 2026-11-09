@@ -245,6 +245,15 @@ tr:last-child td{border-bottom:0}
 .bpal{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .bcode,#vrCode{font:13px/1.5 var(--mono);background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:10px 12px;margin:0;white-space:pre;overflow:auto;color:var(--fg)}
 #vrCode{width:100%;box-sizing:border-box;resize:vertical;tab-size:2}
+
+.lgrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--line)}
+.lgrow .lgn{width:22px;color:var(--muted)}.lgrow .lgt{width:190px;font-size:13px;color:var(--muted)}.lgrow .lgq{min-width:90px}
+.lgrow input{width:120px;padding:5px 8px;border:1px solid var(--line);border-radius:4px;font-size:14px;background:var(--surface);color:var(--fg)}
+.lgrow .lgm{font-size:13px;flex-basis:100%;padding-left:30px}.lgrow.ok .lgm{color:var(--ok)}.lgrow.bad .lgm{color:var(--bad)}
+.lgtbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.lgtb table td,.lgtb table th{text-align:center;padding:4px}.lgtb.ok{border-color:var(--ok)}
+.lgc{width:34px;height:26px;border:1px solid var(--line);border-radius:4px;background:var(--sunk);font-weight:700;font-size:14px;cursor:pointer}
+.lgc:disabled{cursor:default;color:var(--ok)}
 .sw.empty{background:repeating-linear-gradient(45deg,var(--sunk),var(--sunk) 3px,var(--line) 3px,var(--line) 5px)}
 #svTable select{font-size:14px;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface);min-width:120px}
 .svrule{padding:14px 16px;display:grid;gap:8px;font-size:14.5px;max-width:80ch}
@@ -292,6 +301,14 @@ tr:last-child td{border-bottom:0}
 <!-- KONFIGURÁTOR -->
 <section class="page" id="p1">
   <div class="ph"><h1>Konfigurátor zostavy</h1><p class="hint">Zostavu odovzdáš, keď je kompatibilná a spĺňa všetky požiadavky zákazníka.</p></div>
+  <div id="lg" hidden style="display:grid;gap:18px">
+    <div class="box svrule"><h2>Ako na to</h2>
+      <p><b>Dvojková sústava</b> má iba 0 a 1. Miesta sprava majú hodnoty 1, 2, 4, 8, 16, 32, 64, 128. Napríklad 1101 = 8 + 4 + 1 = 13.</p>
+      <p><b>Šestnástková sústava</b> má číslice 0 – 9 a A – F (A = 10, B = 11, C = 12, D = 13, E = 14, F = 15). Jedna hex číslica = 4 bity, napríklad 1010 0011 = A3.</p>
+      <p><b>Logické členy:</b> AND = 1 iba keď sú oba vstupy 1 · OR = 1 keď je aspoň jeden vstup 1 · NOT otočí hodnotu · NAND = opak AND · NOR = opak OR · XOR = 1 keď sú vstupy rôzne.</p></div>
+    <div class="box" style="padding:14px 16px"><h2 style="margin:0 0 4px">1. Prevody medzi sústavami</h2><p class="hint" style="margin:0 0 10px">Napíš výsledok a skontroluj. Ak sa pomýliš, zobrazí sa tip a môžeš to skúsiť znova. Počíta sa každý pokus.</p><div id="lgPr"></div></div>
+    <div><h2 style="margin:0 0 4px">2. Pravdivostné tabuľky</h2><p class="hint" style="margin:0 0 10px">Klikaním na ? nastav výstup Y (0 alebo 1) pre každý riadok a skontroluj tabuľku.</p><div id="lgTb" class="lgtbs"></div></div>
+  </div>
   <div class="orders" id="orders"></div>
   <div class="box req" id="req"></div>
   <div id="rj" hidden style="display:grid;gap:18px">
@@ -1078,21 +1095,111 @@ $("#vrRun").onclick=()=>{const V=SV.vr,src=V.mode==="bloky"?blocksCode():V.code,
   else{m.className="note bad";m.innerHTML="Test programu našiel problémy:<ul>"+res.R.map(x=>`<li>${esc(x)}</li>`).join("")+"</ul>";log("Vrátnik","test programu ("+V.mode+")","problémy: "+res.R.join(" | ")+" | kód: "+src.replace(/\s+/g," ").slice(0,400),false)}
   renderVR();save()};
 
+/* 2.C – logické obvody */
+const LOG_CLASSES=["2.C"];let LGM=false;
+const LOG_Q=[
+ {s:"Dva stavy",u:"Počítač pracuje iba s dvoma stavmi: je napätie (1) alebo nie je napätie (0). Jedna taká hodnota sa volá bit.",t:"Čo znamená v číslicovej technike hodnota 1?",o:["Je napätie (logická jednotka, zapnuté)","Nie je napätie","Číslo jeden v desiatkovej sústave","Chyba obvodu"],a:0,e:"1 = je napätie (napr. 5 V), 0 = nie je napätie (0 V). Jeden takýto údaj je 1 bit."},
+ {s:"Člen AND",u:"AND (logický súčin, A zároveň B): výstup je 1 iba vtedy, keď sú VŠETKY vstupy 1.",t:"Člen AND má vstupy A = 1, B = 0. Aký je výstup?",o:["0","1","Závisí od napätia","Nedá sa určiť"],a:0,e:"AND dá 1 iba pri oboch vstupoch 1. Tu je B = 0, takže výstup je 0."},
+ {s:"Člen OR",u:"OR (logický súčet, A alebo B): výstup je 1, keď je aspoň jeden vstup 1.",t:"Člen OR má vstupy A = 0, B = 1. Aký je výstup?",o:["1","0","2","Nedá sa určiť"],a:0,e:"Stačí jeden vstup v 1, takže OR dá 1."},
+ {s:"Člen NOT",u:"NOT (negácia, invertor) má jeden vstup a otočí ho: z 0 urobí 1, z 1 urobí 0.",t:"Na vstupe člena NOT je 1. Čo je na výstupe?",o:["0","1","Raz 0, raz 1","Člen NOT nemá výstup"],a:0,e:"NOT hodnotu otočí: 1 → 0."},
+ {s:"Člen NAND",u:"NAND = NOT AND. Najprv sa urobí AND a výsledok sa otočí. Výstup je 0 iba vtedy, keď sú oba vstupy 1.",t:"Pri ktorej kombinácii vstupov dá NAND na výstupe 0?",o:["A = 1, B = 1","A = 0, B = 0","A = 0, B = 1","Nikdy"],a:0,e:"AND by dal 1 iba pri 1 a 1; NAND to otočí, takže 0 je iba pri 1 a 1."},
+ {s:"Člen NOR",u:"NOR = NOT OR. Najprv OR a výsledok sa otočí. Výstup je 1 iba vtedy, keď sú oba vstupy 0.",t:"Pri ktorej kombinácii dá NOR na výstupe 1?",o:["A = 0, B = 0","A = 1, B = 1","A = 1, B = 0","Vždy"],a:0,e:"OR dá 0 iba pri 0 a 0; NOR to otočí na 1."},
+ {s:"Člen XOR",u:"XOR (výlučné alebo, exkluzívny súčet): výstup je 1, keď sú vstupy RÔZNE. Keď sú rovnaké, výstup je 0.",t:"Člen XOR má vstupy A = 1, B = 1. Aký je výstup?",o:["0","1","2","Nedá sa určiť"],a:0,e:"Vstupy sú rovnaké, takže XOR dá 0. Tým sa líši od OR, ktorý by dal 1."},
+ {s:"Rozdiel OR a XOR",u:"OR dá 1 pri aspoň jednej jednotke. XOR dá 1 iba vtedy, keď sú vstupy rôzne.",t:"Pri ktorej kombinácii vstupov majú OR a XOR rôzny výstup?",o:["A = 1, B = 1","A = 0, B = 0","A = 0, B = 1","A = 1, B = 0"],a:0,e:"Pri 1 a 1 dá OR jednotku, ale XOR nulu (vstupy sú rovnaké)."},
+ {s:"Počet riadkov tabuľky",u:"Pravdivostná tabuľka obsahuje všetky kombinácie vstupov. Každý vstup má 2 možnosti, takže pri n vstupoch je 2 na n riadkov.",t:"Koľko riadkov má pravdivostná tabuľka obvodu s 3 vstupmi?",o:["8","3","6","9"],a:0,e:"2 × 2 × 2 = 8 kombinácií (000 až 111)."},
+ {s:"Univerzálny člen",u:"Niektoré členy sú univerzálne: iba z nich sa dá postaviť akýkoľvek iný obvod. Sú to NAND a NOR. Napríklad NOT dostaneš, keď na oba vstupy NAND privedieš ten istý signál.",t:"Ako z člena NAND urobíš člen NOT?",o:["Oba vstupy NAND spojím a privediem na ne signál A","Jeden vstup necháme odpojený","Dám dva NAND za sebou bez spojenia","Z NAND sa NOT urobiť nedá"],a:0,e:"A NAND A = NOT (A AND A) = NOT A."},
+ {s:"Booleova algebra: A·1",u:"V Booleovej algebre sa AND zapisuje ako násobenie (A·B) a OR ako sčítanie (A+B). Pravidlá: A·1 = A, A·0 = 0, A+0 = A, A+1 = 1.",t:"Čomu sa rovná A · 0 (A AND 0)?",o:["0","A","1","NOT A"],a:0,e:"AND s nulou je vždy 0, nech je A čokoľvek."},
+ {s:"Booleova algebra: A+1",u:"Pravidlá: A·1 = A, A·0 = 0, A+0 = A, A+1 = 1.",t:"Čomu sa rovná A + 1 (A OR 1)?",o:["1","A","0","NOT A"],a:0,e:"OR s jednotkou je vždy 1."},
+ {s:"Booleova algebra: A·NOT A",u:"Signál a jeho negácia sú vždy opačné: keď je A = 1, NOT A = 0 a naopak.",t:"Čomu sa rovná A AND (NOT A)?",o:["0","1","A","Závisí od A"],a:0,e:"Jeden z nich je vždy 0, takže AND je vždy 0. Naopak A OR (NOT A) je vždy 1."},
+ {s:"De Morganov zákon",u:"De Morganove zákony: NOT (A AND B) = (NOT A) OR (NOT B) a NOT (A OR B) = (NOT A) AND (NOT B). Pri negácii celého výrazu sa AND zmení na OR a naopak.",t:"Čomu sa rovná NOT (A AND B)?",o:["(NOT A) OR (NOT B)","(NOT A) AND (NOT B)","A OR B","NOT A AND B"],a:0,e:"Negácia celého AND je OR negovaných vstupov. To je zároveň člen NAND."},
+ {s:"Hodnota bitu",u:"V dvojkovej sústave má každé miesto sprava hodnotu 1, 2, 4, 8, 16, 32, 64, 128. Číslo je súčet hodnôt miest, kde je 1.",t:"Aké číslo v desiatkovej sústave je 1010?",o:["10","1010","12","5"],a:0,e:"8 + 0 + 2 + 0 = 10."},
+ {s:"Bajt",u:"8 bitov = 1 bajt. Každý bit má 2 stavy, takže 8 bitov dá 2⁸ = 256 kombinácií (0 až 255).",t:"Aké je najväčšie číslo, ktoré sa dá zapísať do jedného bajtu?",o:["255","256","128","99999999"],a:0,e:"11111111 = 128+64+32+16+8+4+2+1 = 255. Kombinácií je 256, lebo aj 0 je číslo."},
+ {s:"Šestnástková sústava",u:"Šestnástková (hex) sústava má číslice 0 – 9 a A – F (A=10 … F=15). Jedna hex číslica zodpovedá presne 4 bitom.",t:"Prečo sa v počítačoch používa šestnástková sústava?",o:["Je to skrátený zápis dvojkovej: 4 bity = 1 hex číslica","Počítač počíta v šestnástkovej sústave","Je presnejšia ako dvojková","Kvôli farbám"],a:0,e:"Napríklad 1111 1111 = FF. Kratší zápis bajtov (MAC adresy, farby, adresy v pamäti)."}
+];
+const LOG_D=[
+ {s:"Alarm v aute",u:"Rozmysli si, kedy má byť výstup 1. Ak musia platiť obe podmienky naraz, je to AND. Ak stačí jedna, je to OR.",t:"Siréna (výstup) sa má zapnúť, keď sú otvorené dvere (A = 1) a zároveň je zapnutý alarm (B = 1). Aký člen použiješ?",o:["AND","OR","XOR","NOR"],a:0,e:"Musia platiť obe podmienky naraz, teda AND."},
+ {s:"Zvonček na dvoch dverách",u:"Ak stačí, aby platila aspoň jedna podmienka, použiješ OR.",t:"Dom má zvonček pri predných aj zadných dverách. Zvonček má zvoniť, keď niekto stlačí ktorékoľvek tlačidlo. Aký člen použiješ?",o:["OR","AND","NAND","NOT"],a:0,e:"Stačí jedno tlačidlo, teda OR."},
+ {s:"Svetlo na schodoch",u:"Schodiskový vypínač: zmena ktoréhokoľvek vypínača zmení stav svetla. Pozri sa, kedy svieti: keď sú vypínače v rôznej polohe.",t:"Svetlo na schodoch sa dá prepnúť vypínačom dole aj hore. Svieti, keď sú vypínače v rôznej polohe. Aký člen to opisuje?",o:["XOR","AND","OR","NOR"],a:0,e:"Výstup 1 pri rôznych vstupoch, teda XOR."},
+ {s:"Kontrolka prázdnej nádrže",u:"Niekedy treba výstup, ktorý je opačný ako vstup. Na to slúži NOT.",t:"Senzor dáva 1, keď je v nádrži palivo. Kontrolka má svietiť, keď palivo nie je. Čo dáš medzi senzor a kontrolku?",o:["NOT","AND","OR","Nič, stačí vodič"],a:0,e:"Kontrolka má opačnú hodnotu ako senzor, teda invertor NOT."},
+ {s:"Bezpečnostný lis",u:"Pri strojoch sa používa dvojručné ovládanie: stroj sa spustí, iba ak operátor drží obe tlačidlá, aby mal obe ruky mimo lisu.",t:"Lis sa má spustiť iba vtedy, keď operátor stlačí ľavé aj pravé tlačidlo. Aký člen?",o:["AND","OR","XOR","NOT"],a:0,e:"Obe tlačidlá naraz, teda AND. Je to aj bezpečnostné pravidlo BOZP."},
+ {s:"Ventilátor v serverovni",u:"Keď sa majú zapnúť pri akejkoľvek z viacerých podmienok, je to OR.",t:"Ventilátor sa zapne, keď je vysoká teplota (A = 1) alebo vysoká vlhkosť (B = 1). Aký člen?",o:["OR","AND","XOR","NAND"],a:0,e:"Stačí jedna podmienka, teda OR."},
+ {s:"Hlasovanie troch porotcov",u:"Pri troch vstupoch môžeš skladať viac členov. Aspoň dvaja súhlasia znamená: (A a B) alebo (A a C) alebo (B a C).",t:"Výsledok je 1, keď súhlasia aspoň dvaja z troch porotcov A, B, C. Ktorý výraz to opisuje?",o:["(A AND B) OR (A AND C) OR (B AND C)","A AND B AND C","A OR B OR C","A XOR B XOR C"],a:0,e:"Každá dvojica s AND, a potom stačí ktorákoľvek dvojica, teda OR."},
+ {s:"Polovičná sčítačka",u:"Sčítanie dvoch bitov: 0+0=0, 0+1=1, 1+0=1, 1+1=10 (súčet 0, prenos 1). Pozri sa, kedy je súčet 1 a kedy je prenos 1.",t:"Polovičná sčítačka sčíta bity A a B. Aké členy dajú súčet S a prenos C?",o:["S = A XOR B, C = A AND B","S = A OR B, C = A AND B","S = A AND B, C = A XOR B","S = A NOR B, C = A OR B"],a:0,e:"Súčet je 1 pri rôznych bitoch (XOR), prenos iba pri 1+1 (AND). Takto sčítava aj procesor."},
+ {s:"Výstup obvodu",u:"Pri zloženom obvode počítaj postupne: najprv vnútro zátvorky, potom zvyšok.",t:"Obvod Y = (A AND B) OR C. Vstupy: A = 1, B = 0, C = 1. Aký je výstup Y?",o:["1","0","Nedá sa určiť","2"],a:0,e:"A AND B = 0, potom 0 OR 1 = 1."},
+ {s:"Výstup obvodu 2",u:"Pri zloženom obvode počítaj postupne: najprv vnútro zátvorky, potom zvyšok. NOT otočí hodnotu.",t:"Obvod Y = NOT (A OR B). Vstupy: A = 0, B = 1. Aký je výstup Y?",o:["0","1","Nedá sa určiť","Raz 0, raz 1"],a:0,e:"0 OR 1 = 1, NOT 1 = 0. Je to člen NOR."},
+ {s:"Kontrola parity",u:"Parita sa používa pri prenose dát na odhalenie chyby: počíta sa, či je počet jednotiek párny alebo nepárny. Reťaz členov XOR dá 1, keď je počet jednotiek nepárny.",t:"Ktorý člen sa používa na kontrolu parity (či je počet jednotiek nepárny)?",o:["XOR","AND","OR","NAND"],a:0,e:"A XOR B XOR C … dá 1 pri nepárnom počte jednotiek."},
+ {s:"Výstup obvodu 3",u:"Pri zloženom obvode počítaj postupne. NAND je NOT AND.",t:"Obvod Y = (A NAND B) AND C. Vstupy: A = 1, B = 1, C = 1. Aký je výstup Y?",o:["0","1","Nedá sa určiť","2"],a:0,e:"1 NAND 1 = 0, potom 0 AND 1 = 0."}
+];
+const LG_GATES={AND:(a,b)=>a&b,OR:(a,b)=>a|b,NAND:(a,b)=>1-(a&b),NOR:(a,b)=>1-(a|b),XOR:(a,b)=>a^b};
+const LG_TABLES=[
+ {id:"AND",n:2,f:r=>r[0]&r[1]},{id:"OR",n:2,f:r=>r[0]|r[1]},{id:"NAND",n:2,f:r=>1-(r[0]&r[1])},{id:"NOR",n:2,f:r=>1-(r[0]|r[1])},{id:"XOR",n:2,f:r=>r[0]^r[1]},
+ {id:"Y = (A AND B) OR C",n:3,f:r=>(r[0]&r[1])|r[2]},
+ {id:"Y = NOT (A OR B)",n:2,f:r=>1-(r[0]|r[1])},
+ {id:"Y = (A XOR B) AND C",n:3,f:r=>(r[0]^r[1])&r[2]}
+];
+const rows=n=>[...Array(1<<n)].map((_,i)=>[...Array(n)].map((_,k)=>(i>>(n-1-k))&1));
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function lgMakePr(){
+  const L=[],used=new Set(),u=v=>{if(used.has(v))return false;used.add(v);return true};
+  const add=(typ,fn)=>{for(let k=0;k<20;k++){const x=fn();if(u(typ+x.q)){L.push({typ,...x,inp:"",ok:false,tries:0});return}}};
+  for(let i=0;i<2;i++)add("d2b",()=>{const v=rnd(9,250);return{q:String(v),ans:v.toString(2)}});
+  for(let i=0;i<2;i++)add("b2d",()=>{const v=rnd(9,250);return{q:v.toString(2),ans:String(v)}});
+  for(let i=0;i<2;i++)add("d2h",()=>{const v=rnd(20,255);return{q:String(v),ans:v.toString(16).toUpperCase()}});
+  for(let i=0;i<2;i++)add("h2b",()=>{const v=rnd(17,255);return{q:v.toString(16).toUpperCase(),ans:v.toString(2).padStart(8,"0")}});
+  for(let i=0;i<2;i++)add("b2h",()=>{const v=rnd(17,255);return{q:v.toString(2).padStart(8,"0"),ans:v.toString(16).toUpperCase()}});
+  return L;
+}
+const LG_TYP={d2b:["desiatková → dvojková","Deľ číslo 2 a zapisuj zvyšky (0 alebo 1). Výsledok čítaj zdola nahor. Alebo odčítaj najväčšie hodnoty 128, 64, 32, 16, 8, 4, 2, 1, ktoré sa zmestia."],
+ b2d:["dvojková → desiatková","Sprava majú miesta hodnoty 1, 2, 4, 8, 16, 32, 64, 128. Sčítaj hodnoty miest, kde je 1."],
+ d2h:["desiatková → šestnástková","Vydeľ číslo 16: celá časť je prvá číslica, zvyšok druhá. Čísla 10–15 píš ako A–F."],
+ h2b:["šestnástková → dvojková","Každú hex číslicu prepíš na 4 bity (napr. A = 1010, 5 = 0101) a spoj ich. Výsledok má 8 bitov."],
+ b2h:["dvojková → šestnástková","Rozdeľ 8 bitov na dve štvorice, každú preveď na číslo 0–15 a zapíš ako hex číslicu (10–15 = A–F)."]};
+function lgInit(){return{pr:lgMakePr(),tb:LG_TABLES.map(t=>({cells:Array(1<<t.n).fill(null),ok:false,tries:0}))}}
+function lgNorm(typ,s){s=String(s).trim().toUpperCase().replace(/\s+/g,"");if(typ==="d2b"||typ==="h2b"||typ==="b2d")s=s.replace(/^0+(?=.)/,"");return s}
+function renderLG(){
+  const G=SV.lg;
+  $("#lgPr").innerHTML=G.pr.map((p,i)=>`<div class="lgrow ${p.ok?"ok":p.tries?"bad":""}"><span class="lgn">${i+1}.</span><span class="lgt">${LG_TYP[p.typ][0]}</span><b class="mono lgq">${p.q}</b><span>=</span>
+    <input class="mono" data-i="${i}" value="${esc(p.inp)}" ${p.ok?"disabled":""} autocomplete="off" spellcheck="false"><button class="lnk" data-c="${i}" ${p.ok?"disabled":""}>Skontrolovať</button>
+    <span class="lgm">${p.ok?"✓ správne":p.tries?`nesprávne (pokus ${p.tries}). Tip: ${LG_TYP[p.typ][1]}`:""}</span></div>`).join("");
+  $("#lgPr").querySelectorAll("input").forEach(e=>{e.oninput=()=>{G.pr[+e.dataset.i].inp=e.value;save()};e.onkeydown=ev=>{if(ev.key==="Enter")lgCheckPr(+e.dataset.i)}});
+  $("#lgPr").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>lgCheckPr(+b.dataset.c));
+  $("#lgTb").innerHTML=LG_TABLES.map((t,ti)=>{const s=G.tb[ti],R=rows(t.n),names=["A","B","C"].slice(0,t.n);
+    return `<div class="box lgtb ${s.ok?"ok":""}"><div class="bh"><h2 class="mono">${t.id.length<5?"Člen "+t.id:t.id}</h2><span class="hint">${s.ok?"✓ správne":s.tries?"pokusov: "+s.tries:""}</span></div>
+    <table><thead><tr>${names.map(n=>`<th>${n}</th>`).join("")}<th>Y</th></tr></thead><tbody>${R.map((r,ri)=>`<tr>${r.map(v=>`<td class="mono">${v}</td>`).join("")}<td><button class="lgc mono" data-t="${ti}" data-r="${ri}" ${s.ok?"disabled":""}>${s.cells[ri]===null?"?":s.cells[ri]}</button></td></tr>`).join("")}</tbody></table>
+    <div style="padding:8px 12px"><button class="lnk" data-tc="${ti}" ${s.ok?"disabled":""}>Skontrolovať tabuľku</button> <span class="hint" id="lgtm${ti}"></span></div></div>`}).join("");
+  $("#lgTb").querySelectorAll(".lgc").forEach(b=>b.onclick=()=>{const s=G.tb[+b.dataset.t],r=+b.dataset.r;s.cells[r]=s.cells[r]===1?0:1;b.textContent=s.cells[r];save()});
+  $("#lgTb").querySelectorAll("[data-tc]").forEach(b=>b.onclick=()=>lgCheckTb(+b.dataset.tc));
+  upd();
+}
+function lgCheckPr(i){const p=SV.lg.pr[i];if(p.ok)return;const v=lgNorm(p.typ,p.inp);if(!v)return;
+  if(v===lgNorm(p.typ,p.ans)){p.ok=true;log("Prevody","prevod "+LG_TYP[p.typ][0],p.q+" = "+p.inp+" (pokus "+(p.tries+1)+")",true)}
+  else{p.tries++;log("Prevody","prevod "+LG_TYP[p.typ][0],p.q+" = "+p.inp+" (nesprávne)",false)}
+  renderLG();save();setTimeout(()=>{const n=$("#lgPr").querySelectorAll("input")[i+1];if(p.ok&&n&&!n.disabled)n.focus()},0)}
+function lgCheckTb(ti){const t=LG_TABLES[ti],s=SV.lg.tb[ti],R=rows(t.n);
+  if(s.cells.some(c=>c===null)){$("#lgtm"+ti).textContent="Vyplň všetky riadky (klikni na ?).";return}
+  const bad=R.map((r,ri)=>s.cells[ri]!==t.f(r)?ri:-1).filter(x=>x>=0);
+  if(!bad.length){s.ok=true;log("Tabuľky",t.id,"správne (pokus "+(s.tries+1)+")",true);renderLG()}
+  else{s.tries++;log("Tabuľky",t.id,"chybných riadkov: "+bad.length,false);renderLG();$("#lgtm"+ti).textContent=`Chybných riadkov: ${bad.length}. Prečítaj si pravidlo člena v časti Logické členy a skús znova.`}
+  save()}
+function lgScore(){const G=SV.lg;return{pr:G.pr.filter(p=>p.ok).length,prN:G.pr.length,tb:G.tb.filter(t=>t.ok).length,tbN:G.tb.length,err:G.pr.reduce((a,p)=>a+p.tries,0)+G.tb.reduce((a,t)=>a+t.tries,0)}}
+
 let PC_LABELS=null;
 function setMode(){
   if(!PC_LABELS)PC_LABELS={nav:[...document.querySelectorAll(".nav button")].slice(0,4).map(b=>b.firstChild.nodeValue),
     h:["p1","p2","p3","p4"].map(id=>[$("#"+id+" .ph h1").textContent,$("#"+id+" .ph .hint").textContent]),
     rg:[...document.querySelectorAll(".rgrid span")].map(e=>e.textContent)};
-  const T=TEL;
-  const nav=T?["Kábel RJ45 ","Montáž rozvodu ","Teória ","Poruchy "]:PC_LABELS.nav;
+  const T=TEL,L=LGM;
+  const nav=T?["Kábel RJ45 ","Montáž rozvodu ","Teória ","Poruchy "]:L?["Prevody a tabuľky ","Montáž ","Logické členy ","Obvody "]:PC_LABELS.nav;
   [...document.querySelectorAll(".nav button")].slice(0,4).forEach((b,i)=>b.firstChild.nodeValue=nav[i]);
   const H=T?[["Zapojenie kábla RJ45","Urči poradie žíl v konektoroch RJ45 podľa normy a skontroluj zapojenie. Kontrolovať môžeš koľkokrát chceš."],
              ["Montáž vnútorného rozvodu","Vyberaj kroky v poradí, v akom ich robíš pri montáži rozvodu a stúpacieho vedenia."],
              ["Teória","Pri každej otázke si najprv prečítaj krátke vysvetlenie, potom odpovedz. Ak sa pomýliš, môžeš to skúsiť znova. Niektoré otázky sú z učiva, ktoré už poznáš (BOZP, meranie, súčiastky)."],
-             ["Poruchy","Vyber zákazku vľavo, prečítaj si tip, sprav kontroly a urči príčinu poruchy. Ak sa pomýliš, môžeš to skúsiť znova."]]:PC_LABELS.h;
+             ["Poruchy","Vyber zákazku vľavo, prečítaj si tip, sprav kontroly a urči príčinu poruchy. Ak sa pomýliš, môžeš to skúsiť znova."]]:L?[["Prevody a pravdivostné tabuľky","Najprv prevody medzi sústavami, potom pravdivostné tabuľky. Kontrolovať môžeš koľkokrát chceš."],["Montáž",""],
+             ["Logické členy a Booleova algebra","Pri každej otázke si najprv prečítaj vysvetlenie, potom odpovedz. Ak sa pomýliš, môžeš to skúsiť znova."],
+             ["Obvody v praxi","Vyber úlohu vľavo, prečítaj si tip a urči, aký člen alebo obvod treba. Ak sa pomýliš, môžeš to skúsiť znova."]]:PC_LABELS.h;
   ["p1","p2","p3","p4"].forEach((id,i)=>{$("#"+id+" .ph h1").textContent=H[i][0];$("#"+id+" .ph .hint").textContent=H[i][1]});
-  const rg=T?["Kábel RJ45","Montáž","Teória","Poruchy"]:PC_LABELS.rg;document.querySelectorAll(".rgrid span").forEach((e,i)=>e.textContent=rg[i]);
-  $("#orders").hidden=T;$("#req").hidden=T;$("#p1 .cfg").hidden=T;$("#svork").hidden=!T;$("#rig").hidden=T;$("#p3 .bios").hidden=T;
+  const rg=T?["Kábel RJ45","Montáž","Teória","Poruchy"]:L?["Prevody","Tabuľky","Logické členy","Obvody"]:PC_LABELS.rg;document.querySelectorAll(".rgrid span").forEach((e,i)=>e.textContent=rg[i]);
+  $("#orders").hidden=T||L;$("#req").hidden=T||L;$("#p1 .cfg").hidden=T||L;$("#lg").hidden=!L;if(L)renderLG();document.querySelector('.nav [data-p="p2"]').hidden=L;$("#svork").hidden=!T;$("#rig").hidden=T;$("#p3 .bios").hidden=T||L;
   $("#svork").hidden=true;$("#rj").hidden=!T;if(T)renderRJ();document.querySelector('.nav [data-p="p6"]').hidden=!T;if(T)renderVR();
 }
 
@@ -1172,15 +1279,17 @@ function upd(){
   const n=fullName()?fullName()+", "+profile.trieda:"";
   const pc=Object.keys(passed).length,bs=sc(biosSt),ds=sc(diagSt),asmDone=aNext===STEPS.length;
   $("#c1").textContent=TEL?(SV.rj&&SV.rj.ok?"✓":"–"):pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;if(TEL&&SV.vr)$("#c6").textContent=(SV.vr.schOk?1:0)+(SV.vr.progOk?1:0)+"/2";
+  if(LGM&&SV.lg){const g=lgScore();$("#c1").textContent=(g.pr+g.tb)+"/"+(g.prN+g.tbN)}
   $("#rName").textContent=n||"Meno nevyplnené";
   $("#rDate").textContent="Vyplnené "+new Date().toLocaleString("sk-SK",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"});
   $("#r1").textContent=TEL?(SV.rj&&SV.rj.ok?"hotový":"nehotový"):pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
+  if(LGM&&SV.lg){const g=lgScore();$("#r1").textContent=g.pr+" / "+g.prN;$("#r2").textContent=g.tb+" / "+g.tbN}
   $("#r3").textContent=bs.ok+" / "+BIOS.length;$("#r4").textContent=ds.ok+" / "+DIAG.length;
   $("#rTable").innerHTML="<thead><tr><th>Časť</th><th>Stav</th><th>Výsledok</th></tr></thead><tbody>"+
    (TEL?`<tr><td>Kábel RJ45 (${SV.rj.typ})</td><td>${SV.rj.ok?"zapojený správne":"nedokončený"}</td><td class="mono">pokusov: ${SV.rj.tries}</td></tr>`:"")+ORDERS.map(o=>`<tr><td>Zákazka ${o.no} · ${o.short}</td><td>${passed[o.id]?"odovzdaná":"neodovzdaná"}</td><td class="mono">${passed[o.id]?price(builds[o.id])+" € z "+o.budget+" €":"–"}</td></tr>`).join("")+
-   `<tr><td>Montáž</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>
-    <tr><td>${TEL?"Teória":"BIOS"}</td><td>${bs.done} / ${BIOS.length} zodpovedaných</td><td class="mono">${bs.ok} správne</td></tr>
-    <tr><td>${TEL?"Poruchy":"Servisné zákazky"}</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${ds.ok} správne</td></tr>${TEL&&SV.vr?`<tr><td>Vrátnik – schéma</td><td>${SV.vr.schOk?"správna":"nedokončená"}</td><td class="mono">pokusov: ${SV.vr.schTries}</td></tr><tr><td>Vrátnik – program</td><td>${SV.vr.progOk?"funguje":"nedokončený"}</td><td class="mono">pokusov: ${SV.vr.progTries}</td></tr>`:""}</tbody>`;
+   (LGM&&SV.lg?(g=>`<tr><td>Prevody</td><td>${g.pr} / ${g.prN} správne</td><td class="mono">chybných pokusov: ${SV.lg.pr.reduce((a,p)=>a+p.tries,0)}</td></tr><tr><td>Pravdivostné tabuľky</td><td>${g.tb} / ${g.tbN} správne</td><td class="mono">chybných pokusov: ${SV.lg.tb.reduce((a,t)=>a+t.tries,0)}</td></tr>`)(lgScore()):`<tr><td>Montáž</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>`)+`
+    <tr><td>${LGM?"Logické členy":TEL?"Teória":"BIOS"}</td><td>${bs.done} / ${BIOS.length} zodpovedaných</td><td class="mono">${bs.ok} správne</td></tr>
+    <tr><td>${LGM?"Obvody":TEL?"Poruchy":"Servisné zákazky"}</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${ds.ok} správne</td></tr>${TEL&&SV.vr?`<tr><td>Vrátnik – schéma</td><td>${SV.vr.schOk?"správna":"nedokončená"}</td><td class="mono">pokusov: ${SV.vr.schTries}</td></tr><tr><td>Vrátnik – program</td><td>${SV.vr.progOk?"funguje":"nedokončený"}</td><td class="mono">pokusov: ${SV.vr.progTries}</td></tr>`:""}</tbody>`;
 }
 $("#whoName").textContent="";
 /* štart */
@@ -1202,7 +1311,8 @@ function updAway(){const e=$("#awayInfo");if(e)e.textContent=awayN?`Odchody zo s
 function renderFeedback(){
   const li=(cls,t)=>`<li class="${cls}">${t}</li>`;
   let h=`<h2>Spätná väzba</h2><p class="hint">Takto dopadla tvoja práca. Po obnovení stránky sa tento prehľad stratí.</p><div class="fb">`;
-  if(TEL)h+=`<div><h3>Kábel RJ45 (${SV.rj.typ})</h3><ul>${SV.rj.ok?li("ok",`Zapojený správne, pokusov o kontrolu: ${SV.rj.tries}.`):li("bad",`Nezapojený správne (pokusov: ${SV.rj.tries}).`)+rjBad().map(([e,k])=>li("why",`${rjEndName(e)}, pin ${k+1}: mal si ${SV.rj.sel[e][k]||"nič"}, správne je ${rjExp(e)[k]}.`)).join("")}</ul></div><div><h3>Vrátnik</h3><ul>${li(SV.vr.schOk?"ok":"bad",SV.vr.schOk?`Schéma správna (pokusov: ${SV.vr.schTries}).`:`Schéma nie je dokončená (pokusov: ${SV.vr.schTries}).`)}${li(SV.vr.progOk?"ok":"bad",SV.vr.progOk?`Program funguje (pokusov: ${SV.vr.progTries}, spôsob: ${SV.vr.mode}).`:`Program nie je dokončený (pokusov: ${SV.vr.progTries}).`)}</ul></div>`;
+  if(LGM){const g=lgScore();h+=`<div><h3>Prevody: ${g.pr} z ${g.prN}</h3><ul>${SV.lg.pr.map(p=>li(p.ok?"ok":"bad",`${LG_TYP[p.typ][0]}: ${p.q} = ${p.ok?p.ans:"<span class=why>správne: "+p.ans+"</span>"}${p.tries?" (chybné pokusy: "+p.tries+")":""}`)).join("")}</ul></div><div><h3>Tabuľky: ${g.tb} z ${g.tbN}</h3><ul>${LG_TABLES.map((t,i)=>li(SV.lg.tb[i].ok?"ok":"bad",`${t.id}: ${SV.lg.tb[i].ok?"správne":"nesprávne alebo nedokončené"}${SV.lg.tb[i].tries?" (chybné pokusy: "+SV.lg.tb[i].tries+")":""}`)).join("")}</ul></div>`}
+  else if(TEL)h+=`<div><h3>Kábel RJ45 (${SV.rj.typ})</h3><ul>${SV.rj.ok?li("ok",`Zapojený správne, pokusov o kontrolu: ${SV.rj.tries}.`):li("bad",`Nezapojený správne (pokusov: ${SV.rj.tries}).`)+rjBad().map(([e,k])=>li("why",`${rjEndName(e)}, pin ${k+1}: mal si ${SV.rj.sel[e][k]||"nič"}, správne je ${rjExp(e)[k]}.`)).join("")}</ul></div><div><h3>Vrátnik</h3><ul>${li(SV.vr.schOk?"ok":"bad",SV.vr.schOk?`Schéma správna (pokusov: ${SV.vr.schTries}).`:`Schéma nie je dokončená (pokusov: ${SV.vr.schTries}).`)}${li(SV.vr.progOk?"ok":"bad",SV.vr.progOk?`Program funguje (pokusov: ${SV.vr.progTries}, spôsob: ${SV.vr.mode}).`:`Program nie je dokončený (pokusov: ${SV.vr.progTries}).`)}</ul></div>`;
   else h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
     const ev=lastEval[o.id],t=tries[o.id]||0;
     if(passed[o.id])return li("ok",`<b>${o.no} ${o.short}:</b> odovzdaná, ${price(builds[o.id])} € z ${o.budget} €, pokusov: ${t}.`);
@@ -1211,7 +1321,7 @@ function renderFeedback(){
     return li("bad",`<b>${o.no} ${o.short}:</b> neprešla kontrolou (pokusov: ${t}).<ul>${pr.map(x=>`<li class="why">${x}</li>`).join("")}</ul>`);
   }).join("")+`</ul></div>`;
   const wrongSteps=LOG.filter(l=>l.cast==="Montáž"&&l.ok==="nie").map(l=>l.detail);
-  h+=`<div><h3>Montáž</h3><ul>`+(aNext===STEPS.length?li(aErr?"bad":"ok",`Dokončená, chybných krokov: ${aErr}.`):li("bad",`Nedokončená, hotových ${aNext} z ${STEPS.length} krokov.`))+
+  if(!LGM)h+=`<div><h3>Montáž</h3><ul>`+(aNext===STEPS.length?li(aErr?"bad":"ok",`Dokončená, chybných krokov: ${aErr}.`):li("bad",`Nedokončená, hotových ${aNext} z ${STEPS.length} krokov.`))+
     wrongSteps.slice(0,6).map(d=>li("why","Vybral si: "+esc(d.replace(/ \(správny bol: /," → správne bolo: ").replace(/\)$/,"")))).join("")+
     (wrongSteps.length>6?li("why",`a ďalších ${wrongSteps.length-6} chybných krokov.`):"")+`</ul></div>`;
   const desk=(name,list,st)=>{const bad=[];list.forEach((q,i)=>{const x=st[i];
@@ -1219,7 +1329,7 @@ function renderFeedback(){
       else if(x.pick!==x.ans)bad.push(li("bad",`<b>${q.s}:</b> tvoja odpoveď „${esc(x.opts[x.pick])}“. <span class="why">Správne: ${esc(x.opts[x.ans])}. ${esc(q.e)}</span>`));});
     const ok=st.filter(x=>x.pick!==null&&x.pick===x.ans).length;
     return `<div><h3>${name}: ${ok} z ${list.length} správne</h3><ul>${bad.join("")||li("ok","Všetko správne.")}</ul></div>`;};
-  h+=desk(TEL?"Teória":"BIOS",BIOS,biosSt)+desk(TEL?"Poruchy":"Servis",DIAG,diagSt);
+  h+=desk(LGM?"Logické členy":TEL?"Teória":"BIOS",BIOS,biosSt)+desk(LGM?"Obvody":TEL?"Poruchy":"Servis",DIAG,diagSt);
   h+=`<div><h3>Odchody zo stránky</h3><ul>${li(awayN?"bad":"ok",awayN?`Stránku si opustil ${awayN}× (spolu ${awaySec} s).`:"Stránku si počas práce neopustil.")}</ul></div></div>`;
   const fb=$("#feedback");fb.innerHTML=h;fb.hidden=false;fb.scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -1230,7 +1340,7 @@ $("#send").onclick=async()=>{
   if(!ENDPOINT){m.className="note bad";m.textContent="Odosielanie ešte nie je nastavené. Povedz to majstrovi.";return}
   const bs=sc(biosSt),ds=sc(diagSt),errs=LOG.filter(l=>l.ok==="nie"&&l.cast!=="Dozor").length;
   const payload={meno:profile.meno,priezvisko:profile.priezvisko,trieda:profile.trieda,zaciatok:new Date(T0||Date.now()).toISOString(),koniec:new Date().toISOString(),
-    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:TEL?(SV.rj&&SV.rj.ok?1:0):Object.keys(passed).length,montaz_hotova:aNext===STEPS.length,montaz_chyby:aErr,
+    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:LGM?lgScore().pr:TEL?(SV.rj&&SV.rj.ok?1:0):Object.keys(passed).length,montaz_hotova:LGM?lgScore().tb===LG_TABLES.length:aNext===STEPS.length,montaz_chyby:LGM?lgScore().err:aErr,
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
   $("#send").disabled=true;m.className="note";m.textContent="Odosielam…";
   try{await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
@@ -1240,6 +1350,7 @@ $("#send").onclick=async()=>{
 let saved=null;try{saved=JSON.parse(localStorage.getItem(SKEY)||"null")}catch(e){}
 if(saved&&!saved.pick)saved=null;
 if(saved&&saved.profile&&TEL_CLASSES.includes(saved.profile.trieda)&&!saved.pick.tel)saved=null;
+if(saved&&saved.profile&&LOG_CLASSES.includes(saved.profile.trieda)&&!saved.pick.log)saved=null;
 if(saved&&saved.sent){try{localStorage.removeItem(SKEY)}catch(e){}saved=null}
 if(saved&&saved.profile&&saved.profile.meno){
   Object.assign(profile,saved.profile);T0=saved.T0;LOG.push(...saved.LOG);
@@ -1252,23 +1363,25 @@ if(saved&&saved.profile&&saved.profile.meno){
 }else order=shuffle(STEPS.map((_,i)=>i));
 const pickN=(a,n,ok)=>shuffle(a.map((_,i)=>i).filter(i=>!ok||ok(a[i]))).slice(0,n).sort((x,y)=>x-y);
 function makePick(trieda){
+  if(LOG_CLASSES.includes(trieda))return{lvl:"logika",log:true,o:[],b:pickN(LOG_Q,10),d:pickN(LOG_D,8)};
   if(TEL_CLASSES.includes(trieda))return{lvl:"telekom",tel:true,o:[],b:[...pickN(TEL_Q,5,x=>!x.k&&!x.x),...pickN(TEL_Q,3,x=>x.k)],d:pickN(TEL_D,8),sv:[1,6,11,16][Math.floor(Math.random()*4)],rj:Math.random()<.5?"priamy":"krížený"};
   if(EASY_CLASSES.includes(trieda))return{lvl:"ľahká",
     o:pickN(ORDERS_ALL,EASY.n.o,x=>EASY.orders.includes(x.id)),b:pickN(BIOS_ALL,EASY.n.b,x=>EASY.bios.includes(x.s)),d:pickN(DIAG_ALL,EASY.n.d,x=>EASY.diag.includes(x.s))};
   return{lvl:"štandardná",o:pickN(ORDERS_ALL,ORDERS_PICK),b:pickN(BIOS_ALL,BIOS_PICK),d:pickN(DIAG_ALL,DIAG_PICK)};
 }
 function applyPick(pk,savedDesks){
-  PICK=pk;TEL=!!pk.tel;
+  PICK=pk;TEL=!!pk.tel;LGM=!!pk.log;
   const prevLen=STEPS.length;STEPS=TEL?TEL_STEPS:PC_STEPS;
   if(!savedDesks||order.length!==STEPS.length){order=shuffle(STEPS.map((_,i)=>i));if(!savedDesks){aNext=0;aErr=0}}
-  if(TEL){ORDERS=[];BIOS=PICK.b.map(i=>TEL_Q[i]);DIAG=PICK.d.map(i=>TEL_D[i]);if(!savedDesks)SV={start:pk.sv||1,sel:{},ok:false,tries:0};if(!SV.rj)SV.rj=rjInit(pk.rj||"priamy");if(!SV.vr)SV.vr=vrInit()}
+  if(LGM){ORDERS=[];BIOS=PICK.b.map(i=>LOG_Q[i]);DIAG=PICK.d.map(i=>LOG_D[i]);if(!savedDesks||!SV.lg)SV={...SV,lg:lgInit()}}
+  else if(TEL){ORDERS=[];BIOS=PICK.b.map(i=>TEL_Q[i]);DIAG=PICK.d.map(i=>TEL_D[i]);if(!savedDesks)SV={start:pk.sv||1,sel:{},ok:false,tries:0};if(!SV.rj)SV.rj=rjInit(pk.rj||"priamy");if(!SV.vr)SV.vr=vrInit()}
   else{ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
     ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});
     if(!ORDERS.some(o=>o.id===cur))cur=ORDERS[0].id;}
-  biosSt=makeDesk(BIOS,$("#biosDesk"),TEL?"T-":"B-",TEL?"Teória":"BIOS",savedDesks?savedDesks.bios:null);
-  diagSt=makeDesk(DIAG,$("#diagDesk"),TEL?"P-":"S-",TEL?"Poruchy":"Servis",savedDesks?savedDesks.diag:null);
+  biosSt=makeDesk(BIOS,$("#biosDesk"),LGM?"L-":TEL?"T-":"B-",LGM?"Logické členy":TEL?"Teória":"BIOS",savedDesks?savedDesks.bios:null);
+  diagSt=makeDesk(DIAG,$("#diagDesk"),LGM?"O-":TEL?"P-":"S-",LGM?"Obvody":TEL?"Poruchy":"Servis",savedDesks?savedDesks.diag:null);
   setMode();renderAsm();
-  if(TEL)upd();else renderCfg();
+  if(TEL||LGM)upd();else renderCfg();
 }
 updAway();renderAsm();
 if(saved&&saved.profile&&saved.profile.meno)applyPick(saved.pick,saved);
