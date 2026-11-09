@@ -246,6 +246,9 @@ tr:last-child td{border-bottom:0}
 .bcode,#vrCode{font:13px/1.5 var(--mono);background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:10px 12px;margin:0;white-space:pre;overflow:auto;color:var(--fg)}
 #vrCode{width:100%;box-sizing:border-box;resize:vertical;tab-size:2}
 
+.lghow{padding:14px 18px}.lghow h2{margin:0 0 10px}.lghow h3{font-size:14px;margin:0 0 6px}.lghow p{font-size:14px;line-height:1.55;margin:0 0 10px}
+.lgcols{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}@media(max-width:1000px){.lgcols{grid-template-columns:1fr}}
+.lgv{border-collapse:collapse;margin:0 0 10px;width:auto}.lgv td,.lgv th{border:1px solid var(--line);padding:3px 8px;text-align:center;font:600 13px var(--mono)}.lgg th{background:var(--sunk)}
 .lgrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--line)}
 .lgrow .lgn{width:22px;color:var(--muted)}.lgrow .lgt{width:190px;font-size:13px;color:var(--muted)}.lgrow .lgq{min-width:90px}
 .lgrow input{width:120px;padding:5px 8px;border:1px solid var(--line);border-radius:4px;font-size:14px;background:var(--surface);color:var(--fg)}
@@ -302,10 +305,33 @@ tr:last-child td{border-bottom:0}
 <section class="page" id="p1">
   <div class="ph"><h1>Konfigurátor zostavy</h1><p class="hint">Zostavu odovzdáš, keď je kompatibilná a spĺňa všetky požiadavky zákazníka.</p></div>
   <div id="lg" hidden style="display:grid;gap:18px">
-    <div class="box svrule"><h2>Ako na to</h2>
-      <p><b>Dvojková sústava</b> má iba 0 a 1. Miesta sprava majú hodnoty 1, 2, 4, 8, 16, 32, 64, 128. Napríklad 1101 = 8 + 4 + 1 = 13.</p>
-      <p><b>Šestnástková sústava</b> má číslice 0 – 9 a A – F (A = 10, B = 11, C = 12, D = 13, E = 14, F = 15). Jedna hex číslica = 4 bity, napríklad 1010 0011 = A3.</p>
-      <p><b>Logické členy:</b> AND = 1 iba keď sú oba vstupy 1 · OR = 1 keď je aspoň jeden vstup 1 · NOT otočí hodnotu · NAND = opak AND · NOR = opak OR · XOR = 1 keď sú vstupy rôzne.</p></div>
+    <div class="box lghow"><h2>Ako na to</h2>
+      <div class="lgcols">
+      <div><h3>Dvojková sústava (binárna)</h3>
+      <p>Počítač pozná iba <b>0</b> (nie je napätie) a <b>1</b> (je napätie). Každé miesto v čísle má svoju hodnotu, sprava doľava sa vždy zdvojnásobí:</p>
+      <table class="lgv"><tr><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td>2</td><td>1</td></tr></table>
+      <p><b>Z dvojkovej do desiatkovej:</b> sčítaj hodnoty miest, kde je 1.<br>
+      <span class="mono">1101</span> → 8 + 4 + 0 + 1 = <b>13</b></p>
+      <p><b>Z desiatkovej do dvojkovej:</b> zober najväčšiu hodnotu z tabuľky, ktorá sa zmestí, a odčítaj ju. Na jej miesto napíš 1, kde sa nezmestí, napíš 0.<br>
+      <span class="mono">13</span>: 8 sa zmestí (zostane 5) → 1 · 4 sa zmestí (zostane 1) → 1 · 2 sa nezmestí → 0 · 1 sa zmestí → 1 = <b class="mono">1101</b></p></div>
+      <div><h3>Šestnástková sústava (hex)</h3>
+      <p>Má 16 číslic: 0 – 9 a potom písmená: <b>A = 10, B = 11, C = 12, D = 13, E = 14, F = 15</b>.</p>
+      <p><b>Z dvojkovej do hex:</b> rozdeľ 8 bitov na dve štvorice. Každú štvoricu preveď (hodnoty 8, 4, 2, 1) a zapíš ako jednu hex číslicu.<br>
+      <span class="mono">1010 0011</span> → 1010 = 10 = A, 0011 = 3 → <b class="mono">A3</b></p>
+      <p><b>Z hex do dvojkovej:</b> naopak, každú hex číslicu prepíš na 4 bity.<br>
+      <span class="mono">3F</span> → 3 = 0011, F = 15 = 1111 → <b class="mono">0011 1111</b></p>
+      <p><b>Z desiatkovej do hex:</b> vydeľ číslo 16. Celá časť je prvá číslica, zvyšok druhá.<br>
+      <span class="mono">172</span> : 16 = 10, zvyšok 12 → A a C → <b class="mono">AC</b></p></div>
+      <div><h3>Logické členy</h3>
+      <p>Členy majú vstupy A, B a výstup Y. Pravdivostná tabuľka ukazuje výstup pre každú kombináciu vstupov.</p>
+      <table class="lgv lgg"><thead><tr><th>A</th><th>B</th><th>AND</th><th>OR</th><th>NAND</th><th>NOR</th><th>XOR</th></tr></thead><tbody>
+      <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td></tr></tbody></table>
+      <p><b>AND</b> (a zároveň): 1 iba keď sú oba vstupy 1 · <b>OR</b> (alebo): 1 keď je aspoň jeden vstup 1 · <b>NOT</b>: otočí hodnotu, 0 → 1, 1 → 0 · <b>NAND</b> = AND a potom NOT · <b>NOR</b> = OR a potom NOT · <b>XOR</b>: 1 keď sú vstupy rôzne.</p>
+      <p><b>Zložený obvod</b> počítaj po krokoch, najprv zátvorku: <span class="mono">(A AND B) OR C</span> pre A = 1, B = 0, C = 1 → 1 AND 0 = 0 → 0 OR 1 = <b>1</b></p></div>
+      </div></div>
     <div class="box" style="padding:14px 16px"><h2 style="margin:0 0 4px">1. Prevody medzi sústavami</h2><p class="hint" style="margin:0 0 10px">Napíš výsledok a skontroluj. Ak sa pomýliš, zobrazí sa tip a môžeš to skúsiť znova. Počíta sa každý pokus.</p><div id="lgPr"></div></div>
     <div><h2 style="margin:0 0 4px">2. Pravdivostné tabuľky</h2><p class="hint" style="margin:0 0 10px">Klikaním na ? nastav výstup Y (0 alebo 1) pre každý riadok a skontroluj tabuľku.</p><div id="lgTb" class="lgtbs"></div></div>
   </div>
@@ -1194,7 +1220,7 @@ function setMode(){
   const H=T?[["Zapojenie kábla RJ45","Urči poradie žíl v konektoroch RJ45 podľa normy a skontroluj zapojenie. Kontrolovať môžeš koľkokrát chceš."],
              ["Montáž vnútorného rozvodu","Vyberaj kroky v poradí, v akom ich robíš pri montáži rozvodu a stúpacieho vedenia."],
              ["Teória","Pri každej otázke si najprv prečítaj krátke vysvetlenie, potom odpovedz. Ak sa pomýliš, môžeš to skúsiť znova. Niektoré otázky sú z učiva, ktoré už poznáš (BOZP, meranie, súčiastky)."],
-             ["Poruchy","Vyber zákazku vľavo, prečítaj si tip, sprav kontroly a urči príčinu poruchy. Ak sa pomýliš, môžeš to skúsiť znova."]]:L?[["Prevody a pravdivostné tabuľky","Najprv prevody medzi sústavami, potom pravdivostné tabuľky. Kontrolovať môžeš koľkokrát chceš."],["Montáž",""],
+             ["Poruchy","Vyber zákazku vľavo, prečítaj si tip, sprav kontroly a urči príčinu poruchy. Ak sa pomýliš, môžeš to skúsiť znova."]]:L?[["Prevody a pravdivostné tabuľky",""],["Montáž",""],
              ["Logické členy a Booleova algebra","Pri každej otázke si najprv prečítaj vysvetlenie, potom odpovedz. Ak sa pomýliš, môžeš to skúsiť znova."],
              ["Obvody v praxi","Vyber úlohu vľavo, prečítaj si tip a urči, aký člen alebo obvod treba. Ak sa pomýliš, môžeš to skúsiť znova."]]:PC_LABELS.h;
   ["p1","p2","p3","p4"].forEach((id,i)=>{$("#"+id+" .ph h1").textContent=H[i][0];$("#"+id+" .ph .hint").textContent=H[i][1]});
