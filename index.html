@@ -248,7 +248,7 @@ tr:last-child td{border-bottom:0}
 
 .lghow{padding:14px 18px}.lghow h2{margin:0 0 10px}.lghow h3{font-size:14px;margin:0 0 6px}.lghow p{font-size:14px;line-height:1.55;margin:0 0 10px}
 .lgcols{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}@media(max-width:1000px){.lgcols{grid-template-columns:1fr}}
-.lgv{border-collapse:collapse;margin:0 0 10px;width:auto}.lgv td,.lgv th{border:1px solid var(--line);padding:3px 8px;text-align:center;font:600 13px var(--mono)}.lgg th{background:var(--sunk)}
+.lgv{border-collapse:collapse;margin:0 0 10px;width:auto}.lgv td,.lgv th{border:1px solid var(--line);padding:3px 8px;text-align:center;font:600 13px var(--mono)}.lgg th{background:var(--sunk)}.lgv tr.lgb td{color:var(--accent)}.lgst td:first-child,.lgst th:first-child{text-align:left;font-family:var(--sans);font-weight:500}.lgst th{background:var(--sunk);font-family:var(--sans)}
 .lgrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--line)}
 .lgrow .lgn{width:22px;color:var(--muted)}.lgrow .lgt{width:190px;font-size:13px;color:var(--muted)}.lgrow .lgq{min-width:90px}
 .lgrow input{width:120px;padding:5px 8px;border:1px solid var(--line);border-radius:4px;font-size:14px;background:var(--surface);color:var(--fg)}
@@ -310,10 +310,17 @@ tr:last-child td{border-bottom:0}
       <div><h3>Dvojková sústava (binárna)</h3>
       <p>Počítač pozná iba <b>0</b> (nie je napätie) a <b>1</b> (je napätie). Každé miesto v čísle má svoju hodnotu, sprava doľava sa vždy zdvojnásobí:</p>
       <table class="lgv"><tr><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td>2</td><td>1</td></tr></table>
-      <p><b>Z dvojkovej do desiatkovej:</b> sčítaj hodnoty miest, kde je 1.<br>
-      <span class="mono">1101</span> → 8 + 4 + 0 + 1 = <b>13</b></p>
-      <p><b>Z desiatkovej do dvojkovej:</b> zober najväčšiu hodnotu z tabuľky, ktorá sa zmestí, a odčítaj ju. Na jej miesto napíš 1, kde sa nezmestí, napíš 0.<br>
-      <span class="mono">13</span>: 8 sa zmestí (zostane 5) → 1 · 4 sa zmestí (zostane 1) → 1 · 2 sa nezmestí → 0 · 1 sa zmestí → 1 = <b class="mono">1101</b></p></div>
+      <p><b>Z dvojkovej do desiatkovej:</b> napíš číslo pod hodnoty miest (zarovnaj sprava) a sčítaj hodnoty, pod ktorými je 1.</p>
+      <table class="lgv"><tr><td>8</td><td>4</td><td>2</td><td>1</td></tr><tr class="lgb"><td>1</td><td>1</td><td>0</td><td>1</td></tr></table>
+      <p><span class="mono">1101</span> = 8 + 4 + 0 + 1 = <b>13</b></p>
+      <p><b>Z desiatkovej do dvojkovej:</b> choď od najväčšej hodnoty, ktorá sa zmestí, a pýtaj sa, či sa zmestí do toho, čo ti zostáva. Príklad pre <b>13</b>:</p>
+      <table class="lgv lgst"><thead><tr><th>Zmestí sa?</th><th>zapíšem</th><th>zostáva</th></tr></thead><tbody>
+      <tr><td>8 do 13? áno</td><td>1</td><td>13 − 8 = 5</td></tr>
+      <tr><td>4 do 5? áno</td><td>1</td><td>5 − 4 = 1</td></tr>
+      <tr><td>2 do 1? nie</td><td>0</td><td>stále 1</td></tr>
+      <tr><td>1 do 1? áno</td><td>1</td><td>0, hotovo</td></tr></tbody></table>
+      <p>Číslice zapíš za sebou zhora nadol: <b class="mono">1101</b></p>
+      </div>
       <div><h3>Šestnástková sústava (hex)</h3>
       <p>Má 16 číslic: 0 – 9 a potom písmená: <b>A = 10, B = 11, C = 12, D = 13, E = 14, F = 15</b>.</p>
       <p><b>Z dvojkovej do hex:</b> rozdeľ 8 bitov na dve štvorice. Každú štvoricu preveď (hodnoty 8, 4, 2, 1) a zapíš ako jednu hex číslicu.<br>
