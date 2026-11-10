@@ -292,6 +292,7 @@ tr:last-child td{border-bottom:0}
       <button data-p="p3">BIOS <span class="cnt" id="c3"></span></button>
       <button data-p="p4">Servis <span class="cnt" id="c4"></span></button>
       <button data-p="p6" hidden>Vrátnik <span class="cnt" id="c6"></span></button>
+      <button data-p="p7" hidden>Sústavy a logika <span class="cnt" id="c7"></span></button>
       <button data-p="p5">Výkaz</button>
     </nav>
     <div class="who">Technik <b id="whoName" style="color:var(--bar-fg);font-weight:600"></b></div>
@@ -465,6 +466,7 @@ tr:last-child td{border-bottom:0}
 </section>
 
 <!-- VRÁTNIK -->
+<section class="page" id="p7" hidden><div class="ph"><h1>Číselné sústavy a logické členy</h1></div></section>
 <section class="page" id="p6" hidden>
   <div class="ph"><h1>Domový vrátnik</h1><p class="hint">Najprv zapoj schému, potom napíš program pre riadiacu jednotku. Kontrolovať môžeš koľkokrát chceš.</p></div>
   <div class="box svrule">
@@ -1168,6 +1170,7 @@ const LOG_D=[
 ];
 const LG_GATES={AND:(a,b)=>a&b,OR:(a,b)=>a|b,NAND:(a,b)=>1-(a&b),NOR:(a,b)=>1-(a|b),XOR:(a,b)=>a^b};
 const LG_TABLES=[
+ {id:"NOT",n:1,f:r=>1-r[0]},
  {id:"AND",n:2,f:r=>r[0]&r[1]},{id:"OR",n:2,f:r=>r[0]|r[1]},{id:"NAND",n:2,f:r=>1-(r[0]&r[1])},{id:"NOR",n:2,f:r=>1-(r[0]|r[1])},{id:"XOR",n:2,f:r=>r[0]^r[1]},
  {id:"Y = (A AND B) OR C",n:3,f:r=>(r[0]&r[1])|r[2]},
  {id:"Y = NOT (A OR B)",n:2,f:r=>1-(r[0]|r[1])},
@@ -1175,9 +1178,15 @@ const LG_TABLES=[
 ];
 const rows=n=>[...Array(1<<n)].map((_,i)=>[...Array(n)].map((_,k)=>(i>>(n-1-k))&1));
 const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
-function lgMakePr(){
+const lgT=()=>SV.lg&&SV.lg.ids?SV.lg.ids.map(id=>LG_TABLES.find(t=>t.id===id)):LG_TABLES.filter(t=>t.id!=="NOT");
+function lgMakePr(easy){
   const L=[],used=new Set(),u=v=>{if(used.has(v))return false;used.add(v);return true};
   const add=(typ,fn)=>{for(let k=0;k<20;k++){const x=fn();if(u(typ+x.q)){L.push({typ,...x,inp:"",ok:false,tries:0});return}}};
+  if(easy){
+    for(let i=0;i<3;i++)add("d2b",()=>{const v=rnd(5,63);return{q:String(v),ans:v.toString(2)}});
+    for(let i=0;i<3;i++)add("b2d",()=>{const v=rnd(5,63);return{q:v.toString(2),ans:String(v)}});
+    for(let i=0;i<2;i++)add("b2h",()=>{const v=rnd(17,255);return{q:v.toString(2).padStart(8,"0"),ans:v.toString(16).toUpperCase()}});
+    return L}
   for(let i=0;i<2;i++)add("d2b",()=>{const v=rnd(9,250);return{q:String(v),ans:v.toString(2)}});
   for(let i=0;i<2;i++)add("b2d",()=>{const v=rnd(9,250);return{q:v.toString(2),ans:String(v)}});
   for(let i=0;i<2;i++)add("d2h",()=>{const v=rnd(20,255);return{q:String(v),ans:v.toString(16).toUpperCase()}});
@@ -1190,7 +1199,7 @@ const LG_TYP={d2b:["desiatková → dvojková","Deľ číslo 2 a zapisuj zvyšky
  d2h:["desiatková → šestnástková","Vydeľ číslo 16: celá časť je prvá číslica, zvyšok druhá. Čísla 10–15 píš ako A–F."],
  h2b:["šestnástková → dvojková","Každú hex číslicu prepíš na 4 bity (napr. A = 1010, 5 = 0101) a spoj ich. Výsledok má 8 bitov."],
  b2h:["dvojková → šestnástková","Rozdeľ 8 bitov na dve štvorice, každú preveď na číslo 0–15 a zapíš ako hex číslicu (10–15 = A–F)."]};
-function lgInit(){return{pr:lgMakePr(),tb:LG_TABLES.map(t=>({cells:Array(1<<t.n).fill(null),ok:false,tries:0}))}}
+function lgInit(easy){const ids=easy?["NOT","AND","OR","NAND","NOR","XOR"]:LG_TABLES.filter(t=>t.id!=="NOT").map(t=>t.id);return{ids,pr:lgMakePr(easy),tb:ids.map(id=>({cells:Array(1<<LG_TABLES.find(t=>t.id===id).n).fill(null),ok:false,tries:0}))}}
 function lgNorm(typ,s){s=String(s).trim().toUpperCase().replace(/\s+/g,"");if(typ==="d2b"||typ==="h2b"||typ==="b2d")s=s.replace(/^0+(?=.)/,"");return s}
 function renderLG(){
   const G=SV.lg;
@@ -1199,7 +1208,7 @@ function renderLG(){
     <span class="lgm">${p.ok?"✓ správne":p.tries?`nesprávne (pokus ${p.tries}). Tip: ${LG_TYP[p.typ][1]}`:""}</span></div>`).join("");
   $("#lgPr").querySelectorAll("input").forEach(e=>{e.oninput=()=>{G.pr[+e.dataset.i].inp=e.value;save()};e.onkeydown=ev=>{if(ev.key==="Enter")lgCheckPr(+e.dataset.i)}});
   $("#lgPr").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>lgCheckPr(+b.dataset.c));
-  $("#lgTb").innerHTML=LG_TABLES.map((t,ti)=>{const s=G.tb[ti],R=rows(t.n),names=["A","B","C"].slice(0,t.n);
+  $("#lgTb").innerHTML=lgT().map((t,ti)=>{const s=G.tb[ti],R=rows(t.n),names=["A","B","C"].slice(0,t.n);
     return `<div class="box lgtb ${s.ok?"ok":""}"><div class="bh"><h2 class="mono">${t.id.length<5?"Člen "+t.id:t.id}</h2><span class="hint">${s.ok?"✓ správne":s.tries?"pokusov: "+s.tries:""}</span></div>
     <table><thead><tr>${names.map(n=>`<th>${n}</th>`).join("")}<th>Y</th></tr></thead><tbody>${R.map((r,ri)=>`<tr>${r.map(v=>`<td class="mono">${v}</td>`).join("")}<td><button class="lgc mono" data-t="${ti}" data-r="${ri}" ${s.ok?"disabled":""}>${s.cells[ri]===null?"?":s.cells[ri]}</button></td></tr>`).join("")}</tbody></table>
     <div style="padding:8px 12px"><button class="lnk" data-tc="${ti}" ${s.ok?"disabled":""}>Skontrolovať tabuľku</button> <span class="hint" id="lgtm${ti}"></span></div></div>`}).join("");
@@ -1211,11 +1220,11 @@ function lgCheckPr(i){const p=SV.lg.pr[i];if(p.ok)return;const v=lgNorm(p.typ,p.
   if(v===lgNorm(p.typ,p.ans)){p.ok=true;log("Prevody","prevod "+LG_TYP[p.typ][0],p.q+" = "+p.inp+" (pokus "+(p.tries+1)+")",true)}
   else{p.tries++;log("Prevody","prevod "+LG_TYP[p.typ][0],p.q+" = "+p.inp+" (nesprávne)",false)}
   renderLG();save();setTimeout(()=>{const n=$("#lgPr").querySelectorAll("input")[i+1];if(p.ok&&n&&!n.disabled)n.focus()},0)}
-function lgCheckTb(ti){const t=LG_TABLES[ti],s=SV.lg.tb[ti],R=rows(t.n);
+function lgCheckTb(ti){const t=lgT()[ti],s=SV.lg.tb[ti],R=rows(t.n);
   if(s.cells.some(c=>c===null)){$("#lgtm"+ti).textContent="Vyplň všetky riadky (klikni na ?).";return}
   const bad=R.map((r,ri)=>s.cells[ri]!==t.f(r)?ri:-1).filter(x=>x>=0);
   if(!bad.length){s.ok=true;log("Tabuľky",t.id,"správne (pokus "+(s.tries+1)+")",true);renderLG()}
-  else{s.tries++;log("Tabuľky",t.id,"chybných riadkov: "+bad.length,false);renderLG();$("#lgtm"+ti).textContent=`Chybných riadkov: ${bad.length}. Prečítaj si pravidlo člena v časti Logické členy a skús znova.`}
+  else{s.tries++;log("Tabuľky",t.id,"chybných riadkov: "+bad.length,false);renderLG();$("#lgtm"+ti).textContent=`Chybných riadkov: ${bad.length}. Prečítaj si pravidlo člena v časti Ako na to hore a skús znova.`}
   save()}
 function lgScore(){const G=SV.lg;return{pr:G.pr.filter(p=>p.ok).length,prN:G.pr.length,tb:G.tb.filter(t=>t.ok).length,tbN:G.tb.length,err:G.pr.reduce((a,p)=>a+p.tries,0)+G.tb.reduce((a,t)=>a+t.tries,0)}}
 
@@ -1237,6 +1246,7 @@ function setMode(){
   const rg=T?["Kábel RJ45","Montáž","Teória","Poruchy"]:L?["Prevody","Tabuľky","Logické členy","Obvody"]:PC_LABELS.rg;document.querySelectorAll(".rgrid span").forEach((e,i)=>e.textContent=rg[i]);
   $("#orders").hidden=T||L;$("#req").hidden=T||L;$("#p1 .cfg").hidden=T||L;$("#lg").hidden=!L;if(L)renderLG();document.querySelector('.nav [data-p="p2"]').hidden=L;$("#svork").hidden=!T;$("#rig").hidden=T;$("#p3 .bios").hidden=T||L;
   $("#svork").hidden=true;$("#rj").hidden=!T;if(T)renderRJ();document.querySelector('.nav [data-p="p6"]').hidden=!T;if(T)renderVR();
+  {const X=!T&&!L&&SV.lg;document.querySelector('.nav [data-p="p7"]').hidden=!X;const lg=$("#lg");if(X){$("#p7").appendChild(lg);lg.hidden=false;renderLG()}else if(lg.parentNode.id==="p7"){$("#p1 .ph").after(lg)}}
 }
 
 let aNext=0,aErr=0,order=[],asmLock=0;
@@ -1306,7 +1316,7 @@ function makeDesk(list,root,pre,part,saved){
 document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll(".nav button").forEach(x=>x.toggleAttribute("aria-current",x===b));
   b.setAttribute("aria-current","page");
-  ["p1","p2","p3","p4","p5","p6"].forEach(id=>$("#"+id).hidden=id!==b.dataset.p);
+  ["p1","p2","p3","p4","p5","p6","p7"].forEach(id=>$("#"+id).hidden=id!==b.dataset.p);
   window.scrollTo(0,0);
 });
 let biosSt=[],diagSt=[];
@@ -1316,6 +1326,7 @@ function upd(){
   const pc=Object.keys(passed).length,bs=sc(biosSt),ds=sc(diagSt),asmDone=aNext===STEPS.length;
   $("#c1").textContent=TEL?(SV.rj&&SV.rj.ok?"✓":"–"):pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;if(TEL&&SV.vr)$("#c6").textContent=(SV.vr.schOk?1:0)+(SV.vr.progOk?1:0)+"/2";
   if(LGM&&SV.lg){const g=lgScore();$("#c1").textContent=(g.pr+g.tb)+"/"+(g.prN+g.tbN)}
+  if(!LGM&&!TEL&&SV.lg){const g=lgScore();$("#c7").textContent=(g.pr+g.tb)+"/"+(g.prN+g.tbN)}
   $("#rName").textContent=n||"Meno nevyplnené";
   $("#rDate").textContent="Vyplnené "+new Date().toLocaleString("sk-SK",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"});
   $("#r1").textContent=TEL?(SV.rj&&SV.rj.ok?"hotový":"nehotový"):pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
@@ -1351,7 +1362,8 @@ function updAway(){const e=$("#awayInfo");if(e)e.textContent=(awayN?`Odchody zo 
 function renderFeedback(){
   const li=(cls,t)=>`<li class="${cls}">${t}</li>`;
   let h=`<h2>Spätná väzba</h2><p class="hint">Takto dopadla tvoja práca. Po obnovení stránky sa tento prehľad stratí.</p><div class="fb">`;
-  if(LGM){const g=lgScore();h+=`<div><h3>Prevody: ${g.pr} z ${g.prN}</h3><ul>${SV.lg.pr.map(p=>li(p.ok?"ok":"bad",`${LG_TYP[p.typ][0]}: ${p.q} = ${p.ok?p.ans:"<span class=why>správne: "+p.ans+"</span>"}${p.tries?" (chybné pokusy: "+p.tries+")":""}`)).join("")}</ul></div><div><h3>Tabuľky: ${g.tb} z ${g.tbN}</h3><ul>${LG_TABLES.map((t,i)=>li(SV.lg.tb[i].ok?"ok":"bad",`${t.id}: ${SV.lg.tb[i].ok?"správne":"nesprávne alebo nedokončené"}${SV.lg.tb[i].tries?" (chybné pokusy: "+SV.lg.tb[i].tries+")":""}`)).join("")}</ul></div>`}
+  if(SV.lg&&!LGM&&!TEL){const g=lgScore();h+=`<div><h3>Prevody: ${g.pr} z ${g.prN}</h3><ul>${SV.lg.pr.map(p=>li(p.ok?"ok":"bad",`${LG_TYP[p.typ][0]}: ${p.q} = ${p.ok?p.ans:"<span class=why>správne: "+p.ans+"</span>"}`)).join("")}</ul></div><div><h3>Tabuľky: ${g.tb} z ${g.tbN}</h3><ul>${lgT().map((t,i)=>li(SV.lg.tb[i].ok?"ok":"bad",`${t.id}: ${SV.lg.tb[i].ok?"správne":"nesprávne alebo nedokončené"}`)).join("")}</ul></div>`}
+  if(LGM){const g=lgScore();h+=`<div><h3>Prevody: ${g.pr} z ${g.prN}</h3><ul>${SV.lg.pr.map(p=>li(p.ok?"ok":"bad",`${LG_TYP[p.typ][0]}: ${p.q} = ${p.ok?p.ans:"<span class=why>správne: "+p.ans+"</span>"}${p.tries?" (chybné pokusy: "+p.tries+")":""}`)).join("")}</ul></div><div><h3>Tabuľky: ${g.tb} z ${g.tbN}</h3><ul>${lgT().map((t,i)=>li(SV.lg.tb[i].ok?"ok":"bad",`${t.id}: ${SV.lg.tb[i].ok?"správne":"nesprávne alebo nedokončené"}${SV.lg.tb[i].tries?" (chybné pokusy: "+SV.lg.tb[i].tries+")":""}`)).join("")}</ul></div>`}
   else if(TEL)h+=`<div><h3>Kábel RJ45 (${SV.rj.typ})</h3><ul>${SV.rj.ok?li("ok",`Zapojený správne, pokusov o kontrolu: ${SV.rj.tries}.`):li("bad",`Nezapojený správne (pokusov: ${SV.rj.tries}).`)+rjBad().map(([e,k])=>li("why",`${rjEndName(e)}, pin ${k+1}: mal si ${SV.rj.sel[e][k]||"nič"}, správne je ${rjExp(e)[k]}.`)).join("")}</ul></div><div><h3>Vrátnik</h3><ul>${li(SV.vr.schOk?"ok":"bad",SV.vr.schOk?`Schéma správna (pokusov: ${SV.vr.schTries}).`:`Schéma nie je dokončená (pokusov: ${SV.vr.schTries}).`)}${li(SV.vr.progOk?"ok":"bad",SV.vr.progOk?`Program funguje (pokusov: ${SV.vr.progTries}, spôsob: ${SV.vr.mode}).`:`Program nie je dokončený (pokusov: ${SV.vr.progTries}).`)}</ul></div>`;
   else h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
     const ev=lastEval[o.id],t=tries[o.id]||0;
@@ -1380,7 +1392,7 @@ $("#send").onclick=async()=>{
   if(!ENDPOINT){m.className="note bad";m.textContent="Odosielanie ešte nie je nastavené. Povedz to majstrovi.";return}
   const bs=sc(biosSt),ds=sc(diagSt),errs=LOG.filter(l=>l.ok==="nie"&&l.cast!=="Dozor").length;
   const payload={meno:profile.meno,priezvisko:profile.priezvisko,trieda:profile.trieda,zaciatok:new Date(T0||Date.now()).toISOString(),koniec:new Date().toISOString(),
-    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:LGM?lgScore().pr:TEL?(SV.rj&&SV.rj.ok?1:0):Object.keys(passed).length,montaz_hotova:LGM?lgScore().tb===LG_TABLES.length:aNext===STEPS.length,montaz_chyby:LGM?lgScore().err:aErr,
+    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:LGM?lgScore().pr:TEL?(SV.rj&&SV.rj.ok?1:0):Object.keys(passed).length,montaz_hotova:LGM?lgScore().tb===lgT().length:aNext===STEPS.length,montaz_chyby:LGM?lgScore().err:aErr,
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
   $("#send").disabled=true;m.className="note";m.textContent="Odosielam…";
   try{await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
@@ -1413,6 +1425,7 @@ function applyPick(pk,savedDesks){
   PICK=pk;TEL=!!pk.tel;LGM=!!pk.log;
   const prevLen=STEPS.length;STEPS=TEL?TEL_STEPS:PC_STEPS;
   if(!savedDesks||order.length!==STEPS.length){order=shuffle(STEPS.map((_,i)=>i));if(!savedDesks){aNext=0;aErr=0}}
+  if(!LGM&&!TEL&&pk.lvl==="ľahká"&&!SV.lg)SV={...SV,lg:lgInit(true)};
   if(LGM){ORDERS=[];BIOS=PICK.b.map(i=>LOG_Q[i]);DIAG=PICK.d.map(i=>LOG_D[i]);if(!savedDesks||!SV.lg)SV={...SV,lg:lgInit()}}
   else if(TEL){ORDERS=[];BIOS=PICK.b.map(i=>TEL_Q[i]);DIAG=PICK.d.map(i=>TEL_D[i]);if(!savedDesks)SV={start:pk.sv||1,sel:{},ok:false,tries:0};if(!SV.rj)SV.rj=rjInit(pk.rj||"priamy");if(!SV.vr)SV.vr=vrInit()}
   else{ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
