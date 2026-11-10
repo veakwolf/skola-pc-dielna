@@ -650,7 +650,31 @@ const ORDERS_ALL=[
   req:{ramMin:16,storMin:1,gpuTier:1,coresMin:0}},
  {id:"o8",no:"Z-108",who:"Jana, fotografka",short:"Počítač na fotky s archívom",budget:1600,
   text:"Upravujem fotky v Lightroome a mám veľký archív. Potrebujem 32 GB RAM, procesor aspoň so 6 jadrami, grafiku na úrovni RTX 5060, SSD na systém a spolu aspoň 4 TB miesta. Rozpočet 1600 €.",
-  req:{ramMin:32,storMin:4,gpuTier:1,coresMin:6}}
+  req:{ramMin:32,storMin:4,gpuTier:1,coresMin:6}},
+ {id:"o9",no:"Z-109",who:"Pani Horváthová, dôchodkyňa",short:"Počítač na internet",budget:650,
+  text:"Chcem počítač na internet, videá a videohovory s vnúčatami. Hry nehrám. Stačí 16 GB RAM a aspoň 500 GB SSD. Môžem dať najviac 650 €.",
+  req:{ramMin:16,storMin:.5,gpuTier:0,coresMin:0}},
+ {id:"o10",no:"Z-110",who:"Základná škola Hlboká",short:"Počítač do učebne",budget:750,
+  text:"Do počítačovej učebne potrebujeme počítače na Word, Excel a internet. Bez grafickej karty. 16 GB RAM a aspoň 1 TB SSD. Cena za jeden kus najviac 750 €.",
+  req:{ramMin:16,storMin:1,gpuTier:0,coresMin:0}},
+ {id:"o11",no:"Z-111",who:"Peter, filmový fanúšik",short:"Malý počítač pod televízor",budget:750,
+  text:"Chcem malý počítač pod televízor na filmy a seriály, takže iba malú skrinku. Hry nehrám. 16 GB RAM a aspoň 1 TB SSD na filmy. Rozpočet 750 €.",
+  req:{ramMin:16,storMin:1,gpuTier:0,coresMin:0,small:true}},
+ {id:"o12",no:"Z-112",who:"Pán Novák, živnostník",short:"Kancelária s archívom",budget:800,
+  text:"Robím faktúry a skenujem doklady, mám veľký archív. Potrebujem 16 GB RAM, SSD na systém a spolu aspoň 2 TB miesta. Hry nehrám. Rozpočet 800 €.",
+  req:{ramMin:16,storMin:2,gpuTier:0,coresMin:0}},
+ {id:"o13",no:"Z-113",who:"Adam, 12 rokov",short:"Počítač na Minecraft",budget:1150,
+  text:"Hrám Minecraft a Roblox. Stačí grafika na úrovni RTX 5060, 16 GB RAM a aspoň 500 GB SSD. Rodičia dajú najviac 1150 €.",
+  req:{ramMin:16,storMin:.5,gpuTier:1,coresMin:0}},
+ {id:"o14",no:"Z-114",who:"Potraviny U Jána",short:"Počítač k pokladni",budget:650,
+  text:"Pri pokladni je málo miesta, potrebujeme iba malú skrinku. Počítač bude na pokladničný program. 16 GB RAM a aspoň 500 GB SSD. Rozpočet 650 €.",
+  req:{ramMin:16,storMin:.5,gpuTier:0,coresMin:0,small:true}},
+ {id:"o15",no:"Z-115",who:"Zuzana, účtovníčka s veľkými tabuľkami",short:"Výkonnejší kancelársky PC",budget:1100,
+  text:"Pracujem s veľkými tabuľkami v Exceli. Potrebujem procesor aspoň so 6 jadrami, 32 GB RAM a aspoň 1 TB SSD. Hry nehrám. Rozpočet 1100 €.",
+  req:{ramMin:32,storMin:1,gpuTier:0,coresMin:6}},
+ {id:"o16",no:"Z-116",who:"Michal, 16 rokov",short:"Herný PC na Fortnite",budget:1300,
+  text:"Hrám Fortnite a Valorant. Chcem procesor aspoň so 6 jadrami, grafiku na úrovni RTX 5060, 16 GB RAM a aspoň 1 TB SSD. Rozpočet 1300 €.",
+  req:{ramMin:16,storMin:1,gpuTier:1,coresMin:6}}
 ];
 const BIOS_ALL=[
  {s:"Frekvencia RAM",t:"Pamäte sú predávané ako DDR5-6000, BIOS ukazuje 4800 MT/s. Čo urobíš?",o:["Zapnem profil EXPO (pri Inteli XMP)","Vymením RAM, je pokazená","Nič, 4800 je viac ako 6000","Zapnem CSM"],a:0,e:"Pamäte štartujú na základnej frekvencii. Rýchlosť z obalu zapne až profil EXPO alebo XMP."},
@@ -696,7 +720,7 @@ const DIAG_ALL=[
 const ORDERS_PICK=3,BIOS_PICK=6,DIAG_PICK=12;
 /* ľahšia obtiažnosť pre prvákov */
 const EASY_CLASSES=["1.D"];
-const EASY={orders:["o1","o4","o6","o7"],
+const EASY={orders:["o1","o4","o6","o7","o9","o10","o11","o12","o13","o14","o15","o16"],
  bios:["Teplota CPU","Kapacita RAM","Uloženie zmien","Boot priorita","Inštalácia sa opakuje","SYS_FAN1","HDD na SATA","Aktualizácia BIOS-u"],
  diag:["Pípanie po čistení","Vypína sa pri hraní","No signal po výmene grafiky","Vôbec nereaguje","Reštarty pri záťaži","Predné USB nefunguje","RAM nejde zasunúť","Jedno krátke pípnutie","Zdroj páchne","Nehrá zvuk","Nefunguje internet cez kábel","Málo miesta na disku C","Veľmi pomalý počítač","Grafika sa netočí"],
  n:{o:3,b:5,d:8}};
@@ -1174,11 +1198,16 @@ const LG_TABLES=[
  {id:"AND",n:2,f:r=>r[0]&r[1]},{id:"OR",n:2,f:r=>r[0]|r[1]},{id:"NAND",n:2,f:r=>1-(r[0]&r[1])},{id:"NOR",n:2,f:r=>1-(r[0]|r[1])},{id:"XOR",n:2,f:r=>r[0]^r[1]},
  {id:"Y = (A AND B) OR C",n:3,f:r=>(r[0]&r[1])|r[2]},
  {id:"Y = NOT (A OR B)",n:2,f:r=>1-(r[0]|r[1])},
- {id:"Y = (A XOR B) AND C",n:3,f:r=>(r[0]^r[1])&r[2]}
+ {id:"Y = (A XOR B) AND C",n:3,f:r=>(r[0]^r[1])&r[2]},
+ {id:"Y = A AND B AND C",n:3,f:r=>r[0]&r[1]&r[2],e:1},
+ {id:"Y = A OR B OR C",n:3,f:r=>r[0]|r[1]|r[2],e:1},
+ {id:"Y = (NOT A) AND B",n:2,f:r=>(1-r[0])&r[1],e:1},
+ {id:"Y = A OR (NOT B)",n:2,f:r=>r[0]|(1-r[1]),e:1},
+ {id:"Y = NOT (A XOR B)",n:2,f:r=>1-(r[0]^r[1]),e:1}
 ];
 const rows=n=>[...Array(1<<n)].map((_,i)=>[...Array(n)].map((_,k)=>(i>>(n-1-k))&1));
 const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
-const lgT=()=>SV.lg&&SV.lg.ids?SV.lg.ids.map(id=>LG_TABLES.find(t=>t.id===id)):LG_TABLES.filter(t=>t.id!=="NOT");
+const lgT=()=>SV.lg&&SV.lg.ids?SV.lg.ids.map(id=>LG_TABLES.find(t=>t.id===id)):LG_TABLES.filter(t=>t.id!=="NOT"&&!t.e);
 function lgMakePr(easy){
   const L=[],used=new Set(),u=v=>{if(used.has(v))return false;used.add(v);return true};
   const add=(typ,fn)=>{for(let k=0;k<20;k++){const x=fn();if(u(typ+x.q)){L.push({typ,...x,inp:"",ok:false,tries:0});return}}};
@@ -1199,7 +1228,7 @@ const LG_TYP={d2b:["desiatková → dvojková","Deľ číslo 2 a zapisuj zvyšky
  d2h:["desiatková → šestnástková","Vydeľ číslo 16: celá časť je prvá číslica, zvyšok druhá. Čísla 10–15 píš ako A–F."],
  h2b:["šestnástková → dvojková","Každú hex číslicu prepíš na 4 bity (napr. A = 1010, 5 = 0101) a spoj ich. Výsledok má 8 bitov."],
  b2h:["dvojková → šestnástková","Rozdeľ 8 bitov na dve štvorice, každú preveď na číslo 0–15 a zapíš ako hex číslicu (10–15 = A–F)."]};
-function lgInit(easy){const ids=easy?["NOT","AND","OR","NAND","NOR","XOR"]:LG_TABLES.filter(t=>t.id!=="NOT").map(t=>t.id);return{ids,pr:lgMakePr(easy),tb:ids.map(id=>({cells:Array(1<<LG_TABLES.find(t=>t.id===id).n).fill(null),ok:false,tries:0}))}}
+function lgInit(easy){const B=["NOT","AND","OR","NAND","NOR","XOR"],E=LG_TABLES.filter(t=>t.e).map(t=>t.id),ids=easy?[...shuffle([...B]).slice(0,4),...shuffle([...E]).slice(0,2)].sort((a,b)=>(B.indexOf(a)+1||9)-(B.indexOf(b)+1||9)):LG_TABLES.filter(t=>t.id!=="NOT"&&!t.e).map(t=>t.id);return{ids,pr:lgMakePr(easy),tb:ids.map(id=>({cells:Array(1<<LG_TABLES.find(t=>t.id===id).n).fill(null),ok:false,tries:0}))}}
 function lgNorm(typ,s){s=String(s).trim().toUpperCase().replace(/\s+/g,"");if(typ==="d2b"||typ==="h2b"||typ==="b2d")s=s.replace(/^0+(?=.)/,"");return s}
 function renderLG(){
   const G=SV.lg;
@@ -1419,7 +1448,7 @@ function makePick(trieda){
   if(TEL_CLASSES.includes(trieda))return{lvl:"telekom",tel:true,o:[],b:[...pickN(TEL_Q,5,x=>!x.k&&!x.x),...pickN(TEL_Q,3,x=>x.k)],d:pickN(TEL_D,8),sv:[1,6,11,16][Math.floor(Math.random()*4)],rj:Math.random()<.5?"priamy":"krížený"};
   if(EASY_CLASSES.includes(trieda))return{lvl:"ľahká",
     o:pickN(ORDERS_ALL,EASY.n.o,x=>EASY.orders.includes(x.id)),b:pickN(BIOS_ALL,EASY.n.b,x=>EASY.bios.includes(x.s)),d:pickN(DIAG_ALL,EASY.n.d,x=>EASY.diag.includes(x.s))};
-  return{lvl:"štandardná",o:pickN(ORDERS_ALL,ORDERS_PICK),b:pickN(BIOS_ALL,BIOS_PICK),d:pickN(DIAG_ALL,DIAG_PICK)};
+  return{lvl:"štandardná",o:pickN(ORDERS_ALL,ORDERS_PICK,x=>+x.id.slice(1)<=8),b:pickN(BIOS_ALL,BIOS_PICK),d:pickN(DIAG_ALL,DIAG_PICK)};
 }
 function applyPick(pk,savedDesks){
   PICK=pk;TEL=!!pk.tel;LGM=!!pk.log;
