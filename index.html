@@ -1257,6 +1257,43 @@ function lgCheckTb(ti){const t=lgT()[ti],s=SV.lg.tb[ti],R=rows(t.n);
   save()}
 function lgScore(){const G=SV.lg;return{pr:G.pr.filter(p=>p.ok).length,prN:G.pr.length,tb:G.tb.filter(t=>t.ok).length,tbN:G.tb.length,err:G.pr.reduce((a,p)=>a+p.tries,0)+G.tb.reduce((a,t)=>a+t.tries,0)}}
 
+/* 3.C – periférie a kabeláž */
+const PER_CLASSES=["3.C"];let PERM=false;
+const PER_Q=[
+ {s:"Laserová tlačiareň: bledá tlač",t:"Laserová tlačiareň tlačí celé strany čoraz bledšie. Čo je najpravdepodobnejšia príčina?",o:["Dochádza toner","Je zaseknutý papier","Chýba ovládač","Zlý USB kábel"],a:0,e:"Rovnomerne bledá tlač je typický príznak dochádzajúceho tonera. Pomôže pretrepať kazetu, potom ju vymeniť."},
+ {s:"Laserová tlačiareň: rozmazaný toner",t:"Po vytlačení sa toner dá z papiera zotrieť prstom. Ktorá časť tlačiarne je chybná?",o:["Fixačná jednotka (fuser)","Toner","Podávací valček","Sieťová karta tlačiarne"],a:0,e:"Fixačná jednotka teplom a tlakom zapeká toner do papiera. Keď nehreje, toner ostane len položený na povrchu."},
+ {s:"Laserová tlačiareň: opakovaná škvrna",t:"Na každej strane je rovnaká škvrna, ktorá sa opakuje v pravidelných vzdialenostiach. Čo je chybné?",o:["Poškodený alebo znečistený valec (fotovalec)","Prázdny toner","Zlý ovládač","Vlhký papier je vždy jediná príčina"],a:0,e:"Pravidelne sa opakujúca chyba vzniká na otáčajúcom sa valci. Podľa vzdialenosti opakovania sa dá určiť, ktorý valec to je."},
+ {s:"Atramentová tlačiareň: chýbajú pruhy",t:"Atramentová tlačiareň netlačí niektoré riadky, v texte sú vodorovné biele pruhy. Čo urobíš najprv?",o:["Spustím čistenie tlačovej hlavy","Vymením USB kábel","Preinštalujem Windows","Vymením papier za hrubší"],a:0,e:"Biele pruhy znamenajú zaschnuté trysky. Najprv čistenie hlavy z ponuky tlačiarne, potom test trysiek."},
+ {s:"Zaseknutý papier",t:"V tlačiarni sa zasekol papier. Ako postupuješ správne?",o:["Vypnem tlačiareň a papier opatrne vytiahnem v smere posuvu","Silno potiahnem proti smeru posuvu","Vytiahnem ho za zapnutej tlačiarne čo najrýchlejšie","Nechám ho tam, tlačiareň si poradí"],a:0,e:"Tlačiareň sa vypne (pri laserovej pozor na horúci fuser) a papier sa ťahá v smere posuvu, aby sa neroztrhol a nepoškodili valce."},
+ {s:"Tlačiareň v sieti nereaguje",t:"Sieťová tlačiareň je zapnutá, ale nikto na ňu nevie tlačiť. Čo overíš ako prvé?",o:["IP adresu tlačiarne a príkazom ping, či odpovedá","Či má dosť papiera v zásobníku 2","Farbu tonera","Teplotu procesora počítača"],a:0,e:"Pri sieťovej tlačiarni sa overuje sieť: IP adresa z ponuky tlačiarne, ping z počítača a či port v počítači ukazuje na správnu IP."},
+ {s:"Zaseknutá tlačová fronta",t:"Tlač stojí, vo fronte visí úloha, ktorá sa nedá zrušiť. Čo pomôže?",o:["Reštartovať službu Zaraďovač tlače (Print Spooler)","Vymeniť toner","Odinštalovať prehliadač","Vymeniť monitor"],a:0,e:"Zaseknutú frontu rieši reštart služby Print Spooler (services.msc), prípadne vymazanie úloh v jej priečinku."},
+ {s:"Monitor: No signal",t:"Monitor svieti, ale ukazuje No signal. Počítač beží. Čo skontroluješ ako prvé?",o:["Kábel a zvolený vstup na monitore (HDMI/DP)","Klávesnicu","Tlačiareň","Napätie v zásuvke"],a:0,e:"Najčastejšie je zle zvolený vstup alebo uvoľnený kábel. Pri dedikovanej grafike aj to, či je kábel v grafike, nie v doske."},
+ {s:"Mŕtvy pixel",t:"Na LCD monitore je jeden bod, ktorý stále svieti na červeno, nech je obraz akýkoľvek. Čo to je?",o:["Zaseknutý (vadný) pixel na paneli","Chyba grafickej karty","Vírus","Zlý kábel"],a:0,e:"Chyba v jednom bode na stále rovnakom mieste je chyba panela. Grafika alebo kábel by spôsobili chybu v celom obraze."},
+ {s:"Monitor: zlé rozlíšenie",t:"Obraz na monitore je rozmazaný a písmo neostré. Monitor má 1920 × 1080. Čo je príčina?",o:["V systéme nie je nastavené natívne rozlíšenie monitora","Pokazený panel","Málo RAM","Slabý zdroj"],a:0,e:"LCD je ostré iba pri natívnom rozlíšení. Pri inom ho musí prepočítavať a obraz je rozmazaný."},
+ {s:"Monitor: blikanie",t:"Obraz občas na sekundu zčernie a znova naskočí. Pri pohnutí káblom sa to zhorší. Čo je príčina?",o:["Poškodený alebo uvoľnený video kábel","Málo miesta na disku","Zlý ovládač tlačiarne","Prehriaty procesor"],a:0,e:"Ak problém závisí od pohybu kábla, je to kábel alebo konektor. Vymeň kábel za overený."},
+ {s:"Klávesnica: niektoré klávesy",t:"Na klávesnici nefungujú len niektoré klávesy, po rozliatej káve. Čo je najpravdepodobnejšie?",o:["Poškodená fólia (matica kontaktov) tekutinou","Chýba ovládač","Zlý USB port","Nesprávne rozloženie jazyka"],a:0,e:"Tekutina poškodí vodivé dráhy fólie pod klávesmi. Ak nefungujú len niektoré klávesy, nie je chyba v kábli ani porte."},
+ {s:"Klávesnica píše iné znaky",t:"Na klávesnici sa namiesto Z píše Y a namiesto ž sa píše iný znak. Čo je chybné?",o:["Nastavené rozloženie klávesnice (jazyk) vo Windows","Pokazená klávesnica","Vírus","Zlý USB port"],a:0,e:"Zámena Z/Y a znakov je rozdiel medzi rozložením SK, SK QWERTY a EN. Opraví sa vo Windows (Win + medzerník)."},
+ {s:"Myš: trhaný pohyb",t:"Optická myš sa pohybuje trhane. Čo skontroluješ najprv?",o:["Povrch pod myšou a čistotu senzora","Grafickú kartu","Rýchlosť internetu","Teplotu disku"],a:0,e:"Optický senzor potrebuje vhodný povrch. Sklo, lesklý stôl alebo nečistota na senzore spôsobia trhanie."},
+ {s:"Bezdrôtová myš: výpadky",t:"Bezdrôtová myš občas prestane reagovať. Čo urobíš ako prvé?",o:["Vymením batérie a dám prijímač bližšie (predná USB)","Preinštalujem Windows","Vymením monitor","Aktualizujem BIOS"],a:0,e:"Najčastejšie sú slabé batérie alebo slabý signál. Prijímač v zadnej USB za kovovou skrinkou má horší dosah."},
+ {s:"Správca zariadení",t:"Ako zistíš, či má pripojené zariadenie nainštalovaný ovládač?",o:["V Správcovi zariadení – pri chybe je žltý výkričník","V Správcovi úloh","V Prieskumníkovi","V BIOS-e v sekcii Boot"],a:0,e:"Správca zariadení (devmgmt.msc) ukazuje všetky zariadenia. Žltý výkričník znamená problém s ovládačom."},
+ {s:"USB zariadenie nejde",t:"USB disk nefunguje v jednom porte, v inom áno. Kde je chyba?",o:["V USB porte, nie v disku","V disku","V operačnom systéme","V monitore"],a:0,e:"Ak zariadenie funguje inde, je v poriadku. Chyba je v danom porte, jeho napájaní alebo zapojení predného panela."},
+ {s:"Postup diagnostiky",t:"Aký je správny prvý krok pri diagnostike poruchy periférie?",o:["Overiť najjednoduchšie veci: napájanie, kábel, zapojenie","Hneď vymeniť zariadenie za nové","Preinštalovať operačný systém","Rozobrať zariadenie"],a:0,e:"Diagnostika ide od najjednoduchšieho a najlacnejšieho: napájanie, káble, nastavenie, ovládač. Až potom výmena dielov."}
+];
+const KAB_D=[
+ {s:"Tester: všetko 1–8",t:"Tester kábla ukazuje: 1-1, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7, 8-8. Aký je kábel?",o:["Priamy kábel, zapojený správne","Krížený kábel","Prerušený vodič","Skrat"],a:0,e:"Každý pin vedie na rovnaký pin na druhom konci, teda priamy (straight-through) kábel."},
+ {s:"Tester: 1-3, 2-6",t:"Tester ukazuje: 1-3, 2-6, 3-1, 4-4, 5-5, 6-2, 7-7, 8-8. Aký je kábel?",o:["Krížený kábel (T568A na jednom a T568B na druhom konci)","Priamy kábel","Prerušený pár","Zlý konektor na oboch stranách"],a:0,e:"Prehodené piny 1↔3 a 2↔6 znamenajú vymenený oranžový a zelený pár, teda krížený kábel."},
+ {s:"Tester: chýba 7",t:"Pri teste svietia diódy 1, 2, 3, 4, 5, 6, 8, ale 7 nesvieti na žiadnej strane. Čo je zle?",o:["Prerušený vodič č. 7 (alebo zle zakrimpovaný)","Skrat 7 a 8","Krížený kábel","Kábel je v poriadku"],a:0,e:"Nesvieti iba jeden vodič, takže je prerušený alebo nedosadol v konektore. Najčastejšie sa rieši novým zakrimpovaním."},
+ {s:"Tester: 3 a 6 naraz",t:"Pri teste sa pri vodiči 3 rozsvietia naraz 3 aj 6. Čo je to za chybu?",o:["Skrat medzi vodičmi 3 a 6","Prerušený vodič 3","Krížený kábel","Kábel je v poriadku"],a:0,e:"Ak sa naraz rozsvietia dva piny, vodiče sú spojené – skrat. Zvyčajne v konektore pri zlom krimpovaní."},
+ {s:"Tester: 1-2, 2-1",t:"Tester ukazuje 1-2 a 2-1, ostatné piny sedia. Čo je zle?",o:["Prehodené žily v jednom páre na jednom konci","Krížený kábel","Prerušený vodič","Skrat"],a:0,e:"Vodiče 1 a 2 sú vymenené. Pár je ten istý, ale poradie žíl v konektore je zlé. Treba prekrimpovať."},
+ {s:"Split pair",t:"Tester ukazuje všetko 1-1 až 8-8 správne, ale sieť pri 1 Gb/s padá a funguje iba na 100 Mb/s. Žily boli v konektore zoradené 1 biela-oranžová, 2 oranžová, 3 biela-zelená, 4 zelená, 5 biela-modrá, 6 modrá… Čo je zle?",o:["Rozdelený pár (split pair) – žily jedného páru nie sú na pinoch 3 a 6","Kábel je v poriadku","Krížený kábel","Prerušený vodič"],a:0,e:"Jednoduchý tester skontroluje len pin na pin. Pre rušenie je dôležité, aby boli páry na správnych pinoch (zelený pár na 3 a 6). Inak vzniká presluch."},
+ {s:"Dĺžka kábla",t:"Aká je maximálna dĺžka segmentu kábla Cat5e/Cat6 pre Ethernet?",o:["100 m","10 m","500 m","1000 m"],a:0,e:"Pre metalický Ethernet je limit 100 m (90 m inštalácia + 10 m prepojovacie káble)."},
+ {s:"LED na porte",t:"Počítač je zapojený káblom do switcha, ale LED na porte vôbec nesvieti. Čo to znamená?",o:["Nie je fyzické spojenie (link) – chyba kábla, portu alebo karty","Chýba IP adresa","Zlý DNS server","Firewall blokuje internet"],a:0,e:"LED linku je fyzická vrstva. Keď nesvieti, problém je v kábli, porte alebo sieťovej karte, nie v nastavení IP."},
+ {s:"Kábel pri žiarivke",t:"Sieť na jednom počítači má veľa chýb a výpadkov. Kábel vedie popri silovom kábli a žiarivkách. Čo je príčina?",o:["Elektromagnetické rušenie (UTP kábel je náchylný)","Zlá IP adresa","Málo RAM","Starý BIOS"],a:0,e:"UTP kábel je netienený. Silové vedenie a žiarivky rušia signál. Pomôže iná trasa alebo tienený kábel (FTP/STP)."},
+ {s:"Ostrý ohyb",t:"Kábel je za skriňou ostro zalomený a pritlačený nábytkom. Pred tým fungoval na 1 Gb/s, teraz iba na 100 Mb/s. Prečo?",o:["Poškodený kábel – zlomené alebo porušené páry","Zmenil sa operačný systém","Switch je preťažený","Chýba ovládač"],a:0,e:"Ostrý ohyb a tlak poškodia skrútenie párov alebo vodiče. Gigabit potrebuje všetky 4 páry, 100 Mb/s stačia 2, preto sa rýchlosť zníži."},
+ {s:"Optický kábel",t:"Ktorá je hlavná výhoda optického kábla oproti metalickému?",o:["Nepôsobí naň elektromagnetické rušenie a dosiahne veľké vzdialenosti","Je lacnejší a dá sa ľahko krimpovať","Vedie elektrický prúd","Používa konektor RJ45"],a:0,e:"Optika prenáša svetlo, preto nie je citlivá na rušenie a zvládne stovky metrov až kilometre."},
+ {s:"Krimpovanie",t:"Ako ďaleko má byť z kábla stiahnutý plášť pri krimpovaní RJ45?",o:["Tak, aby plášť siahal do konektora pod poistku (žily asi 1,2–1,5 cm)","Čo najviac, aspoň 5 cm","Plášť sa nesťahuje vôbec","Iba 1 mm"],a:0,e:"Plášť musí byť zachytený v konektore. Dlho odkryté žily strácajú skrútenie, ľahko sa vytrhnú a zhorší sa presluch."}
+];
+
 let PC_LABELS=null;
 function setMode(){
   if(!PC_LABELS)PC_LABELS={nav:[...document.querySelectorAll(".nav button")].slice(0,4).map(b=>b.firstChild.nodeValue),
@@ -1275,6 +1312,11 @@ function setMode(){
   const rg=T?["Kábel RJ45","Montáž","Teória","Poruchy"]:L?["Prevody","Tabuľky","Logické členy","Obvody"]:PC_LABELS.rg;document.querySelectorAll(".rgrid span").forEach((e,i)=>e.textContent=rg[i]);
   $("#orders").hidden=T||L;$("#req").hidden=T||L;$("#p1 .cfg").hidden=T||L;$("#lg").hidden=!L;if(L)renderLG();document.querySelector('.nav [data-p="p2"]').hidden=L;$("#svork").hidden=!T;$("#rig").hidden=T;$("#p3 .bios").hidden=T||L;
   $("#svork").hidden=true;$("#rj").hidden=!T;if(T)renderRJ();document.querySelector('.nav [data-p="p6"]').hidden=!T;if(T)renderVR();
+  if(PERM){[["p3","Diagnostika periférií","Tlačiarne, monitory, klávesnice, myši a USB. Každá otázka má iba jeden pokus, po odpovedi uvidíš vysvetlenie."],["p4","Diagnostika kabeláže","Vyber úlohu vľavo. Výsledky testera káblov, chyby krimpovania a vedenie káblov. Každá úloha má iba jeden pokus."]].forEach(([id,a,b])=>{$("#"+id+" .ph h1").textContent=a;$("#"+id+" .ph .hint").textContent=b});
+    const nb=[...document.querySelectorAll(".nav button")];nb[2].firstChild.nodeValue="Periférie ";nb[3].firstChild.nodeValue="Kabeláž ";nb[0].hidden=true;nb[1].hidden=true;$("#p3 .bios").hidden=true;
+    const rs=document.querySelectorAll(".rgrid span");rs[2].textContent="Periférie";rs[3].textContent="Kabeláž";const rd=document.querySelectorAll(".rgrid > div");rd[0].hidden=true;rd[1].hidden=true;
+    if(!$("#p1").hidden)nb[2].click()}
+  else{const nb=[...document.querySelectorAll(".nav button")];nb[0].hidden=false;if(!L)nb[1].hidden=false;const rd=document.querySelectorAll(".rgrid > div");rd[0].hidden=!!T&&false;rd[1].hidden=false}
   {const X=!T&&!L&&SV.lg;document.querySelector('.nav [data-p="p7"]').hidden=!X;const lg=$("#lg");if(X){$("#p7").appendChild(lg);lg.hidden=false;renderLG()}else if(lg.parentNode.id==="p7"){$("#p1 .ph").after(lg)}}
 }
 
@@ -1363,9 +1405,9 @@ function upd(){
   $("#r3").textContent=bs.ok+" / "+BIOS.length;$("#r4").textContent=ds.ok+" / "+DIAG.length;
   $("#rTable").innerHTML="<thead><tr><th>Časť</th><th>Stav</th><th>Výsledok</th></tr></thead><tbody>"+
    (TEL?`<tr><td>Kábel RJ45 (${SV.rj.typ})</td><td>${SV.rj.ok?"zapojený správne":"nedokončený"}</td><td class="mono">pokusov: ${SV.rj.tries}</td></tr>`:"")+ORDERS.map(o=>`<tr><td>Zákazka ${o.no} · ${o.short}</td><td>${passed[o.id]?"odovzdaná":"neodovzdaná"}</td><td class="mono">${passed[o.id]?price(builds[o.id])+" € z "+o.budget+" €":"–"}</td></tr>`).join("")+
-   (LGM&&SV.lg?(g=>`<tr><td>Prevody</td><td>${g.pr} / ${g.prN} správne</td><td class="mono">chybných pokusov: ${SV.lg.pr.reduce((a,p)=>a+p.tries,0)}</td></tr><tr><td>Pravdivostné tabuľky</td><td>${g.tb} / ${g.tbN} správne</td><td class="mono">chybných pokusov: ${SV.lg.tb.reduce((a,t)=>a+t.tries,0)}</td></tr>`)(lgScore()):`<tr><td>Montáž</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>`)+`
-    <tr><td>${LGM?"Logické členy":TEL?"Teória":"BIOS"}</td><td>${bs.done} / ${BIOS.length} zodpovedaných</td><td class="mono">${bs.ok} správne</td></tr>
-    <tr><td>${LGM?"Obvody":TEL?"Poruchy":"Servisné zákazky"}</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${ds.ok} správne</td></tr>${TEL&&SV.vr?`<tr><td>Vrátnik – schéma</td><td>${SV.vr.schOk?"správna":"nedokončená"}</td><td class="mono">pokusov: ${SV.vr.schTries}</td></tr><tr><td>Vrátnik – program</td><td>${SV.vr.progOk?"funguje":"nedokončený"}</td><td class="mono">pokusov: ${SV.vr.progTries}</td></tr>`:""}</tbody>`;
+   (PERM?"":LGM&&SV.lg?(g=>`<tr><td>Prevody</td><td>${g.pr} / ${g.prN} správne</td><td class="mono">chybných pokusov: ${SV.lg.pr.reduce((a,p)=>a+p.tries,0)}</td></tr><tr><td>Pravdivostné tabuľky</td><td>${g.tb} / ${g.tbN} správne</td><td class="mono">chybných pokusov: ${SV.lg.tb.reduce((a,t)=>a+t.tries,0)}</td></tr>`)(lgScore()):`<tr><td>Montáž</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>`)+`
+    <tr><td>${PERM?"Periférie":LGM?"Logické členy":TEL?"Teória":"BIOS"}</td><td>${bs.done} / ${BIOS.length} zodpovedaných</td><td class="mono">${bs.ok} správne</td></tr>
+    <tr><td>${PERM?"Kabeláž":LGM?"Obvody":TEL?"Poruchy":"Servisné zákazky"}</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${ds.ok} správne</td></tr>${TEL&&SV.vr?`<tr><td>Vrátnik – schéma</td><td>${SV.vr.schOk?"správna":"nedokončená"}</td><td class="mono">pokusov: ${SV.vr.schTries}</td></tr><tr><td>Vrátnik – program</td><td>${SV.vr.progOk?"funguje":"nedokončený"}</td><td class="mono">pokusov: ${SV.vr.progTries}</td></tr>`:""}</tbody>`;
 }
 $("#whoName").textContent="";
 /* štart */
@@ -1394,7 +1436,7 @@ function renderFeedback(){
   if(SV.lg&&!LGM&&!TEL){const g=lgScore();h+=`<div><h3>Prevody: ${g.pr} z ${g.prN}</h3><ul>${SV.lg.pr.map(p=>li(p.ok?"ok":"bad",`${LG_TYP[p.typ][0]}: ${p.q} = ${p.ok?p.ans:"<span class=why>správne: "+p.ans+"</span>"}`)).join("")}</ul></div><div><h3>Tabuľky: ${g.tb} z ${g.tbN}</h3><ul>${lgT().map((t,i)=>li(SV.lg.tb[i].ok?"ok":"bad",`${t.id}: ${SV.lg.tb[i].ok?"správne":"nesprávne alebo nedokončené"}`)).join("")}</ul></div>`}
   if(LGM){const g=lgScore();h+=`<div><h3>Prevody: ${g.pr} z ${g.prN}</h3><ul>${SV.lg.pr.map(p=>li(p.ok?"ok":"bad",`${LG_TYP[p.typ][0]}: ${p.q} = ${p.ok?p.ans:"<span class=why>správne: "+p.ans+"</span>"}${p.tries?" (chybné pokusy: "+p.tries+")":""}`)).join("")}</ul></div><div><h3>Tabuľky: ${g.tb} z ${g.tbN}</h3><ul>${lgT().map((t,i)=>li(SV.lg.tb[i].ok?"ok":"bad",`${t.id}: ${SV.lg.tb[i].ok?"správne":"nesprávne alebo nedokončené"}${SV.lg.tb[i].tries?" (chybné pokusy: "+SV.lg.tb[i].tries+")":""}`)).join("")}</ul></div>`}
   else if(TEL)h+=`<div><h3>Kábel RJ45 (${SV.rj.typ})</h3><ul>${SV.rj.ok?li("ok",`Zapojený správne, pokusov o kontrolu: ${SV.rj.tries}.`):li("bad",`Nezapojený správne (pokusov: ${SV.rj.tries}).`)+rjBad().map(([e,k])=>li("why",`${rjEndName(e)}, pin ${k+1}: mal si ${SV.rj.sel[e][k]||"nič"}, správne je ${rjExp(e)[k]}.`)).join("")}</ul></div><div><h3>Vrátnik</h3><ul>${li(SV.vr.schOk?"ok":"bad",SV.vr.schOk?`Schéma správna (pokusov: ${SV.vr.schTries}).`:`Schéma nie je dokončená (pokusov: ${SV.vr.schTries}).`)}${li(SV.vr.progOk?"ok":"bad",SV.vr.progOk?`Program funguje (pokusov: ${SV.vr.progTries}, spôsob: ${SV.vr.mode}).`:`Program nie je dokončený (pokusov: ${SV.vr.progTries}).`)}</ul></div>`;
-  else h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
+  else if(!PERM)h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
     const ev=lastEval[o.id],t=tries[o.id]||0;
     if(passed[o.id])return li("ok",`<b>${o.no} ${o.short}:</b> odovzdaná, ${price(builds[o.id])} € z ${o.budget} €, pokusov: ${t}.`);
     if(!ev)return li("bad",`<b>${o.no} ${o.short}:</b> zostavu si neodovzdal.`);
@@ -1402,7 +1444,7 @@ function renderFeedback(){
     return li("bad",`<b>${o.no} ${o.short}:</b> neprešla kontrolou (pokusov: ${t}).<ul>${pr.map(x=>`<li class="why">${x}</li>`).join("")}</ul>`);
   }).join("")+`</ul></div>`;
   const wrongSteps=LOG.filter(l=>l.cast==="Montáž"&&l.ok==="nie").map(l=>l.detail);
-  if(!LGM)h+=`<div><h3>Montáž</h3><ul>`+(aNext===STEPS.length?li(aErr?"bad":"ok",`Dokončená, chybných krokov: ${aErr}.`):li("bad",`Nedokončená, hotových ${aNext} z ${STEPS.length} krokov.`))+
+  if(!LGM&&!PERM)h+=`<div><h3>Montáž</h3><ul>`+(aNext===STEPS.length?li(aErr?"bad":"ok",`Dokončená, chybných krokov: ${aErr}.`):li("bad",`Nedokončená, hotových ${aNext} z ${STEPS.length} krokov.`))+
     wrongSteps.slice(0,6).map(d=>li("why","Vybral si: "+esc(d.replace(/ \(správny bol: /," → správne bolo: ").replace(/\)$/,"")))).join("")+
     (wrongSteps.length>6?li("why",`a ďalších ${wrongSteps.length-6} chybných krokov.`):"")+`</ul></div>`;
   const desk=(name,list,st)=>{const bad=[];list.forEach((q,i)=>{const x=st[i];
@@ -1410,7 +1452,7 @@ function renderFeedback(){
       else if(x.pick!==x.ans)bad.push(li("bad",`<b>${q.s}:</b> tvoja odpoveď „${esc(x.opts[x.pick])}“. <span class="why">Správne: ${esc(x.opts[x.ans])}. ${esc(q.e)}</span>`));});
     const ok=st.filter(x=>x.pick!==null&&x.pick===x.ans).length;
     return `<div><h3>${name}: ${ok} z ${list.length} správne</h3><ul>${bad.join("")||li("ok","Všetko správne.")}</ul></div>`;};
-  h+=desk(LGM?"Logické členy":TEL?"Teória":"BIOS",BIOS,biosSt)+desk(LGM?"Obvody":TEL?"Poruchy":"Servis",DIAG,diagSt);
+  h+=desk(PERM?"Periférie":LGM?"Logické členy":TEL?"Teória":"BIOS",BIOS,biosSt)+desk(PERM?"Kabeláž":LGM?"Obvody":TEL?"Poruchy":"Servis",DIAG,diagSt);
   h+=`<div><h3>Odchody zo stránky</h3><ul>${li(awayN?"bad":"ok",awayN?`Stránku si opustil ${awayN}× (spolu ${awaySec} s).`:"Stránku si počas práce neopustil.")}</ul></div></div>`;
   const fb=$("#feedback");fb.innerHTML=h;fb.hidden=false;fb.scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -1421,7 +1463,7 @@ $("#send").onclick=async()=>{
   if(!ENDPOINT){m.className="note bad";m.textContent="Odosielanie ešte nie je nastavené. Povedz to majstrovi.";return}
   const bs=sc(biosSt),ds=sc(diagSt),errs=LOG.filter(l=>l.ok==="nie"&&l.cast!=="Dozor").length;
   const payload={meno:profile.meno,priezvisko:profile.priezvisko,trieda:profile.trieda,zaciatok:new Date(T0||Date.now()).toISOString(),koniec:new Date().toISOString(),
-    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:LGM?lgScore().pr:TEL?(SV.rj&&SV.rj.ok?1:0):Object.keys(passed).length,montaz_hotova:LGM?lgScore().tb===lgT().length:aNext===STEPS.length,montaz_chyby:LGM?lgScore().err:aErr,
+    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:PERM?"":LGM?lgScore().pr:TEL?(SV.rj&&SV.rj.ok?1:0):Object.keys(passed).length,montaz_hotova:PERM?"":LGM?lgScore().tb===lgT().length:aNext===STEPS.length,montaz_chyby:PERM?"":LGM?lgScore().err:aErr,
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
   $("#send").disabled=true;m.className="note";m.textContent="Odosielam…";
   try{await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
@@ -1432,6 +1474,7 @@ let saved=null;try{saved=JSON.parse(localStorage.getItem(SKEY)||"null")}catch(e)
 if(saved&&!saved.pick)saved=null;
 if(saved&&saved.profile&&TEL_CLASSES.includes(saved.profile.trieda)&&!saved.pick.tel)saved=null;
 if(saved&&saved.profile&&LOG_CLASSES.includes(saved.profile.trieda)&&!saved.pick.log)saved=null;
+if(saved&&saved.profile&&PER_CLASSES.includes(saved.profile.trieda)&&!saved.pick.per)saved=null;
 if(saved&&saved.sent){try{localStorage.removeItem(SKEY)}catch(e){}saved=null}
 if(saved&&saved.profile&&saved.profile.meno){
   Object.assign(profile,saved.profile);T0=saved.T0;LOG.push(...saved.LOG);
@@ -1444,6 +1487,7 @@ if(saved&&saved.profile&&saved.profile.meno){
 }else order=shuffle(STEPS.map((_,i)=>i));
 const pickN=(a,n,ok)=>shuffle(a.map((_,i)=>i).filter(i=>!ok||ok(a[i]))).slice(0,n).sort((x,y)=>x-y);
 function makePick(trieda){
+  if(PER_CLASSES.includes(trieda))return{lvl:"periférie",per:true,o:[],b:pickN(PER_Q,10),d:pickN(KAB_D,8)};
   if(LOG_CLASSES.includes(trieda))return{lvl:"logika",log:true,o:[],b:pickN(LOG_Q,10),d:pickN(LOG_D,8)};
   if(TEL_CLASSES.includes(trieda))return{lvl:"telekom",tel:true,o:[],b:[...pickN(TEL_Q,5,x=>!x.k&&!x.x),...pickN(TEL_Q,3,x=>x.k)],d:pickN(TEL_D,8),sv:[1,6,11,16][Math.floor(Math.random()*4)],rj:Math.random()<.5?"priamy":"krížený"};
   if(EASY_CLASSES.includes(trieda))return{lvl:"ľahká",
@@ -1451,19 +1495,20 @@ function makePick(trieda){
   return{lvl:"štandardná",o:pickN(ORDERS_ALL,ORDERS_PICK,x=>+x.id.slice(1)<=8),b:pickN(BIOS_ALL,BIOS_PICK),d:pickN(DIAG_ALL,DIAG_PICK)};
 }
 function applyPick(pk,savedDesks){
-  PICK=pk;TEL=!!pk.tel;LGM=!!pk.log;
+  PICK=pk;TEL=!!pk.tel;LGM=!!pk.log;PERM=!!pk.per;
   const prevLen=STEPS.length;STEPS=TEL?TEL_STEPS:PC_STEPS;
   if(!savedDesks||order.length!==STEPS.length){order=shuffle(STEPS.map((_,i)=>i));if(!savedDesks){aNext=0;aErr=0}}
   if(!LGM&&!TEL&&pk.lvl==="ľahká"&&!SV.lg)SV={...SV,lg:lgInit(true)};
-  if(LGM){ORDERS=[];BIOS=PICK.b.map(i=>LOG_Q[i]);DIAG=PICK.d.map(i=>LOG_D[i]);if(!savedDesks||!SV.lg)SV={...SV,lg:lgInit()}}
+  if(PERM){ORDERS=[];BIOS=PICK.b.map(i=>PER_Q[i]);DIAG=PICK.d.map(i=>KAB_D[i])}
+  else if(LGM){ORDERS=[];BIOS=PICK.b.map(i=>LOG_Q[i]);DIAG=PICK.d.map(i=>LOG_D[i]);if(!savedDesks||!SV.lg)SV={...SV,lg:lgInit()}}
   else if(TEL){ORDERS=[];BIOS=PICK.b.map(i=>TEL_Q[i]);DIAG=PICK.d.map(i=>TEL_D[i]);if(!savedDesks)SV={start:pk.sv||1,sel:{},ok:false,tries:0};if(!SV.rj)SV.rj=rjInit(pk.rj||"priamy");if(!SV.vr)SV.vr=vrInit()}
   else{ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
     ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});
     if(!ORDERS.some(o=>o.id===cur))cur=ORDERS[0].id;}
-  biosSt=makeDesk(BIOS,$("#biosDesk"),LGM?"L-":TEL?"T-":"B-",LGM?"Logické členy":TEL?"Teória":"BIOS",savedDesks?savedDesks.bios:null);
-  diagSt=makeDesk(DIAG,$("#diagDesk"),LGM?"O-":TEL?"P-":"S-",LGM?"Obvody":TEL?"Poruchy":"Servis",savedDesks?savedDesks.diag:null);
+  biosSt=makeDesk(BIOS,$("#biosDesk"),PERM?"P-":LGM?"L-":TEL?"T-":"B-",PERM?"Periférie":LGM?"Logické členy":TEL?"Teória":"BIOS",savedDesks?savedDesks.bios:null);
+  diagSt=makeDesk(DIAG,$("#diagDesk"),PERM?"K-":LGM?"O-":TEL?"P-":"S-",PERM?"Kabeláž":LGM?"Obvody":TEL?"Poruchy":"Servis",savedDesks?savedDesks.diag:null);
   setMode();renderAsm();
-  if(TEL||LGM)upd();else renderCfg();
+  if(TEL||LGM||PERM)upd();else renderCfg();
 }
 updAway();renderAsm();
 if(saved&&saved.profile&&saved.profile.meno)applyPick(saved.pick,saved);
