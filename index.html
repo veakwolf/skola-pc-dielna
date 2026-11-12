@@ -1475,8 +1475,8 @@ function renderFeedback(){
     wrongSteps.slice(0,6).map(d=>li("why","Vybral si: "+esc(d.replace(/ \(správny bol: /," → správne bolo: ").replace(/\)$/,"")))).join("")+
     (wrongSteps.length>6?li("why",`a ďalších ${wrongSteps.length-6} chybných krokov.`):"")+`</ul></div>`;
   const desk=(name,list,st)=>{const bad=[];list.forEach((q,i)=>{const x=st[i];
-      if(x.pick===null)bad.push(li("bad",`<b>${q.s}:</b> nezodpovedané. <span class="why">Správne: ${esc(x.opts[x.ans])}. ${esc(q.e)}</span>`));
-      else if(x.pick!==x.ans)bad.push(li("bad",`<b>${q.s}:</b> tvoja odpoveď „${esc(x.opts[x.pick])}“. <span class="why">Správne: ${esc(x.opts[x.ans])}. ${esc(q.e)}</span>`));});
+      if(x.pick===null)bad.push(li("bad",PERM?`<b>${q.s}:</b> nezodpovedané.`:`<b>${q.s}:</b> nezodpovedané. <span class="why">Správne: ${esc(x.opts[x.ans])}. ${esc(q.e)}</span>`));
+      else if(x.pick!==x.ans)bad.push(li("bad",PERM?`<b>${q.s}:</b> nesprávne.`:`<b>${q.s}:</b> tvoja odpoveď „${esc(x.opts[x.pick])}“. <span class="why">Správne: ${esc(x.opts[x.ans])}. ${esc(q.e)}</span>`));});
     const ok=st.filter(x=>x.pick!==null&&x.pick===x.ans).length;
     return `<div><h3>${name}: ${ok} z ${list.length} správne</h3><ul>${bad.join("")||li("ok","Všetko správne.")}</ul></div>`;};
   h+=desk(PERM?"Periférie":LGM?"Logické členy":TEL?"Teória":"BIOS",BIOS,biosSt)+desk(PERM?"Kabeláž":LGM?"Obvody":TEL?"Poruchy":"Servis",DIAG,diagSt);
