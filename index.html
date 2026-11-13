@@ -250,6 +250,7 @@ tr:last-child td{border-bottom:0}
 .lgcols{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}@media(max-width:1000px){.lgcols{grid-template-columns:1fr}}
 .lgv{border-collapse:collapse;margin:0 0 10px;width:auto}.lgv td,.lgv th{border:1px solid var(--line);padding:3px 8px;text-align:center;font:600 13px var(--mono)}.lgg th{background:var(--sunk)}.lghow p.lgnet{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding-left:8px}.lgv tr.lgb td{color:var(--accent)}.lgst td:first-child,.lgst th:first-child{text-align:left;font-family:var(--sans);font-weight:500}.lgst th{background:var(--sunk);font-family:var(--sans)}
 .opts button.picked{outline:2px solid var(--accent)}
+.mtset table td{padding:6px 10px;border-bottom:1px solid var(--line)}.mtset .mtt{width:38%}.mtset select{width:100%;padding:5px;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:4px}.mtset.ok{border-color:var(--ok)}
 .lgrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--line)}
 .lgrow .lgn{width:22px;color:var(--muted)}.lgrow .lgt{width:190px;font-size:13px;color:var(--muted)}.lgrow .lgq{min-width:90px}
 .lgrow input{width:120px;padding:5px 8px;border:1px solid var(--line);border-radius:4px;font-size:14px;background:var(--surface);color:var(--fg)}
@@ -349,6 +350,7 @@ tr:last-child td{border-bottom:0}
   </div>
   <div class="orders" id="orders"></div>
   <div class="box req" id="req"></div>
+  <div id="mt" hidden style="display:grid;gap:18px"></div>
   <div id="rj" hidden style="display:grid;gap:18px">
     <div class="box svrule">
       <h2>Zadanie</h2>
@@ -1321,6 +1323,62 @@ const KAB_D=[
  {s:"Servis PC: žiadny zvuk",pc:1,ch:[["Pozrieť Správcu zariadení","Zvukové zariadenie má žltý výkričník."],["Pozrieť, kam sú zapojené reproduktory","Do zeleného výstupu."],["Pozrieť históriu aktualizácií","Včera sa aktualizoval Windows."]],t:"Po včerajšej aktualizácii Windows nehrá zvuk. Reproduktory sú zapojené správne.",o:["Chýba alebo zlyhal ovládač zvuku","Pokazené reproduktory","Zle zapojený výstup zvuku na doske","Vypnutý zvuk v BIOS-e"],a:0,e:"Žltý výkričník po aktualizácii znamená problém s ovládačom. Treba ho preinštalovať zo stránky výrobcu dosky."}
 ];
 
+let T2M=false;
+/* 2.G – druhé cvičenie: pojmy, teória, poruchy */
+const T2_Q=[
+ {s:"Časti telefónu",u:"Klasický telefón má slúchadlo (v ňom mikrofón a malý reproduktor), vidlicu (háčik, na ktorom slúchadlo leží), klávesnicu na voľbu čísla a zvonček.",t:"Ktorá časť telefónu zapojí prístroj do linky, keď zdvihneš slúchadlo?",o:["Vidlica (háčik)","Zvonček","Klávesnica","Mikrofón"],a:0,e:"Keď zdvihneš slúchadlo, vidlica sa uvoľní a prepne kontakty. Telefón sa zapojí do linky a ozve sa oznamovací tón."},
+ {s:"Mikrofón",u:"Mikrofón mení zvuk (tvoj hlas) na elektrický signál. Reproduktor robí opak: mení elektrický signál na zvuk.",t:"Čo robí mikrofón v slúchadle telefónu?",o:["Mení hlas na elektrický signál","Mení elektrický signál na zvuk","Zvoní pri prichádzajúcom hovore","Napája telefón"],a:0,e:"Mikrofón prevádza zvuk na elektrický signál, ktorý ide po linke k druhému účastníkovi."},
+ {s:"Oznamovací tón",u:"Po zdvihnutí slúchadla ústredňa pošle súvislý tón. Ten znamená: linka je v poriadku, môžeš voliť číslo. Prerušovaný rýchly tón znamená obsadené.",t:"Zdvihneš slúchadlo a počuješ súvislý tón. Čo to znamená?",o:["Linka je pripravená, môžeš voliť číslo","Volané číslo je obsadené","Linka je pokazená","Niekto ti práve volá"],a:0,e:"Súvislý tón po zdvihnutí je oznamovací tón. Ústredňa čaká, kým vytočíš číslo."},
+ {s:"Obsadzovací tón",u:"Obsadzovací tón je rýchlo prerušovaný (tú-tú-tú). Znamená, že volaný práve telefonuje alebo je linka obsadená.",t:"Po vytočení čísla počuješ rýchle krátke tóny tú-tú-tú. Čo to znamená?",o:["Volané číslo je obsadené","Hovor sa práve spája","Linka je pripravená","Telefón je pokazený"],a:0,e:"Rýchlo prerušovaný tón je obsadzovací tón."},
+ {s:"Napájanie linky",u:"Klasickú pevnú linku napája ústredňa jednosmerným napätím okolo 48 V. Preto obyčajný telefón funguje aj bez zásuvky 230 V.",t:"Prečo obyčajný pevný telefón funguje, aj keď nie je zapojený do zásuvky 230 V?",o:["Napája ho ústredňa cez telefónnu linku","Má v sebe batériu na celý život","Napája ho vidlica","Nepotrebuje žiadne napätie"],a:0,e:"Ústredňa posiela po linke jednosmerné napätie okolo 48 V, z ktorého telefón funguje."},
+ {s:"Žily linky",u:"Jedna telefónna linka potrebuje dva vodiče, teda jeden pár. Volajú sa žila a a žila b.",t:"Koľko vodičov potrebuje jedna klasická telefónna linka?",o:["2 (jeden pár)","1","4 (dva páry)","8"],a:0,e:"Linka používa jeden pár: žilu a a žilu b."},
+ {s:"Telefónna zásuvka",u:"V byte je telefónna zásuvka na stene. Do nej sa zapojí šnúra telefónu s konektorom RJ11. Sieťový kábel počítača má väčší konektor RJ45.",t:"Aký konektor má zvyčajne šnúra pevného telefónu?",o:["RJ11","RJ45","HDMI","USB-C"],a:0,e:"Telefón má menší konektor RJ11. RJ45 je širší a má 8 pinov, používa sa pri počítačových sieťach."},
+ {s:"Pobočková ústredňa",u:"Vo firme býva pobočková ústredňa. Má jednu alebo pár liniek von a veľa vnútorných liniek (kancelárií). Medzi kanceláriami sa volá krátkym číslom, napríklad 21.",t:"Na čo slúži pobočková ústredňa vo firme?",o:["Prepája vnútorné linky a pripája ich k vonkajším","Napája počítače vo firme","Nahrádza internet","Je to iný názov pre telefón"],a:0,e:"Pobočková ústredňa umožní volať medzi kanceláriami a zdieľať niekoľko vonkajších liniek."},
+ {s:"VoIP telefón",u:"Dnes sa často telefonuje cez internet. Taký telefón sa volá VoIP alebo IP telefón. Pripája sa sieťovým káblom s konektorom RJ45 ako počítač.",t:"Ako sa pripája IP (VoIP) telefón?",o:["Do počítačovej siete káblom s RJ45","Do telefónnej zásuvky s RJ11","Iba cez Bluetooth","Koaxiálnym káblom"],a:0,e:"IP telefón posiela hlas ako dáta po počítačovej sieti, preto sa zapája ako počítač."},
+ {s:"Domový vrátnik",u:"Domový vrátnik je zariadenie pri vchode do domu. Návšteva zazvoní na paneli, obyvateľ sa s ňou porozpráva cez domáci telefón a tlačidlom jej otvorí dvere.",t:"Ktorá časť vrátnika je pri vchodových dverách?",o:["Vstupný panel s tlačidlami","Domáci telefón","Zdroj v rozvádzači","Zvonček v byte"],a:0,e:"Vstupný panel je vonku pri dverách. Domáci telefón je v byte."},
+ {s:"Elektrický zámok",u:"Elektrický zámok vo dverách sa uvoľní, keď cezeň prejde prúd. Obyvateľ ho pustí tlačidlom s kľúčikom na domácom telefóne.",t:"Čo sa stane, keď obyvateľ stlačí tlačidlo s kľúčikom na domácom telefóne?",o:["Elektrický zámok sa uvoľní a dvere sa dajú otvoriť","Zazvoní zvonček v byte","Zapne sa svetlo na chodbe","Vypne sa celý vrátnik"],a:0,e:"Tlačidlo pustí prúd do elektrického zámku a ten uvoľní západku dverí."},
+ {s:"Videovrátnik",u:"Videovrátnik má navyše kameru na paneli a malú obrazovku v byte. Obyvateľ návštevu vidí, nielen počuje.",t:"Čím sa líši videovrátnik od obyčajného?",o:["Má kameru a obrazovku","Nepotrebuje kábel","Otvára dvere sám","Nemá mikrofón"],a:0,e:"Videovrátnik pridáva kameru na paneli a monitor v byte."},
+ {s:"Stúpacie vedenie",u:"Rozvod v bytovom dome: z pivnice ide kábel zvislo hore cez poschodia, to je stúpacie (vertikálne) vedenie. Na poschodí sa odbočuje do bytov, to je horizontálny rozvod.",t:"Ako sa volá vedenie, ktoré ide v bytovom dome zvislo medzi poschodiami?",o:["Stúpacie (vertikálne) vedenie","Horizontálny rozvod","Prípojka","Uzemnenie"],a:0,e:"Zvislé vedenie medzi poschodiami je stúpacie. Vodorovné po poschodí je horizontálne."},
+ {s:"Žľab a lišta",u:"Kábel sa dá viesť po povrchu steny v plastovom žľabe (lište) s vekom, alebo pod omietkou v chráničke (trubke).",t:"Kde sa používa plastový žľab (lišta) s vekom?",o:["Na povrchu steny, kde sa nedá sekať","Pod omietkou v stene","Pod zemou medzi domami","Vo vnútri telefónu"],a:0,e:"Žľab sa montuje na povrch steny. Výhodou je, že sa doň dajú neskôr pridať ďalšie káble."},
+ {s:"Vŕtanie do steny",u:"Pred vŕtaním do steny treba overiť, či v nej nevedie elektrické vedenie. Na to slúži detektor vedení. Vedenia sa vedú zvislo a vodorovne od vypínačov a zásuviek.",t:"Čo urobíš pred vŕtaním diery do steny na uchytenie žľabu?",o:["Detektorom skontrolujem, či tam nevedie elektrina","Nič, vŕtam rovno","Vypnem počítač","Navlhčím stenu"],a:0,e:"Prevŕtanie vedenia 230 V je nebezpečné. Pred vŕtaním sa stena skontroluje detektorom."},
+ {s:"Práca na rebríku",u:"Z BOZP: na rebríku má stáť druhá osoba, ktorá ho pridržiava. Rebrík musí stáť na rovnom povrchu a nesmie sa na ňom stáť na posledných priečkach.",t:"Montuješ žľab pod stropom z rebríka. Čo je správne?",o:["Kolega drží rebrík a nestojím na najvyšších priečkach","Rebrík opriem o stôl, aby bol vyššie","Stojím na najvyššej priečke","Rebrík dám na stoličku"],a:0,e:"Rebrík musí stáť pevne, ideálne ho niekto pridržiava, a najvyššie priečky sa nepoužívajú."},
+ {s:"Telefónny automat",u:"Verejný telefónny automat je telefón na ulici alebo v budove, ktorý môže použiť ktokoľvek. Za hovor sa platí mincami alebo kartou. Tiesňové čísla (112, 155, 150, 158) sú zadarmo.",t:"Čo platí o volaní na tiesňové číslo 112 z telefónneho automatu?",o:["Je zadarmo","Treba vhodiť mincu","Treba telefónnu kartu","Z automatu sa nedá volať na 112"],a:0,e:"Tiesňové čísla sú bezplatné aj z automatu."},
+ {s:"Meranie prerušenia",u:"Multimetrom v režime pípania (alebo ohmmetrom) zistíš, či vodič nie je prerušený. Celý vodič pípne, prerušený nie. Meria sa vždy bez napätia.",t:"Ako multimetrom zistíš, či nie je žila kábla prerušená?",o:["Režimom pípania zmeriam žilu na oboch koncoch","Zmeriam striedavé napätie 230 V","Zmeriam prúd v ampéroch","Multimetrom sa to nedá zistiť"],a:0,e:"Prechod (kontinuita) sa meria v režime pípania. Ak pípne, vodič je celý."}
+];
+const T2_D=[
+ {s:"Telefón bez tónu",u:"Poruchu hľadáš po častiach. Ak iný telefón v tej istej zásuvke funguje, linka je v poriadku a chyba je v telefóne.",ch:[["Zapojiť do zásuvky iný telefón","Iný telefón má oznamovací tón."],["Pozrieť šnúru telefónu","Šnúra je v poriadku, konektor zacvakne."]],t:"Pani Kováčová po zdvihnutí slúchadla nepočuje žiadny tón.",o:["Pokazený telefón","Pokazená linka v dome","Prerušený kábel v stene","Vypnutá ústredňa"],a:0,e:"Iný telefón v tej istej zásuvke funguje. Linka je teda v poriadku a chyba je v pôvodnom telefóne."},
+ {s:"Nikoho nepočuť",u:"Ak ťa druhá strana počuje, ale ty ju nie, chyba je v časti, ktorá mení signál na zvuk.",ch:[["Opýtať sa druhej strany, či ťa počuje","Áno, počuje ťa normálne."],["Skúsiť hlasitosť na telefóne","Hlasitosť je na maxime."]],t:"Pri hovore pán Novák nič nepočuje, ale volaný ho počuje dobre.",o:["Pokazený reproduktor v slúchadle","Pokazený mikrofón","Pokazená linka","Zlé číslo"],a:0,e:"Druhá strana ťa počuje, takže mikrofón a linka fungujú. Nefunguje reproduktor v slúchadle."},
+ {s:"Volaného nepočuje",u:"Ak ty počuješ druhú stranu, ale ona teba nie, chyba je v časti, ktorá mení hlas na signál.",ch:[["Opýtať sa, či počuje teba","Volaný hovorí, že nič nepočuje."],["Skúsiť iné slúchadlo s tým istým telefónom","S iným slúchadlom ťa počuje."]],t:"Zákazník počuje volaného, ale volaný nepočuje jeho.",o:["Pokazený mikrofón v slúchadle","Pokazený reproduktor","Pokazený zvonček","Vypnutá linka"],a:0,e:"S iným slúchadlom to ide, takže chyba je v mikrofóne pôvodného slúchadla."},
+ {s:"Telefón nezvoní",u:"Ak sa dá volať von a hovor sa dá prijať, keď zdvihneš, linka je v poriadku. Chyba je v časti, ktorá oznamuje hovor.",ch:[["Zavolať na tento telefón z mobilu","Mobil vyzváňa, telefón mlčí. Keď zdvihneš, hovor tam je."],["Pozrieť nastavenie hlasitosti zvonenia","Zvonenie je vypnuté prepínačom na spodku."]],t:"Telefón vôbec nezvoní, ale keď zdvihnú slúchadlo práve vo chvíli hovoru, hovor tam je.",o:["Vypnuté zvonenie na telefóne","Pokazená linka","Pokazený mikrofón","Zlé číslo telefónu"],a:0,e:"Hovor prichádza, len telefón nezvoní. Prepínač zvonenia bol vypnutý."},
+ {s:"Vrátnik neotvára",u:"Pri vrátniku je zvlášť časť na hovor a časť na otváranie dverí. Pri otváraní sa pozri, či prichádza napätie na zámok.",ch:[["Vyskúšať hovor s návštevou","Hovor funguje."],["Zmerať napätie na zámku pri stlačení tlačidla","Na zámok prichádza 12 V."],["Pozrieť zámok","Západka zámku je zaseknutá a hrdzavá."]],t:"Obyvateľ sa s návštevou porozpráva, ale dvere sa po stlačení tlačidla neotvoria.",o:["Zaseknutý elektrický zámok","Pokazený mikrofón na paneli","Pokazený domáci telefón","Vypnutý zdroj vrátnika"],a:0,e:"Napätie na zámok prichádza, ale zámok sa nepohne. Chyba je v samotnom zámku."},
+ {s:"Vrátnik nejde nikde",u:"Ak nefunguje nič v celom dome, chyba je v časti, ktorú používajú všetci: zdroj alebo hlavný kábel.",ch:[["Vyskúšať zvonenie do viacerých bytov","Nefunguje ani jeden byt."],["Pozrieť zdroj vrátnika v rozvádzači","Kontrolka na zdroji nesvieti, istič je vypnutý."]],t:"V celom dome nefunguje vrátnik: nikomu sa nedá zazvoniť ani otvoriť.",o:["Vypnutý istič zdroja vrátnika","Pokazený zámok vo dverách","Pokazený domáci telefón v jednom byte","Zlý kábel v jednom byte"],a:0,e:"Nefunguje to nikde, takže chyba je v spoločnej časti. Zdroj bol bez napätia, lebo bol vypnutý istič."},
+ {s:"Jeden byt nepočuť",u:"Ak niečo nejde iba v jednom byte, spoločné časti sú v poriadku. Chyba je v tom, čo patrí iba tomu bytu.",ch:[["Zazvoniť do iných bytov","Ostatné byty fungujú."],["Pozrieť kábel k domácemu telefónu v byte","Kábel je pri lište pricviknutý dverami a poškodený."]],t:"V jednom byte nefunguje domáci telefón vrátnika. U susedov je všetko v poriadku.",o:["Poškodený kábel k telefónu v byte","Vypnutý zdroj vrátnika","Pokazený vstupný panel","Pokazený zámok vo dverách"],a:0,e:"Ostatné byty fungujú, takže spoločné časti sú v poriadku. Chyba je v kábli iba do tohto bytu."},
+ {s:"Šum po daždi",u:"Voda vedie prúd. Ak sa vlhkosť dostane do kábla alebo krabice, na linke je šum.",ch:[["Opýtať sa, kedy šum vzniká","Najmä po daždi."],["Pozrieť krabicu na fasáde","Krabica nemá veko a je v nej voda."]],t:"Telefón má po daždi veľký šum, keď je sucho, je v poriadku.",o:["Vlhkosť v krabici na fasáde","Pokazený telefón","Slabé napätie zo siete 230 V","Zlé číslo"],a:0,e:"Šum závisí od počasia. Voda v otvorenej krabici zhoršuje izoláciu, treba ju vysušiť a zakryť."}
+];
+const MT_SETS=[
+ {n:"Telefónny prístroj",p:[["Slúchadlo","časť, ktorú držíš pri uchu a ústach"],["Mikrofón","mení hlas na elektrický signál"],["Reproduktor v slúchadle","mení elektrický signál na zvuk"],["Vidlica","pri zdvihnutí slúchadla zapojí telefón do linky"],["Zvonček","ozve sa pri prichádzajúcom hovore"],["Klávesnica","slúži na voľbu čísla"]]},
+ {n:"Rozvody v budove",p:[["Stúpacie vedenie","ide zvislo medzi poschodiami"],["Horizontálny rozvod","ide po poschodí do bytov"],["Svorkovnica","miesto, kde sa prepájajú páry káblov"],["Žľab (lišta)","kryt na povrchu steny na vedenie káblov"],["Chránička (trubka)","rúrka pod omietkou, ktorá chráni kábel"],["Telefónna zásuvka","koncový bod v byte na zapojenie telefónu"]]},
+ {n:"Domový vrátnik",p:[["Vstupný panel","je pri dverách, má tlačidlá a mikrofón"],["Domáci telefón","je v byte, slúži na rozhovor s návštevou"],["Elektrický zámok","uvoľní dvere, keď cez neho prejde prúd"],["Zdroj","napája celý vrátnik"],["Tlačidlo s kľúčikom","na domácom telefóne, otvára dvere"],["Kamera","pri videovrátniku ukazuje návštevu"]]},
+ {n:"Káble a konektory",p:[["RJ11","malý konektor na telefónnej šnúre"],["RJ45","8-pinový konektor sieťového kábla"],["Pár","dve žily skrútené spolu"],["Žily a, b","dva vodiče jednej telefónnej linky"],["UTP","netienený krútený kábel"],["Koaxiálny kábel","kábel pre anténu a televíziu"]]}
+];
+function mtInit(){return MT_SETS.map(s=>({order:shuffle([...s.p.keys()]),sel:{},ok:false,tries:0}))}
+function renderMT(){
+  const M=SV.mt;
+  $("#mt").innerHTML=`<div class="box svrule"><h2>Ako na to</h2><p>Ku každému pojmu vľavo vyber jeho popis. Každý popis sa v jednej skupine použije iba raz. Keď máš skupinu hotovú, klikni na Skontrolovať. Ak sa pomýliš, ukáže sa, koľko máš zle, a môžeš to opraviť.</p></div>`+
+  MT_SETS.map((s,si)=>{const st=M[si],descs=s.p.map(x=>x[1]).slice().sort((a,b)=>a.localeCompare(b,"sk"));
+    return `<div class="box mtset ${st.ok?"ok":""}"><div class="bh"><h2>${si+1}. ${s.n}</h2><span class="hint">${st.ok?"✓ správne":st.tries?"pokusov: "+st.tries:""}</span></div>
+    <table><tbody>${st.order.map(pi=>`<tr><td class="mtt"><b>${s.p[pi][0]}</b></td><td><select data-s="${si}" data-p="${pi}" ${st.ok?"disabled":""}><option value="">vyber popis</option>${descs.map(d=>`<option ${st.sel[pi]===d?"selected":""}>${d}</option>`).join("")}</select></td></tr>`).join("")}</tbody></table>
+    <div style="padding:8px 12px"><button class="lnk" data-mc="${si}" ${st.ok?"disabled":""}>Skontrolovať</button> <span class="hint" id="mtm${si}"></span></div></div>`}).join("");
+  $("#mt").querySelectorAll("select").forEach(e=>e.onchange=()=>{M[+e.dataset.s].sel[+e.dataset.p]=e.value;save()});
+  $("#mt").querySelectorAll("[data-mc]").forEach(b=>b.onclick=()=>{const si=+b.dataset.mc,s=MT_SETS[si],st=M[si];
+    if(s.p.some((_,pi)=>!st.sel[pi])){$("#mtm"+si).textContent="Vyber popis ku každému pojmu.";return}
+    const bad=s.p.filter((x,pi)=>st.sel[pi]!==x[1]).length;
+    if(!bad){st.ok=true;log("Pojmy",s.n,"správne (pokus "+(st.tries+1)+")",true);renderMT();upd()}
+    else{st.tries++;log("Pojmy",s.n,"chybných: "+bad,false);renderMT();$("#mtm"+si).textContent=`Zle priradených: ${bad}. Oprav ich a skontroluj znova.`}
+    save()});
+}
+
+const mtScore=()=>SV.mt?SV.mt.filter(x=>x.ok).length:0,mtErr=()=>SV.mt?SV.mt.reduce((a,x)=>a+x.tries,0):0;
 let PC_LABELS=null;
 function setMode(){
   if(!PC_LABELS)PC_LABELS={nav:[...document.querySelectorAll(".nav button")].slice(0,4).map(b=>b.firstChild.nodeValue),
@@ -1338,11 +1396,13 @@ function setMode(){
   ["p1","p2","p3","p4"].forEach((id,i)=>{$("#"+id+" .ph h1").textContent=H[i][0];$("#"+id+" .ph .hint").textContent=H[i][1]});
   const rg=T?["Kábel RJ45","Montáž","Teória","Poruchy"]:L?["Prevody","Tabuľky","Logické členy","Obvody"]:PC_LABELS.rg;document.querySelectorAll(".rgrid span").forEach((e,i)=>e.textContent=rg[i]);
   $("#orders").hidden=T||L;$("#req").hidden=T||L;$("#p1 .cfg").hidden=T||L;$("#lg").hidden=!L;if(L)renderLG();document.querySelector('.nav [data-p="p2"]').hidden=L;$("#svork").hidden=!T;$("#rig").hidden=T;$("#p3 .bios").hidden=T||L;
-  $("#svork").hidden=true;$("#rj").hidden=!T;if(T)renderRJ();document.querySelector('.nav [data-p="p6"]').hidden=!T;if(T)renderVR();
+  $("#svork").hidden=true;$("#rj").hidden=!T||T2M;if(T&&!T2M)renderRJ();document.querySelector('.nav [data-p="p6"]').hidden=!T||T2M;if(T&&!T2M)renderVR();$("#mt").hidden=!T2M;
+  if(T2M){renderMT();const nb=[...document.querySelectorAll(".nav button")];nb[0].firstChild.nodeValue="Pojmy ";nb[1].hidden=true;$("#p1 .ph h1").textContent="Priraď pojmy";$("#p1 .ph .hint").textContent="";
+    const rs=document.querySelectorAll(".rgrid span");rs[0].textContent="Pojmy";document.querySelectorAll(".rgrid > div")[1].hidden=true;if(!$("#p2").hidden)nb[0].click()}
   if(PERM){[["p3","Diagnostika periférií","Tlačiarne, monitory, klávesnice, myši a USB. Každá otázka má iba jeden pokus, po odpovedi uvidíš vysvetlenie."],["p4","Servis PC, periférií a siete","Vyber úlohu vľavo. Pri servisných prípadoch najprv urob kontroly, až potom sa ukážu možnosti. Každá úloha má iba jeden pokus."]].forEach(([id,a,b])=>{$("#"+id+" .ph h1").textContent=a;$("#"+id+" .ph .hint").textContent=b});
     const nb=[...document.querySelectorAll(".nav button")];nb[2].firstChild.nodeValue="Periférie ";nb[3].firstChild.nodeValue="Servis PC a sieť ";nb[0].firstChild.nodeValue="Krimpovanie RJ45 ";nb[1].hidden=true;$("#p3 .bios").hidden=true;$("#orders").hidden=true;$("#req").hidden=true;$("#p1 .cfg").hidden=true;$("#rj").hidden=false;renderRJ();$("#p1 .ph h1").textContent="Krimpovanie kábla RJ45";$("#p1 .ph .hint").textContent="Urči poradie žíl v oboch konektoroch podľa normy. Kontrolovať môžeš viackrát, ale každá chybná kontrola sa počíta.";
     const rs=document.querySelectorAll(".rgrid span");rs[0].textContent="Kábel RJ45";rs[2].textContent="Periférie";rs[3].textContent="Kabeláž";const rd=document.querySelectorAll(".rgrid > div");rd[1].hidden=true}
-  else{const nb=[...document.querySelectorAll(".nav button")];nb[0].hidden=false;if(!L)nb[1].hidden=false;const rd=document.querySelectorAll(".rgrid > div");rd[0].hidden=!!T&&false;rd[1].hidden=false}
+  else{const nb=[...document.querySelectorAll(".nav button")];nb[0].hidden=false;if(!L&&!T2M)nb[1].hidden=false;const rd=document.querySelectorAll(".rgrid > div");rd[0].hidden=false;rd[1].hidden=T2M}
   {const X=!T&&!L&&SV.lg;document.querySelector('.nav [data-p="p7"]').hidden=!X;const lg=$("#lg");if(X){$("#p7").appendChild(lg);lg.hidden=false;renderLG()}else if(lg.parentNode.id==="p7"){$("#p1 .ph").after(lg)}}
 }
 
@@ -1421,17 +1481,17 @@ const sc=a=>({ok:a.filter(s=>s.pick!==null&&s.pick===s.ans).length,done:a.filter
 function upd(){
   const n=fullName()?fullName()+", "+profile.trieda:"";
   const pc=Object.keys(passed).length,bs=sc(biosSt),ds=sc(diagSt),asmDone=aNext===STEPS.length;
-  $("#c1").textContent=(TEL||PERM)?(SV.rj&&SV.rj.ok?"✓":"–"):pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;if(TEL&&SV.vr)$("#c6").textContent=(SV.vr.schOk?1:0)+(SV.vr.progOk?1:0)+"/2";
+  $("#c1").textContent=T2M?mtScore()+"/4":(TEL||PERM)?(SV.rj&&SV.rj.ok?"✓":"–"):pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;if(TEL&&SV.vr)$("#c6").textContent=(SV.vr.schOk?1:0)+(SV.vr.progOk?1:0)+"/2";
   if(LGM&&SV.lg){const g=lgScore();$("#c1").textContent=(g.pr+g.tb)+"/"+(g.prN+g.tbN)}
   if(!LGM&&!TEL&&SV.lg){const g=lgScore();$("#c7").textContent=(g.pr+g.tb)+"/"+(g.prN+g.tbN)}
   $("#rName").textContent=n||"Meno nevyplnené";
   $("#rDate").textContent="Vyplnené "+new Date().toLocaleString("sk-SK",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"});
-  $("#r1").textContent=(TEL||PERM)?(SV.rj&&SV.rj.ok?"hotový":"nehotový"):pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
+  $("#r1").textContent=T2M?mtScore()+" / 4":(TEL||PERM)?(SV.rj&&SV.rj.ok?"hotový":"nehotový"):pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
   if(LGM&&SV.lg){const g=lgScore();$("#r1").textContent=g.pr+" / "+g.prN;$("#r2").textContent=g.tb+" / "+g.tbN}
   const hid=PERM&&!sent;$("#r3").textContent=hid?bs.done+" / "+BIOS.length+" hotových":bs.ok+" / "+BIOS.length;$("#r4").textContent=hid?ds.done+" / "+DIAG.length+" hotových":ds.ok+" / "+DIAG.length;
   $("#rTable").innerHTML="<thead><tr><th>Časť</th><th>Stav</th><th>Výsledok</th></tr></thead><tbody>"+
    ((TEL||PERM)&&SV.rj?`<tr><td>Kábel RJ45 (${SV.rj.typ})</td><td>${SV.rj.ok?"zapojený správne":"nedokončený"}</td><td class="mono">pokusov: ${SV.rj.tries}</td></tr>`:"")+ORDERS.map(o=>`<tr><td>Zákazka ${o.no} · ${o.short}</td><td>${passed[o.id]?"odovzdaná":"neodovzdaná"}</td><td class="mono">${passed[o.id]?price(builds[o.id])+" € z "+o.budget+" €":"–"}</td></tr>`).join("")+
-   (PERM?"":LGM&&SV.lg?(g=>`<tr><td>Prevody</td><td>${g.pr} / ${g.prN} správne</td><td class="mono">chybných pokusov: ${SV.lg.pr.reduce((a,p)=>a+p.tries,0)}</td></tr><tr><td>Pravdivostné tabuľky</td><td>${g.tb} / ${g.tbN} správne</td><td class="mono">chybných pokusov: ${SV.lg.tb.reduce((a,t)=>a+t.tries,0)}</td></tr>`)(lgScore()):`<tr><td>Montáž</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>`)+`
+   (PERM?"":T2M?`<tr><td>Pojmy</td><td>${mtScore()} / 4 skupín</td><td class="mono">chybných pokusov: ${mtErr()}</td></tr>`:LGM&&SV.lg?(g=>`<tr><td>Prevody</td><td>${g.pr} / ${g.prN} správne</td><td class="mono">chybných pokusov: ${SV.lg.pr.reduce((a,p)=>a+p.tries,0)}</td></tr><tr><td>Pravdivostné tabuľky</td><td>${g.tb} / ${g.tbN} správne</td><td class="mono">chybných pokusov: ${SV.lg.tb.reduce((a,t)=>a+t.tries,0)}</td></tr>`)(lgScore()):`<tr><td>Montáž</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>`)+`
     <tr><td>${PERM?"Periférie":LGM?"Logické členy":TEL?"Teória":"BIOS"}</td><td>${bs.done} / ${BIOS.length} zodpovedaných</td><td class="mono">${hid?"po odoslaní":bs.ok+" správne"}</td></tr>
     <tr><td>${PERM?"Kabeláž":LGM?"Obvody":TEL?"Poruchy":"Servisné zákazky"}</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${hid?"po odoslaní":ds.ok+" správne"}</td></tr>${TEL&&SV.vr?`<tr><td>Vrátnik – schéma</td><td>${SV.vr.schOk?"správna":"nedokončená"}</td><td class="mono">pokusov: ${SV.vr.schTries}</td></tr><tr><td>Vrátnik – program</td><td>${SV.vr.progOk?"funguje":"nedokončený"}</td><td class="mono">pokusov: ${SV.vr.progTries}</td></tr>`:""}</tbody>`;
 }
@@ -1442,7 +1502,7 @@ $("#startForm").onsubmit=e=>{e.preventDefault();
   if(!m||!p||!t){$("#fErr").textContent="Vyplň meno, priezvisko a vyber triedu.";return}
   if(!["1.D","2.C","2.G","3.C"].includes(t)){$("#fErr").textContent="Vyber triedu zo zoznamu.";return}
   Object.assign(profile,{meno:m,priezvisko:p,trieda:t});applyPick(makePick(t),null);
-  $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);log("Štart","pridelené zadanie","obtiažnosť: "+PICK.lvl+(TEL?" | kábel RJ45: "+SV.rj.typ+" | teória: "+BIOS.map(q=>q.s).join(", ")+" | poruchy: "+DIAG.map(q=>q.s).join(", "):" | zákazky: "+ORDERS.map(o=>o.no+" "+o.short).join(", ")+" | BIOS: "+BIOS.map(q=>q.s).join(", ")+" | servis: "+DIAG.map(q=>q.s).join(", ")));upd();window.scrollTo(0,0)};
+  $("#whoName").textContent=fullName()+" · "+t;$("#start").hidden=true;log("Štart","prihlásenie",fullName()+", "+t);log("Štart","pridelené zadanie","obtiažnosť: "+PICK.lvl+(TEL?(SV.rj?" | kábel RJ45: "+SV.rj.typ:"")+" | teória: "+BIOS.map(q=>q.s).join(", ")+" | poruchy: "+DIAG.map(q=>q.s).join(", "):" | zákazky: "+ORDERS.map(o=>o.no+" "+o.short).join(", ")+" | BIOS: "+BIOS.map(q=>q.s).join(", ")+" | servis: "+DIAG.map(q=>q.s).join(", ")));upd();window.scrollTo(0,0)};
 /* dozor: odchod zo stránky */
 let awayAt=null,awayN=0,awaySec=0;
 function goneAway(){if(!profile.meno||sent||awayAt)return;awayAt=Date.now()}
@@ -1462,6 +1522,7 @@ function renderFeedback(){
   if(SV.lg&&!LGM&&!TEL){const g=lgScore();h+=`<div><h3>Prevody: ${g.pr} z ${g.prN}</h3><ul>${SV.lg.pr.map(p=>li(p.ok?"ok":"bad",`${LG_TYP[p.typ][0]}: ${p.q} = ${p.ok?p.ans:"<span class=why>správne: "+p.ans+"</span>"}`)).join("")}</ul></div><div><h3>Tabuľky: ${g.tb} z ${g.tbN}</h3><ul>${lgT().map((t,i)=>li(SV.lg.tb[i].ok?"ok":"bad",`${t.id}: ${SV.lg.tb[i].ok?"správne":"nesprávne alebo nedokončené"}`)).join("")}</ul></div>`}
   if(LGM){const g=lgScore();h+=`<div><h3>Prevody: ${g.pr} z ${g.prN}</h3><ul>${SV.lg.pr.map(p=>li(p.ok?"ok":"bad",`${LG_TYP[p.typ][0]}: ${p.q} = ${p.ok?p.ans:"<span class=why>správne: "+p.ans+"</span>"}${p.tries?" (chybné pokusy: "+p.tries+")":""}`)).join("")}</ul></div><div><h3>Tabuľky: ${g.tb} z ${g.tbN}</h3><ul>${lgT().map((t,i)=>li(SV.lg.tb[i].ok?"ok":"bad",`${t.id}: ${SV.lg.tb[i].ok?"správne":"nesprávne alebo nedokončené"}${SV.lg.tb[i].tries?" (chybné pokusy: "+SV.lg.tb[i].tries+")":""}`)).join("")}</ul></div>`}
   if(PERM&&SV.rj)h+=`<div><h3>Kábel RJ45 (${SV.rj.typ})</h3><ul>${SV.rj.ok?li("ok",`Zapojený správne, pokusov o kontrolu: ${SV.rj.tries}.`):li("bad",`Nezapojený správne (pokusov: ${SV.rj.tries}).`)+rjBad().map(([e,k])=>li("why",`${rjEndName(e)}, pin ${k+1}: mal si ${SV.rj.sel[e][k]||"nič"}, správne je ${rjExp(e)[k]}.`)).join("")}</ul></div>`;
+  else if(T2M)h+=`<div><h3>Pojmy: ${mtScore()} zo 4</h3><ul>${MT_SETS.map((s,i)=>li(SV.mt[i].ok?"ok":"bad",`${s.n}: ${SV.mt[i].ok?"správne":"nedokončené"}${SV.mt[i].tries?" (chybné pokusy: "+SV.mt[i].tries+")":""}`)).join("")}</ul></div>`;
   else if(TEL)h+=`<div><h3>Kábel RJ45 (${SV.rj.typ})</h3><ul>${SV.rj.ok?li("ok",`Zapojený správne, pokusov o kontrolu: ${SV.rj.tries}.`):li("bad",`Nezapojený správne (pokusov: ${SV.rj.tries}).`)+rjBad().map(([e,k])=>li("why",`${rjEndName(e)}, pin ${k+1}: mal si ${SV.rj.sel[e][k]||"nič"}, správne je ${rjExp(e)[k]}.`)).join("")}</ul></div><div><h3>Vrátnik</h3><ul>${li(SV.vr.schOk?"ok":"bad",SV.vr.schOk?`Schéma správna (pokusov: ${SV.vr.schTries}).`:`Schéma nie je dokončená (pokusov: ${SV.vr.schTries}).`)}${li(SV.vr.progOk?"ok":"bad",SV.vr.progOk?`Program funguje (pokusov: ${SV.vr.progTries}, spôsob: ${SV.vr.mode}).`:`Program nie je dokončený (pokusov: ${SV.vr.progTries}).`)}</ul></div>`;
   else if(!PERM)h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
     const ev=lastEval[o.id],t=tries[o.id]||0;
@@ -1490,7 +1551,7 @@ $("#send").onclick=async()=>{
   if(!ENDPOINT){m.className="note bad";m.textContent="Odosielanie ešte nie je nastavené. Povedz to majstrovi.";return}
   const bs=sc(biosSt),ds=sc(diagSt),errs=LOG.filter(l=>l.ok==="nie"&&l.cast!=="Dozor").length;
   const payload={meno:profile.meno,priezvisko:profile.priezvisko,trieda:profile.trieda,zaciatok:new Date(T0||Date.now()).toISOString(),koniec:new Date().toISOString(),
-    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:PERM?(SV.rj&&SV.rj.ok?1:0):LGM?lgScore().pr:TEL?(SV.rj&&SV.rj.ok?1:0):Object.keys(passed).length,montaz_hotova:PERM?"":LGM?lgScore().tb===lgT().length:aNext===STEPS.length,montaz_chyby:PERM?(SV.rj?Math.max(0,SV.rj.tries-(SV.rj.ok?1:0)):""):LGM?lgScore().err:aErr,
+    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:T2M?mtScore():PERM?(SV.rj&&SV.rj.ok?1:0):LGM?lgScore().pr:TEL?(SV.rj&&SV.rj.ok?1:0):Object.keys(passed).length,montaz_hotova:T2M?"":PERM?"":LGM?lgScore().tb===lgT().length:aNext===STEPS.length,montaz_chyby:T2M?mtErr():PERM?(SV.rj?Math.max(0,SV.rj.tries-(SV.rj.ok?1:0)):""):LGM?lgScore().err:aErr,
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
   $("#send").disabled=true;m.className="note";m.textContent="Odosielam…";
   try{await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
@@ -1499,7 +1560,7 @@ $("#send").onclick=async()=>{
 };
 let saved=null;try{saved=JSON.parse(localStorage.getItem(SKEY)||"null")}catch(e){}
 if(saved&&!saved.pick)saved=null;
-if(saved&&saved.profile&&TEL_CLASSES.includes(saved.profile.trieda)&&!saved.pick.tel)saved=null;
+if(saved&&saved.profile&&TEL_CLASSES.includes(saved.profile.trieda)&&!saved.pick.t2)saved=null;
 if(saved&&saved.profile&&LOG_CLASSES.includes(saved.profile.trieda)&&!saved.pick.log)saved=null;
 if(saved&&saved.profile&&PER_CLASSES.includes(saved.profile.trieda)&&!(saved.pick.per&&saved.pick.v===3))saved=null;
 if(saved&&saved.sent){try{localStorage.removeItem(SKEY)}catch(e){}saved=null}
@@ -1516,18 +1577,20 @@ const pickN=(a,n,ok)=>shuffle(a.map((_,i)=>i).filter(i=>!ok||ok(a[i]))).slice(0,
 function makePick(trieda){
   if(PER_CLASSES.includes(trieda))return{lvl:"periférie",per:true,v:3,o:[],b:pickN(PER_Q,12),d:[...pickN(KAB_D,4,x=>!x.ch),...pickN(KAB_D,2,x=>!!x.ch&&!x.pc&&NET_CASE.includes(x.s)),...pickN(KAB_D,3,x=>!!x.ch&&!x.pc&&!NET_CASE.includes(x.s)),...pickN(KAB_D,4,x=>!!x.pc)],rj:Math.random()<.5?"priamy":"krížený"};
   if(LOG_CLASSES.includes(trieda))return{lvl:"logika",log:true,o:[],b:pickN(LOG_Q,10),d:pickN(LOG_D,8)};
-  if(TEL_CLASSES.includes(trieda))return{lvl:"telekom",tel:true,o:[],b:[...pickN(TEL_Q,5,x=>!x.k&&!x.x),...pickN(TEL_Q,3,x=>x.k)],d:pickN(TEL_D,8),sv:[1,6,11,16][Math.floor(Math.random()*4)],rj:Math.random()<.5?"priamy":"krížený"};
+  if(TEL_CLASSES.includes(trieda))return{lvl:"telekom2",tel:true,t2:true,o:[],b:pickN(T2_Q,14),d:pickN(T2_D,8)};
+  if(false)return{lvl:"telekom",tel:true,o:[],b:[...pickN(TEL_Q,5,x=>!x.k&&!x.x),...pickN(TEL_Q,3,x=>x.k)],d:pickN(TEL_D,8),sv:[1,6,11,16][Math.floor(Math.random()*4)],rj:Math.random()<.5?"priamy":"krížený"};
   if(EASY_CLASSES.includes(trieda))return{lvl:"ľahká",
     o:pickN(ORDERS_ALL,EASY.n.o,x=>EASY.orders.includes(x.id)),b:pickN(BIOS_ALL,EASY.n.b,x=>EASY.bios.includes(x.s)),d:pickN(DIAG_ALL,EASY.n.d,x=>EASY.diag.includes(x.s))};
   return{lvl:"štandardná",o:pickN(ORDERS_ALL,ORDERS_PICK,x=>+x.id.slice(1)<=8),b:pickN(BIOS_ALL,BIOS_PICK),d:pickN(DIAG_ALL,DIAG_PICK)};
 }
 function applyPick(pk,savedDesks){
-  PICK=pk;TEL=!!pk.tel;LGM=!!pk.log;PERM=!!pk.per;
+  PICK=pk;TEL=!!pk.tel;T2M=!!pk.t2;LGM=!!pk.log;PERM=!!pk.per;
   const prevLen=STEPS.length;STEPS=TEL?TEL_STEPS:PC_STEPS;
   if(!savedDesks||order.length!==STEPS.length){order=shuffle(STEPS.map((_,i)=>i));if(!savedDesks){aNext=0;aErr=0}}
   if(!LGM&&!TEL&&pk.lvl==="ľahká"&&!SV.lg)SV={...SV,lg:lgInit(true)};
   if(PERM){ORDERS=[];BIOS=PICK.b.map(i=>PER_Q[i]);DIAG=PICK.d.map(i=>KAB_D[i]);if(!SV.rj)SV={...SV,rj:rjInit(pk.rj||"priamy")}}
   else if(LGM){ORDERS=[];BIOS=PICK.b.map(i=>LOG_Q[i]);DIAG=PICK.d.map(i=>LOG_D[i]);if(!savedDesks||!SV.lg)SV={...SV,lg:lgInit()}}
+  else if(TEL&&pk.t2){ORDERS=[];BIOS=PICK.b.map(i=>T2_Q[i]);DIAG=PICK.d.map(i=>T2_D[i]);if(!SV.mt)SV={...SV,mt:mtInit()}}
   else if(TEL){ORDERS=[];BIOS=PICK.b.map(i=>TEL_Q[i]);DIAG=PICK.d.map(i=>TEL_D[i]);if(!savedDesks)SV={start:pk.sv||1,sel:{},ok:false,tries:0};if(!SV.rj)SV.rj=rjInit(pk.rj||"priamy");if(!SV.vr)SV.vr=vrInit()}
   else{ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
     ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});
