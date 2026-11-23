@@ -1161,7 +1161,7 @@ $("#vrRun").onclick=()=>{const V=SV.vr,src=V.mode==="bloky"?blocksCode():V.code,
   renderVR();save()};
 
 /* 2.C – logické obvody */
-const LOG_CLASSES=["2.C"];let LGM=false;
+const LOG_CLASSES=[];let LGM=false;
 const LOG_Q=[
  {s:"Dva stavy",u:"Počítač pracuje iba s dvoma stavmi: je napätie (1) alebo nie je napätie (0). Jedna taká hodnota sa volá bit.",t:"Čo znamená v číslicovej technike hodnota 1?",o:["Je napätie (logická jednotka, zapnuté)","Nie je napätie","Číslo jeden v desiatkovej sústave","Chyba obvodu"],a:0,e:"1 = je napätie (napr. 5 V), 0 = nie je napätie (0 V). Jeden takýto údaj je 1 bit."},
  {s:"Člen AND",u:"AND (logický súčin, A zároveň B): výstup je 1 iba vtedy, keď sú VŠETKY vstupy 1.",t:"Člen AND má vstupy A = 1, B = 0. Aký je výstup?",o:["0","1","Závisí od napätia","Nedá sa určiť"],a:0,e:"AND dá 1 iba pri oboch vstupoch 1. Tu je B = 0, takže výstup je 0."},
@@ -1322,6 +1322,36 @@ const KAB_D=[
  {s:"Servis PC: nesedí čas",pc:1,ch:[["Pozrieť čas v BIOS-e po zapnutí","Dátum je 1. 1. 2009."],["Zmerať batériu na doske","Batéria CR2032 má 1,9 V."],["Pozrieť pripojenie k internetu","Funguje."]],t:"Po každom vypnutí z elektriny má počítač zlý dátum a stratia sa nastavenia BIOS-u.",o:["Vybitá batéria CMOS na doske","Poškodený čip BIOS-u","Zlé nastavenie časového pásma","Vírus mení systémový čas"],a:0,e:"Nastavenia BIOS-u a čas drží batéria CR2032. Pri 1,9 V je vybitá (má mať okolo 3 V)."},
  {s:"Servis PC: žiadny zvuk",pc:1,ch:[["Pozrieť Správcu zariadení","Zvukové zariadenie má žltý výkričník."],["Pozrieť, kam sú zapojené reproduktory","Do zeleného výstupu."],["Pozrieť históriu aktualizácií","Včera sa aktualizoval Windows."]],t:"Po včerajšej aktualizácii Windows nehrá zvuk. Reproduktory sú zapojené správne.",o:["Chýba alebo zlyhal ovládač zvuku","Pokazené reproduktory","Zle zapojený výstup zvuku na doske","Vypnutý zvuk v BIOS-e"],a:0,e:"Žltý výkričník po aktualizácii znamená problém s ovládačom. Treba ho preinštalovať zo stránky výrobcu dosky."}
 ];
+/* 2.C – hardvér PC na známku */
+const HW_CLASSES=["2.C"];
+const HW_Q=[
+ {s:"Socket",t:"Čo musí byť rovnaké na procesore a základnej doske, aby procesor pasoval?",o:["Socket (pätica)","Počet USB portov","Výrobca grafickej karty","Formát skrinky"],a:0,e:"Procesor pasuje iba do dosky s rovnakým socketom, napríklad AM5 alebo LGA1700."},
+ {s:"Jadrá a vlákna",t:"Procesor má 6 jadier a 12 vlákien. Čo to znamená?",o:["Jadro spracúva dve úlohy naraz", "Procesor má 12 fyzických jadier", "Polovica jadier je pri štarte vypnutá", "Šesť jadier slúži iba na grafiku"],a:0,e:"Technológia SMT/Hyper-Threading umožní jednému jadru spracúvať dve vlákna."},
+ {s:"TDP",t:"Čo udáva parameter TDP pri procesore?",o:["Teplo, ktoré musí odviesť chladič", "Maximálnu frekvenciu procesora v GHz", "Počet jadier a vlákien procesora", "Veľkosť vyrovnávacej pamäte cache"],a:0,e:"TDP vo wattoch udáva, koľko tepla musí chladič odviesť."},
+ {s:"Integrovaná grafika",t:"Procesor Intel s označením F (napríklad i5-12400F) nemá integrovanú grafiku. Čo z toho vyplýva?",o:["Treba dedikovanú grafickú kartu", "Počítač nepotrebuje žiadny monitor", "Procesor je vďaka tomu rýchlejší", "Doska musí mať dva sockety pre CPU"],a:0,e:"Bez integrovanej grafiky nie je obraz z dosky, treba dedikovanú grafickú kartu."},
+ {s:"DDR4 a DDR5",t:"Dá sa modul DDR5 vložiť do dosky so slotmi DDR4?",o:["Nie, majú zárez inde", "Áno, len pobeží pomalšie", "Áno, ak sa v BIOS-e zapne XMP", "Áno, ak má modul menšiu kapacitu"],a:0,e:"DDR4 a DDR5 majú zárez inde a elektricky nie sú kompatibilné."},
+ {s:"Dual channel",t:"Prečo sa RAM dáva radšej ako dva moduly (2× 8 GB) než jeden (1× 16 GB)?",o:["Pamäť beží v dual channel", "Dva moduly majú vždy väčšiu kapacitu", "Jeden modul by sa v slote prehrieval", "Doska jeden modul RAM nepodporuje"],a:0,e:"Dva moduly v správnych slotoch (A2, B2) bežia v dual channel a pamäť má väčšiu priepustnosť."},
+ {s:"Kapacita RAM",t:"Na čo má najväčší vplyv kapacita operačnej pamäte?",o:["Koľko programov beží naraz", "Ako rýchlo sa po zapnutí spustí BIOS", "Koľko vydrží batéria CMOS na doske", "Aké najvyššie rozlíšenie má monitor"],a:0,e:"Keď RAM nestačí, systém odkladá dáta na disk a počítač sa spomalí."},
+ {s:"SSD a HDD",t:"Prečo je SSD rýchlejší ako HDD?",o:["Nemá pohyblivé časti", "Má väčšiu kapacitu za rovnakú cenu", "Jeho platne sa točia rýchlejšie ako HDD", "Používa rýchlejší operačný systém"],a:0,e:"HDD musí natočiť platne a posunúť hlavičku. SSD má flash pamäť bez mechaniky."},
+ {s:"M.2 NVMe",t:"Ako sa pripája disk M.2 NVMe?",o:["Do slotu M.2 cez PCIe", "SATA káblom a napájaním zo zdroja", "Do USB portu na zadnom paneli", "Do slotu určeného pre operačnú pamäť"],a:0,e:"NVMe disk je priamo v slote M.2 a komunikuje cez PCIe, preto je rýchlejší ako SATA."},
+ {s:"Formát dosky",t:"Do skrinky typu Mini Tower sa zmestí iba doska mATX. Čo sa stane s doskou ATX?",o:["Nezmestí sa, je väčšia","Zmestí sa, ATX je menšia","Zmestí sa bez skrutiek","Formát dosky nehrá úlohu"],a:0,e:"ATX je väčšia ako mATX. Skrinka musí podporovať formát dosky."},
+ {s:"Čipset",t:"Čo určuje čipset na základnej doske?",o:["Aké rozhrania doska podporuje", "Farbu dosky a jej RGB podsvietenie", "Rýchlosť internetového pripojenia", "Počet jadier procesora na doske"],a:0,e:"Čipset určuje napríklad počet USB a SATA portov, PCIe linky alebo pretaktovanie."},
+ {s:"PCIe x16",t:"Na čo sa najčastejšie používa slot PCIe x16?",o:["Na grafickú kartu","Na operačnú pamäť","Na napájací zdroj","Na pevný disk SATA"],a:0,e:"Najdlhší slot PCIe x16 je určený pre grafickú kartu."},
+ {s:"Napájanie dosky",t:"Ktoré napájacie konektory zo zdroja sa pripájajú na základnú dosku?",o:["24-pin ATX a 8-pin CPU", "Iba 8-pin PCIe pre grafiku", "SATA a Molex pre disky", "Iba 4-pin konektor pre ventilátor"],a:0,e:"Doska dostáva 24-pin hlavné napájanie a 8-pin (4+4) pre procesor."},
+ {s:"Výkon zdroja",t:"Ako zistíš, aký výkonný zdroj treba do PC?",o:["Sčítam príkon dielov a pridám rezervu", "Vyberiem zdroj podľa veľkosti skrinky", "Vyberiem čo najslabší, šetrí elektrinu", "Výkon zdroja pri výbere nehrá úlohu"],a:0,e:"Príkon dielov plus rezerva asi 30 %. Najväčší odber majú grafika a procesor."},
+ {s:"80 PLUS",t:"Čo znamená certifikát 80 PLUS Gold na zdroji?",o:["Zdroj má vysokú účinnosť", "Zdroj má pozlátené konektory", "Zdroj má výkon presne 80 wattov", "Zdroj je určený iba do serverov"],a:0,e:"80 PLUS udáva účinnosť. Gold je asi 90 % pri bežnej záťaži."},
+ {s:"BIOS a UEFI",t:"Čo robí BIOS/UEFI hneď po zapnutí počítača?",o:["Urobí POST a spustí systém", "Nainštaluje Windows z internetu", "Aktualizuje ovládače grafickej karty", "Vytvorí zálohu všetkých dát na disku"],a:0,e:"Firmvér urobí POST, nájde bootovací disk a spustí zavádzač systému."},
+ {s:"Boot priorita",t:"Chceš inštalovať Windows z USB kľúča. Čo nastavíš v BIOS-e?",o:["Poradie bootovania", "Frekvenciu a napätie procesora", "Režim SATA radiča na RAID", "Rýchlosť otáčok ventilátorov"],a:0,e:"Boot priorita určuje, z ktorého zariadenia sa počítač spustí."},
+ {s:"XMP",t:"Na čo slúži profil XMP (EXPO) v BIOS-e?",o:["Nastaví RAM podľa výrobcu", "Zrýchli internetové pripojenie", "Vypne integrovanú grafiku procesora", "Zapne zvukovú kartu na doske"],a:0,e:"Bez XMP beží RAM na základnej (nižšej) frekvencii. XMP načíta profil výrobcu."},
+ {s:"Batéria CMOS",t:"Na čo slúži malá okrúhla batéria na základnej doske?",o:["Drží čas a nastavenia BIOS-u", "Napája procesor pri výpadku prúdu", "Napája USB porty pri vypnutom PC", "Je to záložný zdroj pre pevný disk"],a:0,e:"Batéria CR2032 drží hodiny a nastavenia BIOS-u, keď je PC odpojené."},
+ {s:"Teplovodivá pasta",t:"Prečo sa medzi procesor a chladič dáva teplovodivá pasta?",o:["Zlepší odvod tepla", "Prilepí chladič pevne k procesoru", "Elektricky izoluje procesor od chladiča", "Chráni procesor pred prachom a vlhkom"],a:0,e:"Pasta vytlačí vzduch z mikroskopických nerovností, ktorý by teplo zle viedol."},
+ {s:"USB rýchlosti",t:"Ktoré USB je najrýchlejšie?",o:["USB 3.2 Gen 2", "USB 2.0 Hi-Speed", "USB 1.1 Full-Speed", "USB 3.0 SuperSpeed"],a:0,e:"USB 3.2 Gen 2 má 10 Gb/s, USB 3.0 má 5 Gb/s, USB 2.0 má 480 Mb/s a USB 1.1 iba 12 Mb/s."},
+ {s:"Výstupy obrazu",t:"Ktorý konektor prenáša obraz aj zvuk a je bežný na monitoroch a televízoroch?",o:["HDMI","VGA","PS/2","RJ45"],a:0,e:"HDMI prenáša digitálny obraz aj zvuk. VGA je starý analógový a iba obraz."},
+ {s:"Obnovovacia frekvencia",t:"Čo znamená, že monitor má 144 Hz?",o:["Obraz sa obnoví 144× za sekundu", "Monitor má 144 pixelov na palec", "Monitor má príkon 144 wattov", "Monitor má odozvu 144 milisekúnd"],a:0,e:"Vyššia frekvencia znamená plynulejší pohyb, čo ocenia hlavne hráči."},
+ {s:"Grafická pamäť",t:"Na čo slúži VRAM na grafickej karte?",o:["Ukladá dáta pre grafický čip", "Nahrádza operačnú pamäť počítača", "Uchováva nastavenia BIOS-u a čas", "Je to vyrovnávacia pamäť pre disk"],a:0,e:"VRAM je rýchla pamäť priamo na grafickej karte pre dáta, s ktorými grafika pracuje."}
+];
+const HWP=[...HW_Q,...PER_Q];
+
 
 let T2M=false;
 /* 2.G – druhé cvičenie: pojmy, teória, poruchy */
@@ -1458,7 +1488,10 @@ function setMode(){
   $("#svork").hidden=true;$("#rj").hidden=!T||T2M;if(T&&!T2M)renderRJ();document.querySelector('.nav [data-p="p6"]').hidden=!T||T2M;if(T&&!T2M)renderVR();$("#mt").hidden=!T2M;
   if(T2M){renderMT();const nb=[...document.querySelectorAll(".nav button")];nb[0].firstChild.nodeValue="Pojmy ";nb[1].hidden=PICK.v!==3;if(PICK.v===3){nb[1].firstChild.nodeValue="Montáž zásuvky ";$("#p2 .ph h1").textContent="Montáž telefónnej zásuvky v byte";$("#p2 .ph .hint").textContent="Vyberaj kroky v poradí, v akom ich robíš pri montáži lišty, kábla a zásuvky. Pri chybe sa ukáže vysvetlenie.";}$("#p1 .ph h1").textContent="Priraď pojmy";$("#p1 .ph .hint").textContent="";
     const rs=document.querySelectorAll(".rgrid span");rs[0].textContent="Pojmy";document.querySelectorAll(".rgrid > div")[1].hidden=PICK.v!==3;if(!$("#p2").hidden&&PICK.v!==3)nb[0].click()}
-  if(PERM){[["p3","Diagnostika periférií","Tlačiarne, monitory, klávesnice, myši a USB. Každá otázka má iba jeden pokus, po odpovedi uvidíš vysvetlenie."],["p4","Servis PC, periférií a siete","Vyber úlohu vľavo. Pri servisných prípadoch najprv urob kontroly, až potom sa ukážu možnosti. Každá úloha má iba jeden pokus."]].forEach(([id,a,b])=>{$("#"+id+" .ph h1").textContent=a;$("#"+id+" .ph .hint").textContent=b});
+  if(PERM&&PICK.hw){[["p3","Komponenty PC a BIOS","Otázky o procesore, pamäti, diskoch, doske, zdroji, BIOS-e a perifériách. Každá otázka má iba jeden pokus, výsledok uvidíš až po odoslaní."],["p4","Servis PC a periférií","Vyber prípad vľavo. Najprv urob kontroly, až potom sa ukážu možnosti. Každý prípad má iba jeden pokus."]].forEach(([id,a,b])=>{$("#"+id+" .ph h1").textContent=a;$("#"+id+" .ph .hint").textContent=b});
+    const nb=[...document.querySelectorAll(".nav button")];nb[2].firstChild.nodeValue="Komponenty ";nb[3].firstChild.nodeValue="Servis ";nb[0].hidden=false;nb[1].hidden=false;$("#p3 .bios").hidden=true;$("#rj").hidden=true;
+    const rs=document.querySelectorAll(".rgrid span");rs[2].textContent="Komponenty";rs[3].textContent="Servis";document.querySelectorAll(".rgrid > div").forEach(d=>d.hidden=false)}
+  else if(PERM){[["p3","Diagnostika periférií","Tlačiarne, monitory, klávesnice, myši a USB. Každá otázka má iba jeden pokus, po odpovedi uvidíš vysvetlenie."],["p4","Servis PC, periférií a siete","Vyber úlohu vľavo. Pri servisných prípadoch najprv urob kontroly, až potom sa ukážu možnosti. Každá úloha má iba jeden pokus."]].forEach(([id,a,b])=>{$("#"+id+" .ph h1").textContent=a;$("#"+id+" .ph .hint").textContent=b});
     const nb=[...document.querySelectorAll(".nav button")];nb[2].firstChild.nodeValue="Periférie ";nb[3].firstChild.nodeValue="Servis PC a sieť ";nb[0].firstChild.nodeValue="Krimpovanie RJ45 ";nb[1].hidden=true;$("#p3 .bios").hidden=true;$("#orders").hidden=true;$("#req").hidden=true;$("#p1 .cfg").hidden=true;$("#rj").hidden=false;renderRJ();$("#p1 .ph h1").textContent="Krimpovanie kábla RJ45";$("#p1 .ph .hint").textContent="Urči poradie žíl v oboch konektoroch podľa normy. Kontrolovať môžeš viackrát, ale každá chybná kontrola sa počíta.";
     const rs=document.querySelectorAll(".rgrid span");rs[0].textContent="Kábel RJ45";rs[2].textContent="Periférie";rs[3].textContent="Kabeláž";const rd=document.querySelectorAll(".rgrid > div");rd[1].hidden=true}
   else{const nb=[...document.querySelectorAll(".nav button")];nb[0].hidden=false;if(!L&&!(T2M&&PICK.v!==3))nb[1].hidden=false;const rd=document.querySelectorAll(".rgrid > div");rd[0].hidden=false;rd[1].hidden=T2M&&PICK.v!==3}
@@ -1540,19 +1573,19 @@ const sc=a=>({ok:a.filter(s=>s.pick!==null&&s.pick===s.ans).length,done:a.filter
 function upd(){
   const n=fullName()?fullName()+", "+profile.trieda:"";
   const pc=Object.keys(passed).length,bs=sc(biosSt),ds=sc(diagSt),asmDone=aNext===STEPS.length;
-  $("#c1").textContent=T2M?mtScore()+"/4":(TEL||PERM)?(SV.rj&&SV.rj.ok?"✓":"–"):pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;if(TEL&&SV.vr)$("#c6").textContent=(SV.vr.schOk?1:0)+(SV.vr.progOk?1:0)+"/2";
+  $("#c1").textContent=T2M?mtScore()+"/4":(TEL||(PERM&&!PICK.hw))?(SV.rj&&SV.rj.ok?"✓":"–"):pc+"/"+ORDERS.length;$("#c2").textContent=aNext+"/"+STEPS.length;$("#c3").textContent=bs.done+"/"+BIOS.length;$("#c4").textContent=ds.done+"/"+DIAG.length;if(TEL&&SV.vr)$("#c6").textContent=(SV.vr.schOk?1:0)+(SV.vr.progOk?1:0)+"/2";
   if(LGM&&SV.lg){const g=lgScore();$("#c1").textContent=(g.pr+g.tb)+"/"+(g.prN+g.tbN)}
   if(!LGM&&(!TEL||T2M)&&SV.lg){const g=lgScore();$("#c7").textContent=(g.pr+g.tb)+"/"+(g.prN+g.tbN)}
   $("#rName").textContent=n||"Meno nevyplnené";
   $("#rDate").textContent="Vyplnené "+new Date().toLocaleString("sk-SK",{day:"numeric",month:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"});
-  $("#r1").textContent=T2M?mtScore()+" / 4":(TEL||PERM)?(SV.rj&&SV.rj.ok?"hotový":"nehotový"):pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
+  $("#r1").textContent=T2M?mtScore()+" / 4":(TEL||(PERM&&!PICK.hw))?(SV.rj&&SV.rj.ok?"hotový":"nehotový"):pc+" / "+ORDERS.length;$("#r2").textContent=asmDone?aErr+" chýb":aNext+" / "+STEPS.length;
   if(LGM&&SV.lg){const g=lgScore();$("#r1").textContent=g.pr+" / "+g.prN;$("#r2").textContent=g.tb+" / "+g.tbN}
   const hid=PERM&&!sent;$("#r3").textContent=hid?bs.done+" / "+BIOS.length+" hotových":bs.ok+" / "+BIOS.length;$("#r4").textContent=hid?ds.done+" / "+DIAG.length+" hotových":ds.ok+" / "+DIAG.length;
   $("#rTable").innerHTML="<thead><tr><th>Časť</th><th>Stav</th><th>Výsledok</th></tr></thead><tbody>"+
    ((TEL||PERM)&&SV.rj?`<tr><td>Kábel RJ45 (${SV.rj.typ})</td><td>${SV.rj.ok?"zapojený správne":"nedokončený"}</td><td class="mono">pokusov: ${SV.rj.tries}</td></tr>`:"")+ORDERS.map(o=>`<tr><td>Zákazka ${o.no} · ${o.short}</td><td>${passed[o.id]?"odovzdaná":"neodovzdaná"}</td><td class="mono">${passed[o.id]?price(builds[o.id])+" € z "+o.budget+" €":"–"}</td></tr>`).join("")+
-   (PERM?"":T2M?`<tr><td>Pojmy</td><td>${mtScore()} / 4 skupín</td><td class="mono">chybných pokusov: ${mtErr()}</td></tr>`+(PICK.v===3?`<tr><td>Montáž zásuvky</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>`:""):LGM&&SV.lg?(g=>`<tr><td>Prevody</td><td>${g.pr} / ${g.prN} správne</td><td class="mono">chybných pokusov: ${SV.lg.pr.reduce((a,p)=>a+p.tries,0)}</td></tr><tr><td>Pravdivostné tabuľky</td><td>${g.tb} / ${g.tbN} správne</td><td class="mono">chybných pokusov: ${SV.lg.tb.reduce((a,t)=>a+t.tries,0)}</td></tr>`)(lgScore()):`<tr><td>Montáž</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>`)+`
-    <tr><td>${PERM?"Periférie":LGM?"Logické členy":TEL?"Teória":"BIOS"}</td><td>${bs.done} / ${BIOS.length} zodpovedaných</td><td class="mono">${hid?"po odoslaní":bs.ok+" správne"}</td></tr>
-    <tr><td>${PERM?"Kabeláž":LGM?"Obvody":TEL?"Poruchy":"Servisné zákazky"}</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${hid?"po odoslaní":ds.ok+" správne"}</td></tr>${TEL&&SV.vr?`<tr><td>Vrátnik – schéma</td><td>${SV.vr.schOk?"správna":"nedokončená"}</td><td class="mono">pokusov: ${SV.vr.schTries}</td></tr><tr><td>Vrátnik – program</td><td>${SV.vr.progOk?"funguje":"nedokončený"}</td><td class="mono">pokusov: ${SV.vr.progTries}</td></tr>`:""}</tbody>`;
+   (PERM&&!PICK.hw?"":T2M?`<tr><td>Pojmy</td><td>${mtScore()} / 4 skupín</td><td class="mono">chybných pokusov: ${mtErr()}</td></tr>`+(PICK.v===3?`<tr><td>Montáž zásuvky</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>`:""):LGM&&SV.lg?(g=>`<tr><td>Prevody</td><td>${g.pr} / ${g.prN} správne</td><td class="mono">chybných pokusov: ${SV.lg.pr.reduce((a,p)=>a+p.tries,0)}</td></tr><tr><td>Pravdivostné tabuľky</td><td>${g.tb} / ${g.tbN} správne</td><td class="mono">chybných pokusov: ${SV.lg.tb.reduce((a,t)=>a+t.tries,0)}</td></tr>`)(lgScore()):`<tr><td>Montáž</td><td>${asmDone?"dokončená":"nedokončená"}</td><td class="mono">${asmDone?aErr+" chybných krokov":aNext+" / "+STEPS.length+" krokov"}</td></tr>`)+`
+    <tr><td>${PERM?(PICK.hw?"Komponenty":"Periférie"):LGM?"Logické členy":TEL?"Teória":"BIOS"}</td><td>${bs.done} / ${BIOS.length} zodpovedaných</td><td class="mono">${hid?"po odoslaní":bs.ok+" správne"}</td></tr>
+    <tr><td>${PERM?(PICK.hw?"Servis":"Kabeláž"):LGM?"Obvody":TEL?"Poruchy":"Servisné zákazky"}</td><td>${ds.done} / ${DIAG.length} uzavretých</td><td class="mono">${hid?"po odoslaní":ds.ok+" správne"}</td></tr>${TEL&&SV.vr?`<tr><td>Vrátnik – schéma</td><td>${SV.vr.schOk?"správna":"nedokončená"}</td><td class="mono">pokusov: ${SV.vr.schTries}</td></tr><tr><td>Vrátnik – program</td><td>${SV.vr.progOk?"funguje":"nedokončený"}</td><td class="mono">pokusov: ${SV.vr.progTries}</td></tr>`:""}</tbody>`;
 }
 $("#whoName").textContent="";
 /* štart */
@@ -1583,7 +1616,7 @@ function renderFeedback(){
   if(PERM&&SV.rj)h+=`<div><h3>Kábel RJ45 (${SV.rj.typ})</h3><ul>${SV.rj.ok?li("ok",`Zapojený správne, pokusov o kontrolu: ${SV.rj.tries}.`):li("bad",`Nezapojený správne (pokusov: ${SV.rj.tries}).`)+rjBad().map(([e,k])=>li("why",`${rjEndName(e)}, pin ${k+1}: mal si ${SV.rj.sel[e][k]||"nič"}, správne je ${rjExp(e)[k]}.`)).join("")}</ul></div>`;
   else if(T2M)h+=`<div><h3>Pojmy: ${mtScore()} zo 4</h3><ul>${MTS().map((s,i)=>li(SV.mt[i].ok?"ok":"bad",`${s.n}: ${SV.mt[i].ok?"správne":"nedokončené"}${SV.mt[i].tries?" (chybné pokusy: "+SV.mt[i].tries+")":""}`)).join("")}</ul></div>`;
   else if(TEL)h+=`<div><h3>Kábel RJ45 (${SV.rj.typ})</h3><ul>${SV.rj.ok?li("ok",`Zapojený správne, pokusov o kontrolu: ${SV.rj.tries}.`):li("bad",`Nezapojený správne (pokusov: ${SV.rj.tries}).`)+rjBad().map(([e,k])=>li("why",`${rjEndName(e)}, pin ${k+1}: mal si ${SV.rj.sel[e][k]||"nič"}, správne je ${rjExp(e)[k]}.`)).join("")}</ul></div><div><h3>Vrátnik</h3><ul>${li(SV.vr.schOk?"ok":"bad",SV.vr.schOk?`Schéma správna (pokusov: ${SV.vr.schTries}).`:`Schéma nie je dokončená (pokusov: ${SV.vr.schTries}).`)}${li(SV.vr.progOk?"ok":"bad",SV.vr.progOk?`Program funguje (pokusov: ${SV.vr.progTries}, spôsob: ${SV.vr.mode}).`:`Program nie je dokončený (pokusov: ${SV.vr.progTries}).`)}</ul></div>`;
-  else if(!PERM)h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
+  else if(!PERM||PICK.hw)h+=`<div><h3>Zákazky</h3><ul>`+ORDERS.map(o=>{
     const ev=lastEval[o.id],t=tries[o.id]||0;
     if(passed[o.id])return li("ok",`<b>${o.no} ${o.short}:</b> odovzdaná, ${price(builds[o.id])} € z ${o.budget} €, pokusov: ${t}.`);
     if(!ev)return li("bad",`<b>${o.no} ${o.short}:</b> zostavu si neodovzdal.`);
@@ -1591,7 +1624,7 @@ function renderFeedback(){
     return li("bad",`<b>${o.no} ${o.short}:</b> neprešla kontrolou (pokusov: ${t}).<ul>${pr.map(x=>`<li class="why">${x}</li>`).join("")}</ul>`);
   }).join("")+`</ul></div>`;
   const wrongSteps=LOG.filter(l=>l.cast==="Montáž"&&l.ok==="nie").map(l=>l.detail);
-  if(!LGM&&!PERM)h+=`<div><h3>Montáž</h3><ul>`+(aNext===STEPS.length?li(aErr?"bad":"ok",`Dokončená, chybných krokov: ${aErr}.`):li("bad",`Nedokončená, hotových ${aNext} z ${STEPS.length} krokov.`))+
+  if(!LGM&&(!PERM||PICK.hw))h+=`<div><h3>Montáž</h3><ul>`+(aNext===STEPS.length?li(aErr?"bad":"ok",`Dokončená, chybných krokov: ${aErr}.`):li("bad",`Nedokončená, hotových ${aNext} z ${STEPS.length} krokov.`))+
     wrongSteps.slice(0,6).map(d=>li("why","Vybral si: "+esc(d.replace(/ \(správny bol: /," → správne bolo: ").replace(/\)$/,"")))).join("")+
     (wrongSteps.length>6?li("why",`a ďalších ${wrongSteps.length-6} chybných krokov.`):"")+`</ul></div>`;
   const desk=(name,list,st)=>{const bad=[];list.forEach((q,i)=>{const x=st[i];
@@ -1599,7 +1632,7 @@ function renderFeedback(){
       else if(x.pick!==x.ans)bad.push(li("bad",PERM?`<b>${q.s}:</b> nesprávne.`:`<b>${q.s}:</b> tvoja odpoveď „${esc(x.opts[x.pick])}“. <span class="why">Správne: ${esc(x.opts[x.ans])}. ${esc(q.e)}</span>`));});
     const ok=st.filter(x=>x.pick!==null&&x.pick===x.ans).length;
     return `<div><h3>${name}: ${ok} z ${list.length} správne</h3><ul>${bad.join("")||li("ok","Všetko správne.")}</ul></div>`;};
-  h+=desk(PERM?"Periférie":LGM?"Logické členy":TEL?"Teória":"BIOS",BIOS,biosSt)+desk(PERM?"Kabeláž":LGM?"Obvody":TEL?"Poruchy":"Servis",DIAG,diagSt);
+  h+=desk(PERM?(PICK.hw?"Komponenty":"Periférie"):LGM?"Logické členy":TEL?"Teória":"BIOS",BIOS,biosSt)+desk(PERM?(PICK.hw?"Servis":"Kabeláž"):LGM?"Obvody":TEL?"Poruchy":"Servis",DIAG,diagSt);
   h+=`<div><h3>Odchody zo stránky</h3><ul>${li(awayN?"bad":"ok",awayN?`Stránku si opustil ${awayN}× (spolu ${awaySec} s).`:"Stránku si počas práce neopustil.")}</ul></div></div>`;
   const fb=$("#feedback");fb.innerHTML=h;fb.hidden=false;fb.scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -1610,7 +1643,7 @@ $("#send").onclick=async()=>{
   if(!ENDPOINT){m.className="note bad";m.textContent="Odosielanie ešte nie je nastavené. Povedz to majstrovi.";return}
   const bs=sc(biosSt),ds=sc(diagSt),errs=LOG.filter(l=>l.ok==="nie"&&l.cast!=="Dozor").length;
   const payload={meno:profile.meno,priezvisko:profile.priezvisko,trieda:profile.trieda,zaciatok:new Date(T0||Date.now()).toISOString(),koniec:new Date().toISOString(),
-    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:T2M?mtScore():PERM?(SV.rj&&SV.rj.ok?1:0):LGM?lgScore().pr:TEL?(SV.rj&&SV.rj.ok?1:0):Object.keys(passed).length,montaz_hotova:T2M?(PICK.v===3?aNext===STEPS.length:""):PERM?"":LGM?lgScore().tb===lgT().length:aNext===STEPS.length,montaz_chyby:T2M?(PICK.v===3?aErr:mtErr()):PERM?(SV.rj?Math.max(0,SV.rj.tries-(SV.rj.ok?1:0)):""):LGM?lgScore().err:aErr,
+    minut:T0?Math.round((Date.now()-T0)/60000):0,zostavy:T2M?mtScore():PERM&&PICK.hw?Object.keys(passed).length:PERM?(SV.rj&&SV.rj.ok?1:0):LGM?lgScore().pr:TEL?(SV.rj&&SV.rj.ok?1:0):Object.keys(passed).length,montaz_hotova:T2M?(PICK.v===3?aNext===STEPS.length:""):PERM&&PICK.hw?aNext===STEPS.length:PERM?"":LGM?lgScore().tb===lgT().length:aNext===STEPS.length,montaz_chyby:T2M?(PICK.v===3?aErr:mtErr()):PERM&&PICK.hw?aErr:PERM?(SV.rj?Math.max(0,SV.rj.tries-(SV.rj.ok?1:0)):""):LGM?lgScore().err:aErr,
     bios:bs.ok,bios_spolu:BIOS.length,servis:ds.ok,servis_spolu:DIAG.length,chyby_spolu:errs,kroky:LOG};
   $("#send").disabled=true;m.className="note";m.textContent="Odosielam…";
   try{await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
@@ -1622,6 +1655,7 @@ if(saved&&!saved.pick)saved=null;
 if(saved&&saved.profile&&TEL_CLASSES.includes(saved.profile.trieda)&&!(saved.pick.t2&&saved.pick.v===3))saved=null;
 if(saved&&saved.profile&&LOG_CLASSES.includes(saved.profile.trieda)&&!saved.pick.log)saved=null;
 if(saved&&saved.profile&&saved.profile.trieda==="2.G"&&(saved.pick.tel||saved.pick.lvl!=="ľahká"))saved=null;
+if(saved&&saved.profile&&HW_CLASSES.includes(saved.profile.trieda)&&!saved.pick.hw)saved=null;
 if(saved&&saved.profile&&PER_CLASSES.includes(saved.profile.trieda)&&!(saved.pick.per&&saved.pick.v===3))saved=null;
 if(saved&&saved.sent){try{localStorage.removeItem(SKEY)}catch(e){}saved=null}
 if(saved&&saved.profile&&saved.profile.meno){
@@ -1635,6 +1669,7 @@ if(saved&&saved.profile&&saved.profile.meno){
 }else order=shuffle(STEPS.map((_,i)=>i));
 const pickN=(a,n,ok)=>shuffle(a.map((_,i)=>i).filter(i=>!ok||ok(a[i]))).slice(0,n).sort((x,y)=>x-y);
 function makePick(trieda){
+  if(HW_CLASSES.includes(trieda))return{lvl:"hardvér",per:true,hw:true,v:3,o:pickN(ORDERS_ALL,ORDERS_PICK,x=>+x.id.slice(1)<=8),b:[...pickN(HWP,12,(x,i)=>HW_Q.includes(x)),...pickN(HWP,3,x=>!HW_Q.includes(x))],d:[...pickN(KAB_D,4,x=>!!x.pc),...pickN(KAB_D,3,x=>!!x.ch&&!x.pc&&!NET_CASE.includes(x.s))]};
   if(PER_CLASSES.includes(trieda))return{lvl:"periférie",per:true,v:3,o:[],b:pickN(PER_Q,12),d:[...pickN(KAB_D,4,x=>!x.ch),...pickN(KAB_D,2,x=>!!x.ch&&!x.pc&&NET_CASE.includes(x.s)),...pickN(KAB_D,3,x=>!!x.ch&&!x.pc&&!NET_CASE.includes(x.s)),...pickN(KAB_D,4,x=>!!x.pc)],rj:Math.random()<.5?"priamy":"krížený"};
   if(LOG_CLASSES.includes(trieda))return{lvl:"logika",log:true,o:[],b:pickN(LOG_Q,10),d:pickN(LOG_D,8)};
   if(TEL_CLASSES.includes(trieda))return{lvl:"telekom3",tel:true,t2:true,v:3,o:[],b:pickN(T3_Q,14,x=>!x.k),d:pickN(T3_D,8)};
@@ -1648,17 +1683,18 @@ function applyPick(pk,savedDesks){
   const prevLen=STEPS.length;STEPS=TEL?(PICK&&PICK.v===3?T3_STEPS:TEL_STEPS):PC_STEPS;
   if(!savedDesks||order.length!==STEPS.length){order=shuffle(STEPS.map((_,i)=>i));if(!savedDesks){aNext=0;aErr=0}}
   if(!LGM&&!TEL&&pk.lvl==="ľahká"&&!SV.lg)SV={...SV,lg:lgInit(true)};
-  if(PERM){ORDERS=[];BIOS=PICK.b.map(i=>PER_Q[i]);DIAG=PICK.d.map(i=>KAB_D[i]);if(!SV.rj)SV={...SV,rj:rjInit(pk.rj||"priamy")}}
+  if(PERM&&pk.hw){ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>HWP[i]);DIAG=PICK.d.map(i=>KAB_D[i]);ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});if(!ORDERS.some(o=>o.id===cur))cur=ORDERS[0].id}
+  else if(PERM){ORDERS=[];BIOS=PICK.b.map(i=>PER_Q[i]);DIAG=PICK.d.map(i=>KAB_D[i]);if(!SV.rj)SV={...SV,rj:rjInit(pk.rj||"priamy")}}
   else if(LGM){ORDERS=[];BIOS=PICK.b.map(i=>LOG_Q[i]);DIAG=PICK.d.map(i=>LOG_D[i]);if(!savedDesks||!SV.lg)SV={...SV,lg:lgInit()}}
   else if(TEL&&pk.t2){ORDERS=[];const v3=pk.v===3;BIOS=PICK.b.map(i=>(v3?T3_Q:T2_Q)[i]);DIAG=PICK.d.map(i=>(v3?T3_D:T2_D)[i]);if(v3&&!SV.lg)SV={...SV,lg:lgInit(true)};if(!SV.mt)SV={...SV,mt:mtInit()}}
   else if(TEL){ORDERS=[];BIOS=PICK.b.map(i=>TEL_Q[i]);DIAG=PICK.d.map(i=>TEL_D[i]);if(!savedDesks)SV={start:pk.sv||1,sel:{},ok:false,tries:0};if(!SV.rj)SV.rj=rjInit(pk.rj||"priamy");if(!SV.vr)SV.vr=vrInit()}
   else{ORDERS=PICK.o.map(i=>ORDERS_ALL[i]);BIOS=PICK.b.map(i=>BIOS_ALL[i]);DIAG=PICK.d.map(i=>DIAG_ALL[i]);
     ORDERS.forEach(o=>{if(!builds[o.id])builds[o.id]={storage:[]}});
     if(!ORDERS.some(o=>o.id===cur))cur=ORDERS[0].id;}
-  biosSt=makeDesk(BIOS,$("#biosDesk"),PERM?"P-":LGM?"L-":TEL?"T-":"B-",PERM?"Periférie":LGM?"Logické členy":TEL?"Teória":"BIOS",savedDesks?savedDesks.bios:null);
-  diagSt=makeDesk(DIAG,$("#diagDesk"),PERM?"K-":LGM?"O-":TEL?"P-":"S-",PERM?"Kabeláž":LGM?"Obvody":TEL?"Poruchy":"Servis",savedDesks?savedDesks.diag:null);
+  biosSt=makeDesk(BIOS,$("#biosDesk"),PERM?(pk.hw?"H-":"P-"):LGM?"L-":TEL?"T-":"B-",PERM?(pk.hw?"Komponenty":"Periférie"):LGM?"Logické členy":TEL?"Teória":"BIOS",savedDesks?savedDesks.bios:null);
+  diagSt=makeDesk(DIAG,$("#diagDesk"),PERM?"K-":LGM?"O-":TEL?"P-":"S-",PERM?(pk.hw?"Servis":"Kabeláž"):LGM?"Obvody":TEL?"Poruchy":"Servis",savedDesks?savedDesks.diag:null);
   setMode();renderAsm();
-  if(TEL||LGM||PERM)upd();else renderCfg();
+  if(TEL||LGM||(PERM&&!pk.hw))upd();else renderCfg();
 }
 updAway();renderAsm();
 if(saved&&saved.profile&&saved.profile.meno)applyPick(saved.pick,saved);
